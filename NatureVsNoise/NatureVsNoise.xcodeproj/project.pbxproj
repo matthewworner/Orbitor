@@ -1,0 +1,453 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		E01111112B5A00000000001 /* NatureVsNoiseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000002 /* NatureVsNoiseView.swift */; };
+		E01111112B5A00000000003 /* PlanetFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000004 /* PlanetFactory.swift */; };
+		E01111112B5A00000000005 /* CameraController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000006 /* CameraController.swift */; };
+		E01111112B5A00000000009 /* SatelliteManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000007 /* SatelliteManager.swift */; };
+		E01111112B5A00000000012 /* SatelliteRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000008 /* SatelliteRenderer.swift */; };
+		E01111112B5A00000000013 /* SGP4Propagator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000014 /* SGP4Propagator.swift */; };
+		E01111112B5A00000000015 /* TLEFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000016 /* TLEFetcher.swift */; };
+		E01111112B5A00000000019 /* MetalSatelliteRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A0000000001A /* MetalSatelliteRenderer.swift */; };
+		E01111112B5A00000000021 /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000020 /* FeatureFlags.swift */; };
+		E01111112B5A00000000023 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000022 /* Shaders.metal */; };
+		150CE03D2F07C800003B3D7F /* earth_8k_clouds.png in Resources */ = {isa = PBXBuildFile; fileRef = 150CE02F2F07C7D6003B3D7F /* earth_8k_clouds.png */; };
+		150CE03E2F07C800003B3D7F /* earth_8k_day.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE0302F07C7D6003B3D7F /* earth_8k_day.jpg */; };
+		150CE03F2F07C800003B3D7F /* earth_8k_night.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE0312F07C7D6003B3D7F /* earth_8k_night.jpg */; };
+		150CE0402F07C800003B3D7F /* jupiter_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE0322F07C7D6003B3D7F /* jupiter_8k.jpg */; };
+		150CE0412F07C800003B3D7F /* mars_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE0332F07C7D6003B3D7F /* mars_8k.jpg */; };
+		150CE0422F07C800003B3D7F /* mercury_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE0342F07C7D6003B3D7F /* mercury_8k.jpg */; };
+		150CE0432F07C800003B3D7F /* neptune_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE0352F07C7D6003B3D7F /* neptune_8k.jpg */; };
+		150CE0442F07C800003B3D7F /* saturn_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE0362F07C7D6003B3D7F /* saturn_8k.jpg */; };
+		150CE0452F07C800003B3D7F /* saturn_rings_16k.png in Resources */ = {isa = PBXBuildFile; fileRef = 150CE0372F07C7D6003B3D7F /* saturn_rings_16k.png */; };
+		150CE0462F07C800003B3D7F /* starfield_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE0382F07C7D6003B3D7F /* starfield_8k.jpg */; };
+		150CE0472F07C800003B3D7F /* sun_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE0392F07C7D6003B3D7F /* sun_8k.jpg */; };
+		150CE0482F07C800003B3D7F /* uranus_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE03A2F07C7D6003B3D7F /* uranus_8k.jpg */; };
+		150CE0492F07C800003B3D7F /* venus_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE03B2F07C7D6003B3D7F /* venus_8k.jpg */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		150CE02F2F07C7D6003B3D7F /* earth_8k_clouds.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = earth_8k_clouds.png; sourceTree = "<group>"; };
+		150CE0302F07C7D6003B3D7F /* earth_8k_day.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = earth_8k_day.jpg; sourceTree = "<group>"; };
+		150CE0312F07C7D6003B3D7F /* earth_8k_night.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = earth_8k_night.jpg; sourceTree = "<group>"; };
+		150CE0322F07C7D6003B3D7F /* jupiter_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = jupiter_8k.jpg; sourceTree = "<group>"; };
+		150CE0332F07C7D6003B3D7F /* mars_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = mars_8k.jpg; sourceTree = "<group>"; };
+		150CE0342F07C7D6003B3D7F /* mercury_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = mercury_8k.jpg; sourceTree = "<group>"; };
+		150CE0352F07C7D6003B3D7F /* neptune_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = neptune_8k.jpg; sourceTree = "<group>"; };
+		150CE0362F07C7D6003B3D7F /* saturn_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = saturn_8k.jpg; sourceTree = "<group>"; };
+		150CE0372F07C7D6003B3D7F /* saturn_rings_16k.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = saturn_rings_16k.png; sourceTree = "<group>"; };
+		150CE0382F07C7D6003B3D7F /* starfield_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = starfield_8k.jpg; sourceTree = "<group>"; };
+		150CE0392F07C7D6003B3D7F /* sun_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = sun_8k.jpg; sourceTree = "<group>"; };
+		150CE03A2F07C7D6003B3D7F /* uranus_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = uranus_8k.jpg; sourceTree = "<group>"; };
+		150CE03B2F07C7D6003B3D7F /* venus_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = venus_8k.jpg; sourceTree = "<group>"; };
+		E01111112B5A00000000002 /* NatureVsNoiseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NatureVsNoiseView.swift; sourceTree = "<group>"; };
+		E01111112B5A00000000004 /* PlanetFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanetFactory.swift; sourceTree = "<group>"; };
+		E01111112B5A00000000006 /* CameraController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraController.swift; sourceTree = "<group>"; };
+		E01111112B5A00000000007 /* SatelliteManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteManager.swift; sourceTree = "<group>"; };
+		E01111112B5A00000000008 /* SatelliteRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteRenderer.swift; sourceTree = "<group>"; };
+		E01111112B5A00000000010 /* NatureVsNoise.saver */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NatureVsNoise.saver; sourceTree = BUILT_PRODUCTS_DIR; };
+		E01111112B5A00000000011 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E01111112B5A00000000014 /* SGP4Propagator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SGP4Propagator.swift; sourceTree = "<group>"; };
+		E01111112B5A00000000016 /* TLEFetcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TLEFetcher.swift; sourceTree = "<group>"; };
+		E01111112B5A0000000001A /* MetalSatelliteRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalSatelliteRenderer.swift; sourceTree = "<group>"; };
+		E01111112B5A00000000020 /* FeatureFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureFlags.swift; sourceTree = "<group>"; };
+		E01111112B5A00000000022 /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E01111112B5A00000000042 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		150CE03C2F07C7D6003B3D7F /* 8K */ = {
+			isa = PBXGroup;
+			children = (
+				150CE02F2F07C7D6003B3D7F /* earth_8k_clouds.png */,
+				150CE0302F07C7D6003B3D7F /* earth_8k_day.jpg */,
+				150CE0312F07C7D6003B3D7F /* earth_8k_night.jpg */,
+				150CE0322F07C7D6003B3D7F /* jupiter_8k.jpg */,
+				150CE0332F07C7D6003B3D7F /* mars_8k.jpg */,
+				150CE0342F07C7D6003B3D7F /* mercury_8k.jpg */,
+				150CE0352F07C7D6003B3D7F /* neptune_8k.jpg */,
+				150CE0362F07C7D6003B3D7F /* saturn_8k.jpg */,
+				150CE0372F07C7D6003B3D7F /* saturn_rings_16k.png */,
+				150CE0382F07C7D6003B3D7F /* starfield_8k.jpg */,
+				150CE0392F07C7D6003B3D7F /* sun_8k.jpg */,
+				150CE03A2F07C7D6003B3D7F /* uranus_8k.jpg */,
+				150CE03B2F07C7D6003B3D7F /* venus_8k.jpg */,
+			);
+			path = 8K;
+			sourceTree = "<group>";
+		};
+		E01111112B5A00000000020 = {
+			isa = PBXGroup;
+			children = (
+				150CE03C2F07C7D6003B3D7F /* 8K */,
+				E01111112B5A00000000021 /* NatureVsNoise */,
+				E01111112B5A00000000030 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E01111112B5A00000000021 /* NatureVsNoise */ = {
+			isa = PBXGroup;
+			children = (
+				E01111112B5A00000000022 /* Sources */,
+				E01111112B5A00000000023 /* Resources */,
+				E01111112B5A00000000011 /* Info.plist */,
+			);
+			path = NatureVsNoise;
+			sourceTree = "<group>";
+		};
+		E01111112B5A00000000022 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				E01111112B5A00000000002 /* NatureVsNoiseView.swift */,
+				E01111112B5A00000000024 /* Planets */,
+				E01111112B5A00000000025 /* Camera */,
+				E01111112B5A00000000026 /* Satellites */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		E01111112B5A00000000023 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		E01111112B5A00000000024 /* Planets */ = {
+			isa = PBXGroup;
+			children = (
+				E01111112B5A00000000004 /* PlanetFactory.swift */,
+			);
+			path = Planets;
+			sourceTree = "<group>";
+		};
+		E01111112B5A00000000025 /* Camera */ = {
+			isa = PBXGroup;
+			children = (
+				E01111112B5A00000000006 /* CameraController.swift */,
+			);
+			path = Camera;
+			sourceTree = "<group>";
+		};
+		E01111112B5A00000000026 /* Satellites */ = {
+			isa = PBXGroup;
+			children = (
+				E01111112B5A00000000007 /* SatelliteManager.swift */,
+				E01111112B5A00000000008 /* SatelliteRenderer.swift */,
+				E01111112B5A00000000014 /* SGP4Propagator.swift */,
+				E01111112B5A00000000016 /* TLEFetcher.swift */,
+				E01111112B5A0000000001A /* MetalSatelliteRenderer.swift */,
+				E01111112B5A00000000020 /* FeatureFlags.swift */,
+			);
+			path = Satellites;
+			sourceTree = "<group>";
+		};
+		E01111112B5A00000000030 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E01111112B5A00000000010 /* NatureVsNoise.saver */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E01111112B5A00000000040 /* NatureVsNoise */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E01111112B5A00000000080 /* Build configuration list for PBXNativeTarget "NatureVsNoise" */;
+			buildPhases = (
+				E01111112B5A00000000041 /* Sources */,
+				E01111112B5A00000000042 /* Frameworks */,
+				E01111112B5A00000000043 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NatureVsNoise;
+			productName = NatureVsNoise;
+			productReference = E01111112B5A00000000010 /* NatureVsNoise.saver */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E01111112B5A00000000050 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 2620;
+				TargetAttributes = {
+					E01111112B5A00000000040 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = E01111112B5A00000000070 /* Build configuration list for PBXProject "NatureVsNoise" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = E01111112B5A00000000020;
+			productRefGroup = E01111112B5A00000000030 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E01111112B5A00000000040 /* NatureVsNoise */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		E01111112B5A00000000043 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				150CE03D2F07C800003B3D7F /* earth_8k_clouds.png in Resources */,
+				150CE03E2F07C800003B3D7F /* earth_8k_day.jpg in Resources */,
+				150CE03F2F07C800003B3D7F /* earth_8k_night.jpg in Resources */,
+				150CE0402F07C800003B3D7F /* jupiter_8k.jpg in Resources */,
+				150CE0412F07C800003B3D7F /* mars_8k.jpg in Resources */,
+				150CE0422F07C800003B3D7F /* mercury_8k.jpg in Resources */,
+				150CE0432F07C800003B3D7F /* neptune_8k.jpg in Resources */,
+				150CE0442F07C800003B3D7F /* saturn_8k.jpg in Resources */,
+				150CE0452F07C800003B3D7F /* saturn_rings_16k.png in Resources */,
+				150CE0462F07C800003B3D7F /* starfield_8k.jpg in Resources */,
+				150CE0472F07C800003B3D7F /* sun_8k.jpg in Resources */,
+				150CE0482F07C800003B3D7F /* uranus_8k.jpg in Resources */,
+				150CE0492F07C800003B3D7F /* venus_8k.jpg in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E01111112B5A00000000041 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+					E01111112B5A00000000001 /* NatureVsNoiseView.swift in Sources */,
+					E01111112B5A00000000003 /* PlanetFactory.swift in Sources */,
+					E01111112B5A00000000005 /* CameraController.swift in Sources */,
+					E01111112B5A00000000009 /* SatelliteManager.swift in Sources */,
+					E01111112B5A00000000012 /* SatelliteRenderer.swift in Sources */,
+					E01111112B5A00000000013 /* SGP4Propagator.swift in Sources */,
+					E01111112B5A00000000015 /* TLEFetcher.swift in Sources */,
+					E01111112B5A00000000019 /* MetalSatelliteRenderer.swift in Sources */,
+					E01111112B5A00000000021 /* FeatureFlags.swift in Sources */,
+					E01111112B5A00000000023 /* Shaders.metal in Sources */,
+				);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		E01111112B5A00000000060 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		E01111112B5A00000000061 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		E01111112B5A00000000062 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NatureVsNoise/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Nature vs Noise";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025. All rights reserved.";
+				INFOPLIST_KEY_NSPrincipalClass = "NatureVsNoise.NatureVsNoiseView";
+				INSTALL_PATH = "$(HOME)/Library/Screen Savers";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.naturevsnoise.screensaver;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				WRAPPER_EXTENSION = saver;
+			};
+			name = Debug;
+		};
+		E01111112B5A00000000063 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NatureVsNoise/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Nature vs Noise";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025. All rights reserved.";
+				INFOPLIST_KEY_NSPrincipalClass = "NatureVsNoise.NatureVsNoiseView";
+				INSTALL_PATH = "$(HOME)/Library/Screen Savers";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.naturevsnoise.screensaver;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				WRAPPER_EXTENSION = saver;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E01111112B5A00000000070 /* Build configuration list for PBXProject "NatureVsNoise" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E01111112B5A00000000060 /* Debug */,
+				E01111112B5A00000000061 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E01111112B5A00000000080 /* Build configuration list for PBXNativeTarget "NatureVsNoise" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E01111112B5A00000000062 /* Debug */,
+				E01111112B5A00000000063 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = E01111112B5A00000000050 /* Project object */;
+}
