@@ -176,7 +176,7 @@ class SatelliteManager {
         }
 
         // Priority 3: Development fallback
-        let devPath = "/Users/pro/Projects/Screensaver/Assets/Raw/Data/\(name).tle"
+        let devPath = "/Users/pro/Projects/Side Projects/Screensaver/Assets/Raw/Data/\(name).tle"
         if FileManager.default.fileExists(atPath: devPath) {
             return try? String(contentsOfFile: devPath)
         }

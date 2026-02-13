@@ -15,8 +15,8 @@
 		E01111112B5A00000000013 /* SGP4Propagator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000014 /* SGP4Propagator.swift */; };
 		E01111112B5A00000000015 /* TLEFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000016 /* TLEFetcher.swift */; };
 		E01111112B5A00000000019 /* MetalSatelliteRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A0000000001A /* MetalSatelliteRenderer.swift */; };
-		E01111112B5A00000000021 /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000020 /* FeatureFlags.swift */; };
-		E01111112B5A00000000023 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000022 /* Shaders.metal */; };
+		E01111112B5A000000000B1 /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A0000000002F /* FeatureFlags.swift */; };
+		E01111112B5A000000000B3 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000B2 /* Shaders.metal */; };
 		150CE03D2F07C800003B3D7F /* earth_8k_clouds.png in Resources */ = {isa = PBXBuildFile; fileRef = 150CE02F2F07C7D6003B3D7F /* earth_8k_clouds.png */; };
 		150CE03E2F07C800003B3D7F /* earth_8k_day.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE0302F07C7D6003B3D7F /* earth_8k_day.jpg */; };
 		150CE03F2F07C800003B3D7F /* earth_8k_night.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE0312F07C7D6003B3D7F /* earth_8k_night.jpg */; };
@@ -56,8 +56,8 @@
 		E01111112B5A00000000014 /* SGP4Propagator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SGP4Propagator.swift; sourceTree = "<group>"; };
 		E01111112B5A00000000016 /* TLEFetcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TLEFetcher.swift; sourceTree = "<group>"; };
 		E01111112B5A0000000001A /* MetalSatelliteRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalSatelliteRenderer.swift; sourceTree = "<group>"; };
-		E01111112B5A00000000020 /* FeatureFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureFlags.swift; sourceTree = "<group>"; };
-		E01111112B5A00000000022 /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
+		E01111112B5A0000000002F /* FeatureFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureFlags.swift; sourceTree = "<group>"; };
+		E01111112B5A000000000B2 /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -152,7 +152,7 @@
 				E01111112B5A00000000014 /* SGP4Propagator.swift */,
 				E01111112B5A00000000016 /* TLEFetcher.swift */,
 				E01111112B5A0000000001A /* MetalSatelliteRenderer.swift */,
-				E01111112B5A00000000020 /* FeatureFlags.swift */,
+				E01111112B5A0000000002F /* FeatureFlags.swift */,
 			);
 			path = Satellites;
 			sourceTree = "<group>";
@@ -254,8 +254,8 @@
 					E01111112B5A00000000013 /* SGP4Propagator.swift in Sources */,
 					E01111112B5A00000000015 /* TLEFetcher.swift in Sources */,
 					E01111112B5A00000000019 /* MetalSatelliteRenderer.swift in Sources */,
-					E01111112B5A00000000021 /* FeatureFlags.swift in Sources */,
-					E01111112B5A00000000023 /* Shaders.metal in Sources */,
+					E01111112B5A000000000B1 /* FeatureFlags.swift in Sources */,
+					E01111112B5A000000000B3 /* Shaders.metal in Sources */,
 				);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
