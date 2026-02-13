@@ -1,18 +1,36 @@
 import SpriteKit
+import AppKit
 
-/// Minimalist Head-Up Display for the screensaver
+/// Enhanced Head-Up Display for the screensaver with Mission Control aesthetic
 class HUDOverlay: SKScene {
     
-    // MARK: - UI Elements
+    // MARK: - UI Components
     
-    private var locationLabel: SKLabelNode!
-    private var subLocationLabel: SKLabelNode!
-    
-    private var statsContainer: SKNode!
-    private var satelliteLabel: SKLabelNode!
-    private var fpsLabel: SKLabelNode!
-    
+    private var backgroundLayer: SKNode!
+    private var statsPanel: StatsPanel!
+    private var infoCard: InfoCardView!
+    private var discoveryBanner: DiscoveryBanner!
+    private var factOverlay: FactOverlay!
     private var modeLabel: SKLabelNode!
+    private var gridOverlay: SKShapeNode!
+    
+    // Achievement callback
+    private var achievementManager = AchievementManager.shared
+    
+    // Settings
+    var infoDensity: InfoDensity = .moderate {
+        didSet { updateVisibility() }
+    }
+    
+    // Update timer
+    private var updateTimer: Timer?
+    private let updateInterval: TimeInterval = 0.5
+    
+    // Current state
+    private var currentAltitude: Double = 400  // km
+    private var currentVelocity: Double = 7.8 // km/s
+    private var currentZone: OrbitalZone = .leo
+    private var satelliteCount: Int = 0
     
     // MARK: - Initialization
     
@@ -26,91 +44,249 @@ class HUDOverlay: SKScene {
         setupUI()
     }
     
+    // MARK: - Setup
+    
     private func setupUI() {
         self.backgroundColor = .clear
         self.scaleMode = .resizeFill
         
-        // Font settings
-        let fontName = "Menlo-Regular"
-        let fontSize: CGFloat = 12
-        let fontColor = SKColor(white: 0.8, alpha: 0.8)
+        // Background layer with grid
+        setupBackground()
         
-        // 1. Top Left: Location/Target
-        locationLabel = SKLabelNode(fontNamed: "Menlo-Bold")
-        locationLabel.fontSize = 14
-        locationLabel.fontColor = .white
-        locationLabel.horizontalAlignmentMode = .left
-        locationLabel.verticalAlignmentMode = .top
-        locationLabel.position = CGPoint(x: 20, y: size.height - 20)
-        locationLabel.text = "TARGET: SYSTEM INITIALIZATION"
-        addChild(locationLabel)
+        // Stats panel (top-left)
+        statsPanel = StatsPanel()
+        statsPanel.position = CGPoint(x: 20, y: size.height - 150)
+        addChild(statsPanel)
         
-        subLocationLabel = SKLabelNode(fontNamed: fontName)
-        subLocationLabel.fontSize = 10
-        subLocationLabel.fontColor = fontColor
-        subLocationLabel.horizontalAlignmentMode = .left
-        subLocationLabel.verticalAlignmentMode = .top
-        subLocationLabel.position = CGPoint(x: 20, y: size.height - 40)
-        subLocationLabel.text = "COORDS: 0.00, 0.00, 0.00"
-        addChild(subLocationLabel)
+        // Info card (right side, contextual)
+        infoCard = InfoCardView()
+        infoCard.position = CGPoint(x: size.width - 240, y: size.height - 120)
+        addChild(infoCard)
         
-        // 2. Bottom Left: Stats
-        statsContainer = SKNode()
-        statsContainer.position = CGPoint(x: 20, y: 20)
-        addChild(statsContainer)
+        // Discovery banner (center)
+        discoveryBanner = DiscoveryBanner()
+        discoveryBanner.position = CGPoint(x: size.width / 2 - 140, y: size.height / 2 + 50)
+        addChild(discoveryBanner)
         
-        satelliteLabel = SKLabelNode(fontNamed: fontName)
-        satelliteLabel.fontSize = fontSize
-        satelliteLabel.fontColor = fontColor
-        satelliteLabel.horizontalAlignmentMode = .left
-        satelliteLabel.verticalAlignmentMode = .bottom
-        satelliteLabel.position = CGPoint(x: 0, y: 20)
-        satelliteLabel.text = "OBJECTS: 0 TRACKED"
-        statsContainer.addChild(satelliteLabel)
+        // Fact overlay (bottom center)
+        factOverlay = FactOverlay()
+        factOverlay.position = CGPoint(x: size.width / 2 - 160, y: 80)
+        addChild(factOverlay)
         
-        fpsLabel = SKLabelNode(fontNamed: fontName)
-        fpsLabel.fontSize = 10
-        fpsLabel.fontColor = SKColor(white: 0.5, alpha: 0.8)
-        fpsLabel.horizontalAlignmentMode = .left
-        fpsLabel.verticalAlignmentMode = .bottom
-        fpsLabel.position = CGPoint(x: 0, y: 0)
-        fpsLabel.text = "RENDER: METAL_API [GPU]"
-        statsContainer.addChild(fpsLabel)
+        // Mode label (bottom right)
+        setupModeLabel()
         
-        // 3. Bottom Right: Mode
-        modeLabel = SKLabelNode(fontNamed: "Menlo-Bold")
-        modeLabel.fontSize = fontSize
-        modeLabel.fontColor = fontColor
+        // Setup achievement callbacks
+        setupAchievementCallbacks()
+        
+        // Start update timer
+        startUpdateTimer()
+        
+        // Initial visibility update
+        updateVisibility()
+        
+        #if DEBUG
+        print("🎯 HUDOverlay: Initialized with Mission Control theme")
+        #endif
+    }
+    
+    private func setupBackground() {
+        backgroundLayer = SKNode()
+        backgroundLayer.zPosition = -100
+        addChild(backgroundLayer)
+        
+        // Subtle grid overlay
+        let gridWidth: CGFloat = 200
+        let gridHeight: CGFloat = 150
+        let gridPath = CGMutablePath()
+        
+        // Horizontal lines
+        for i in 0..<6 {
+            let y = CGFloat(i) * (gridHeight / 5)
+            gridPath.move(to: CGPoint(x: 0, y: y))
+            gridPath.addLine(to: CGPoint(x: gridWidth, y: y))
+        }
+        
+        // Vertical lines
+        for i in 0..<7 {
+            let x = CGFloat(i) * (gridWidth / 6)
+            gridPath.move(to: CGPoint(x: x, y: 0))
+            gridPath.addLine(to: CGPoint(x: x, y: gridHeight))
+        }
+        
+        gridOverlay = SKShapeNode(path: gridPath)
+        gridOverlay.strokeColor = MissionControlTheme.primaryCyan.withAlphaComponent(0.1)
+        gridOverlay.lineWidth = 0.5
+        gridOverlay.position = CGPoint(x: 20, y: size.height - 160)
+        gridOverlay.alpha = 0.5
+        backgroundLayer.addChild(gridOverlay)
+    }
+    
+    private func setupModeLabel() {
+        modeLabel = SKLabelNode(fontNamed: "SF Mono")
+        modeLabel.fontSize = 10
+        modeLabel.fontColor = MissionControlTheme.textMuted
+        modeLabel.text = "MODE: CINEMATIC_AUTO"
         modeLabel.horizontalAlignmentMode = .right
         modeLabel.verticalAlignmentMode = .bottom
         modeLabel.position = CGPoint(x: size.width - 20, y: 20)
-        modeLabel.text = "MODE: CINEMATIC_AUTO"
         addChild(modeLabel)
     }
     
-    // MARK: - Updates
-    
-    func updateTarget(_ name: String, coordinates: String) {
-        locationLabel.text = "TARGET: \(name.uppercased())"
-        subLocationLabel.text = "COORDS: \(coordinates)"
+    private func setupAchievementCallbacks() {
+        achievementManager.onAchievementUnlocked = { [weak self] achievement in
+            self?.discoveryBanner.showAchievement(achievement)
+        }
     }
     
-    func updateStats(satelliteCount: Int, fps: Int) {
-        satelliteLabel.text = "OBJECTS: \(formatNumber(satelliteCount)) TRACKED"
+    // MARK: - Update Timer
+    
+    private func startUpdateTimer() {
+        updateTimer = Timer.scheduledTimer(withTimeInterval: updateInterval, repeats: true) { [weak self] _ in
+            self?.updateDisplay()
+        }
     }
     
-    func updateLayout(for newSize: CGSize) {
-        self.size = newSize
+    private func updateDisplay() {
+        // Update stats panel
+        statsPanel.update(
+            satelliteCount: satelliteCount,
+            altitude: currentAltitude,
+            velocity: currentVelocity,
+            zone: currentZone
+        )
+    }
+    
+    // MARK: - Visibility
+    
+    private func updateVisibility() {
+        switch infoDensity {
+        case .minimal:
+            statsPanel.alpha = 1
+            infoCard.alpha = 0
+            factOverlay.alpha = 0
+            gridOverlay.alpha = 0
+        case .moderate:
+            statsPanel.alpha = 1
+            infoCard.alpha = 1
+            factOverlay.alpha = 0
+            gridOverlay.alpha = 0.5
+        case .educational:
+            statsPanel.alpha = 1
+            infoCard.alpha = 1
+            factOverlay.alpha = 1
+            gridOverlay.alpha = 0.5
+            factOverlay.startAutoShow()
+        }
+    }
+    
+    // MARK: - Layout
+    
+    override func didChangeSize(_ oldSize: CGSize) {
+        super.didChangeSize(oldSize)
         
-        locationLabel.position = CGPoint(x: 20, y: newSize.height - 20)
-        subLocationLabel.position = CGPoint(x: 20, y: newSize.height - 40)
-        modeLabel.position = CGPoint(x: newSize.width - 20, y: 20)
-        // Stats container stays at bottom left
+        // Reposition elements
+        statsPanel.position = CGPoint(x: 20, y: size.height - 150)
+        infoCard.position = CGPoint(x: size.width - 240, y: size.height - 120)
+        discoveryBanner.position = CGPoint(x: size.width / 2 - 140, y: size.height / 2 + 50)
+        factOverlay.position = CGPoint(x: size.width / 2 - 160, y: 80)
+        modeLabel.position = CGPoint(x: size.width - 20, y: 20)
+        gridOverlay.position = CGPoint(x: 20, y: size.height - 160)
     }
     
-    private func formatNumber(_ n: Int) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        return formatter.string(from: NSNumber(value: n)) ?? "\(n)"
+    // MARK: - Public Updates
+    
+    /// Update satellite count
+    func updateStats(count: Int) {
+        satelliteCount = count
+    }
+    
+    /// Update camera position data
+    func updateCamera(altitude: Double, velocity: Double) {
+        currentAltitude = altitude
+        currentVelocity = velocity
+        currentZone = zoneForAltitude(altitude)
+    }
+    
+    /// Show a satellite info card
+    func showSatellite(_ satellite: NotableSatellite) {
+        guard infoDensity != .minimal else { return }
+        
+        infoCard.showSatellite(satellite)
+        
+        // Track for achievements
+        achievementManager.trackSatelliteSpotted(
+            name: satellite.name,
+            country: satellite.country,
+            type: satellite.type.rawValue,
+            altitude: currentAltitude
+        )
+    }
+    
+    /// Show orbital zone info
+    func showZone(_ zone: OrbitalZone) {
+        guard infoDensity != .minimal else { return }
+        
+        currentZone = zone
+        infoCard.showZone(zone)
+    }
+    
+    /// Hide info card
+    func hideInfoCard() {
+        infoCard.hide()
+    }
+    
+    /// Show a discovery notification
+    func showDiscovery(name: String, description: String) {
+        discoveryBanner.showDiscovery(name: name, description: description)
+    }
+    
+    /// Show a fact
+    func showFact(_ fact: EducationalFact) {
+        guard infoDensity == .educational else { return }
+        factOverlay.showFact(fact)
+    }
+    
+    /// Enable/disable educational facts
+    func setEducationalFacts(enabled: Bool, frequency: FactOverlay.FactFrequency = .medium) {
+        factOverlay.setAutoShow(enabled)
+        factOverlay.updateFrequency(frequency)
+    }
+    
+    // MARK: - Helpers
+    
+    private func zoneForAltitude(_ altitude: Double) -> OrbitalZone {
+        if altitude <= 2000 {
+            return .leo
+        } else if altitude <= 35786 {
+            return .meo
+        } else {
+            return .geo
+        }
+    }
+    
+    // MARK: - Cleanup
+    
+    deinit {
+        updateTimer?.invalidate()
+        factOverlay.stopAutoShow()
+    }
+}
+
+// MARK: - Extension for old API compatibility
+
+extension HUDOverlay {
+    
+    /// Legacy update method for compatibility
+    func updateTarget(_ name: String, coordinates: String) {
+        // Check if it's a notable satellite
+        if let satellite = NotableSatellites.find(name: name) {
+            showSatellite(satellite)
+        }
+    }
+    
+    /// Legacy update method for compatibility  
+    func updateStats(satelliteCount: Int, fps: Int) {
+        self.satelliteCount = satelliteCount
     }
 }

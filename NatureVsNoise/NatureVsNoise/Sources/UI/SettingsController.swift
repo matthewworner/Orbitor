@@ -17,6 +17,12 @@ class SettingsController: NSObject {
         static let satelliteDensity = "satelliteDensity" // 0.0 to 1.0
         static let qualityLevel = "qualityLevel" // 0=Low, 1=Med, 2=High, 3=Ultra
         static let showHUD = "showHUD"
+        static let infoDensity = "infoDensity" // 0=Minimal, 1=Moderate, 2=Educational
+        static let showOrbitalZones = "showOrbitalZones"
+        static let showCountryColors = "showCountryColors"
+        static let discoveryMode = "discoveryMode"
+        static let educationalFacts = "educationalFacts"
+        static let factFrequency = "factFrequency" // 0=Low, 1=Medium, 2=High
     }
     
     var defaults: ScreenSaverDefaults? {
@@ -36,7 +42,13 @@ class SettingsController: NSObject {
             Keys.showSatellites: true,
             Keys.satelliteDensity: 1.0,
             Keys.qualityLevel: 3, // High default
-            Keys.showHUD: true
+            Keys.showHUD: true,
+            Keys.infoDensity: 1, // Moderate default
+            Keys.showOrbitalZones: true,
+            Keys.showCountryColors: true,
+            Keys.discoveryMode: true,
+            Keys.educationalFacts: true,
+            Keys.factFrequency: 1 // Medium
         ])
     }
     
@@ -44,7 +56,7 @@ class SettingsController: NSObject {
     
     func makeConfigureSheet() -> NSWindow {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 450, height: 400),
+            contentRect: NSRect(x: 0, y: 0, width: 450, height: 450),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -136,6 +148,36 @@ class SettingsController: NSObject {
         qualityDescLabel.frame = NSRect(x: 20, y: 75, width: 300, height: 16)
         container.addSubview(qualityDescLabel)
         
+        // === EDUCATIONAL SECTION ===
+        let eduLabel = createLabel(text: "EDUCATIONAL", fontSize: 11, bold: true)
+        eduLabel.textColor = .secondaryLabelColor
+        eduLabel.frame = NSRect(x: 20, y: 280, width: 100, height: 16)
+        container.addSubview(eduLabel)
+        
+        // Info Density
+        let densityLabel = createLabel(text: "Info Density:", fontSize: 11, bold: false)
+        densityLabel.frame = NSRect(x: 20, y: 250, width: 80, height: 20)
+        container.addSubview(densityLabel)
+        
+        let densitySeg = NSSegmentedControl(labels: ["Min", "Med", "Edu"], trackingMode: .selectOne, target: self, action: #selector(changeInfoDensity(_:)))
+        densitySeg.frame = NSRect(x: 100, y: 248, width: 150, height: 24)
+        densitySeg.selectedSegment = defaults?.integer(forKey: Keys.infoDensity) ?? 1
+        container.addSubview(densitySeg)
+        
+        // Educational Facts Toggle
+        let factsToggle = createCheckbox(title: "Show Educational Facts", state: defaults?.bool(forKey: Keys.educationalFacts) ?? true)
+        factsToggle.frame = NSRect(x: 20, y: 220, width: 200, height: 24)
+        factsToggle.target = self
+        factsToggle.action = #selector(toggleFacts(_:))
+        container.addSubview(factsToggle)
+        
+        // Discovery Mode Toggle
+        let discoveryToggle = createCheckbox(title: "Discovery Mode (Achievements)", state: defaults?.bool(forKey: Keys.discoveryMode) ?? true)
+        discoveryToggle.frame = NSRect(x: 20, y: 195, width: 230, height: 24)
+        discoveryToggle.target = self
+        discoveryToggle.action = #selector(toggleDiscovery(_:))
+        container.addSubview(discoveryToggle)
+        
         // Reset Button
         let resetButton = NSButton(title: "Reset to Safe", target: self, action: #selector(resetToSafe(_:)))
         resetButton.bezelStyle = .rounded
@@ -190,6 +232,21 @@ class SettingsController: NSObject {
     @objc private func changeQuality(_ sender: NSSegmentedControl) {
         // Save quality level preference (0-3 maps to QualityLevel.low-.ultra)
         defaults?.set(sender.selectedSegment, forKey: Keys.qualityLevel)
+        defaults?.synchronize()
+    }
+    
+    @objc private func changeInfoDensity(_ sender: NSSegmentedControl) {
+        defaults?.set(sender.selectedSegment, forKey: Keys.infoDensity)
+        defaults?.synchronize()
+    }
+    
+    @objc private func toggleFacts(_ sender: NSButton) {
+        defaults?.set(sender.state == .on, forKey: Keys.educationalFacts)
+        defaults?.synchronize()
+    }
+    
+    @objc private func toggleDiscovery(_ sender: NSButton) {
+        defaults?.set(sender.state == .on, forKey: Keys.discoveryMode)
         defaults?.synchronize()
     }
     

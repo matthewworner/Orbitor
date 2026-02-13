@@ -39,7 +39,7 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     private var audioController: AudioController?
 
     // UI
-    // private var hudOverlay: HUDOverlay?
+    private var hudOverlay: HUDOverlay?
 
     // Quality settings - read from UserDefaults, fallback to high
     private var qualityLevel: QualityLevel = {
@@ -262,8 +262,8 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         ])
         
         // Initialize UI (Phase 3)
-        // hudOverlay = HUDOverlay(size: bounds.size)
-        // sceneView.overlaySKScene = hudOverlay
+        hudOverlay = HUDOverlay(size: bounds.size)
+        sceneView.overlaySKScene = hudOverlay
         
         #if DEBUG
         print("🚀 NatureVsNoiseView: Initialized")
@@ -769,33 +769,43 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
             ])
         }
         
-        // SceneKit handles animation automatically
         // Update Audio System
-        /*
-        guard let audioController = audioController,
-              let cameraPivot = cameraPivot else { return }
-        
-        // Calculate camera world position (pivot + offset)
-        // In our setup, cameraPivot moves, camera is child.
-        // World Pos ≈ Pivot Pos (since camera is relatively close)
-        let currentPos = cameraPivot.presentation.position
-        
-        // Find nearest planet for audio context
-        // Planets are at known X positions (0, 15, 20, 30, 40, 80, 120, 160, 200)
-        let nearest = findNearestPlanet(to: currentPos)
-        
-        audioController.update(cameraPosition: currentPos, targetNode: nearest)
+        if let audioController = audioController {
+            guard let cameraPivot = cameraPivot else { return }
+            
+            // Calculate camera world position (pivot + offset)
+            // In our setup, cameraPivot moves, camera is child.
+            // World Pos ≈ Pivot Pos (since camera is relatively close)
+            let currentPos = cameraPivot.presentation.position
+            
+            // Find nearest planet for audio context
+            // Planets are at known X positions (0, 15, 20, 30, 40, 80, 120, 160, 200)
+            let nearest = findNearestPlanet(to: currentPos)
+            
+            audioController.update(cameraPosition: currentPos, targetNode: nearest)
+        }
         
         // Update UI
         if let hud = hudOverlay {
-            let targetName = nearest?.name ?? "DEEP SPACE"
-            let coords = String(format: "%.1f, %.1f, %.1f", currentPos.x, currentPos.y, currentPos.z)
-            hud.updateTarget(targetName, coordinates: coords)
+            // Calculate approximate altitude from camera position
+            let cameraDist = sqrt(
+                cameraNode.position.x * cameraNode.position.x +
+                cameraNode.position.y * cameraNode.position.y +
+                cameraNode.position.z * cameraNode.position.z
+            )
             
-            // Stats (approximate count based on quality)
-            hud.updateStats(satelliteCount: qualityLevel.maxSatellites, fps: 60)
+            // Convert SceneKit units to km (Earth radius = 2.0 in SceneKit, 6371km in reality)
+            let altitudeKm = max(0, (cameraDist - 2.0) * 3185.5)
+            let velocity = 7.8 - (altitudeKm / 20000.0)  // Approximate orbital velocity
+            
+            // Update HUD with current state
+            hud.updateCamera(altitude: altitudeKm, velocity: max(3.0, velocity))
+            hud.updateStats(satelliteCount: qualityLevel.maxSatellites)
+            
+            let targetName = findNearestPlanet(to: cameraNode.position)?.name ?? "DEEP SPACE"
+            let coords = String(format: "%.1f, %.1f, %.1f", cameraNode.position.x, cameraNode.position.y, cameraNode.position.z)
+            hud.updateTarget(targetName, coordinates: coords)
         }
-        */
     }
     
     // MARK: - SCNSceneRendererDelegate
