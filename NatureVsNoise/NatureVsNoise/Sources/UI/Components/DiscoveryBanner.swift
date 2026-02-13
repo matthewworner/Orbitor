@@ -185,12 +185,12 @@ class DiscoveryBanner: SKNode {
         let delay = SKAction.wait(forDuration: 0.1)
         let showElements = SKAction.fadeIn(withDuration: 0.2)
         
-        run(SKAction.sequence([delay, SKAction.group([
-            iconLabel.run(showElements),
-            titleLabel.run(showElements),
-            subtitleLabel.run(showElements),
-            progressBar.run(showElements)
-        ])]))
+        run(SKAction.sequence([delay, SKAction.run { [weak self] in
+            self?.iconLabel.run(showElements)
+            self?.titleLabel.run(showElements)
+            self?.subtitleLabel.run(showElements)
+            self?.progressBar.run(showElements)
+        }]))
         
         // Progress bar animation
         run(SKAction.sequence([
@@ -230,8 +230,8 @@ class DiscoveryBanner: SKNode {
     }
     
     private func hideBanner() {
-        isShowing = true
-        
+        isShowing = false
+
         let scaleDown = SKAction.scale(to: 0.8, duration: 0.3)
         scaleDown.timingMode = .easeIn
         
