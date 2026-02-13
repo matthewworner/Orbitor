@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "workspace": {
+    "name": "Screensaver",
+    "createdAt": 1770336837425,
+    "preset": "minimal"
+  },
+  "authorizedRoots": [
+    "/Users/pro/Projects/Screensaver"
+  ]
+}

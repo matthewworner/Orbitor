@@ -35,6 +35,9 @@ class SatelliteRenderer {
         m.metalness.contents = 1.0
         m.roughness.contents = 0.2
         m.lightingModel = .physicallyBased
+        // Add emission for visibility
+        m.emission.contents = NSColor(red: 0.3, green: 0.25, blue: 0.1, alpha: 1.0)
+        m.emission.intensity = 0.5
         return m
     }()
     
@@ -44,6 +47,8 @@ class SatelliteRenderer {
         m.metalness.contents = 1.0
         m.roughness.contents = 0.15
         m.lightingModel = .physicallyBased
+        m.emission.contents = NSColor(white: 0.3, alpha: 1.0)
+        m.emission.intensity = 0.3
         return m
     }()
     
@@ -51,9 +56,9 @@ class SatelliteRenderer {
         let m = SCNMaterial()
         // Deep blue with subtle iridescence — looks realistic but visible
         m.diffuse.contents = NSColor(red: 0.08, green: 0.15, blue: 0.35, alpha: 1.0)
-        // Subtle emission so panels are visible even in shadow
-        m.emission.contents = NSColor(red: 0.02, green: 0.04, blue: 0.12, alpha: 1.0)
-        m.emission.intensity = 0.15
+        // Stronger emission so panels are visible even in shadow
+        m.emission.contents = NSColor(red: 0.1, green: 0.2, blue: 0.4, alpha: 1.0)
+        m.emission.intensity = 0.6
         m.metalness.contents = 0.4
         m.roughness.contents = 0.25
         m.lightingModel = .physicallyBased
@@ -66,6 +71,8 @@ class SatelliteRenderer {
         m.metalness.contents = 0.0
         m.roughness.contents = 0.6
         m.lightingModel = .physicallyBased
+        m.emission.contents = NSColor(white: 0.3, alpha: 1.0)
+        m.emission.intensity = 0.3
         return m
     }()
     
@@ -186,8 +193,8 @@ class SatelliteRenderer {
     
     private func generateToyTemplate() -> SCNNode {
         let node = SCNNode()
-        // Small, readable cross/T-shape
-        node.scale = SCNVector3(0.05, 0.05, 0.05)
+        // Increased scale for better visibility in full-screen
+        node.scale = SCNVector3(0.15, 0.15, 0.15)
 
         let body = SCNBox(width: 1.0, height: 0.6, length: 0.6, chamferRadius: 0.05)
         body.materials = [goldFoilMaterial]

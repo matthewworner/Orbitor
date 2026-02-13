@@ -8,6 +8,7 @@ struct FeatureFlags {
     private static let enableStarfieldKey = "enableStarfield"
     private static let enableToySatsKey = "enableToySats"
     private static let enableSwarmKey = "enableSwarm"
+    private static let showTrailsKey = "showTrails"
 
     // Default values for safe preset
     static let safePreset: [String: Any] = [
@@ -16,7 +17,8 @@ struct FeatureFlags {
         maxSatelliteCountKey: 50,
         enableStarfieldKey: true,
         enableToySatsKey: true,
-        enableSwarmKey: false  // Start with swarm off for safety
+        enableSwarmKey: false,  // Start with swarm off for safety
+        showTrailsKey: true     // Motion trails on by default
     ]
 
     // Getters with defaults
@@ -48,6 +50,11 @@ struct FeatureFlags {
     static var enableSwarm: Bool {
         get { UserDefaults.standard.bool(forKey: enableSwarmKey) }
         set { UserDefaults.standard.set(newValue, forKey: enableSwarmKey) }
+    }
+    
+    static var showTrails: Bool {
+        get { UserDefaults.standard.bool(forKey: showTrailsKey) }
+        set { UserDefaults.standard.set(newValue, forKey: showTrailsKey) }
     }
 
     // Initialize with safe defaults if not set

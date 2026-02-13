@@ -4,7 +4,7 @@ import Metal
 import SpriteKit
 
 
-class NatureVsNoiseView: ScreenSaverView {
+class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
 
     // MARK: - Properties
     private var sceneView: SCNView!
@@ -27,6 +27,13 @@ class NatureVsNoiseView: ScreenSaverView {
     private var animationTime: Double = 0
     private var lastUpdateTime: TimeInterval = 0
     private var displayLink: CVDisplayLink?
+    
+    // MARK: - Diagnostic State
+    private var isFullScreenMode: Bool = false
+    private var setupComplete: Bool = false
+    private var firstFrameRendered: Bool = false
+    private var setupStartTime: TimeInterval = 0
+    private var firstFrameTime: TimeInterval = 0
 
     // Audio
     // private var audioController: AudioController?
@@ -43,10 +50,28 @@ class NatureVsNoiseView: ScreenSaverView {
     
     override init?(frame: NSRect, isPreview: Bool) {
         super.init(frame: frame, isPreview: isPreview)
+        
+        // Detect full-screen mode: not preview AND has reasonable size
+        isFullScreenMode = !isPreview && frame.width > 100 && frame.height > 100
+        
+        logDiagnostics("INIT", details: [
+            "frame": "\(Int(frame.width))x\(Int(frame.height))",
+            "isPreview": "\(isPreview)",
+            "isFullScreen": "\(isFullScreenMode)"
+        ])
+        
         // Setup immediately if we have a valid frame
         if frame.width > 0 && frame.height > 0 {
-            setupScene()
-            hasSetupScene = true
+            // For full-screen, defer setup slightly to ensure view hierarchy is ready
+            if isFullScreenMode {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                    self?.setupScene()
+                    self?.hasSetupScene = true
+                }
+            } else {
+                setupScene()
+                hasSetupScene = true
+            }
         }
     }
     
@@ -57,10 +82,27 @@ class NatureVsNoiseView: ScreenSaverView {
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         
+        // Update full-screen detection
+        isFullScreenMode = !isPreview && newSize.width > 100 && newSize.height > 100
+        
+        logDiagnostics("SET_FRAME_SIZE", details: [
+            "newSize": "\(Int(newSize.width))x\(Int(newSize.height))",
+            "isFullScreen": "\(isFullScreenMode)"
+        ])
+        
         // Setup scene when we first get a valid size
         if !hasSetupScene && newSize.width > 0 && newSize.height > 0 {
-            setupScene()
-            hasSetupScene = true
+            // For full-screen, defer setup to ensure view hierarchy is ready
+            if isFullScreenMode {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+                    guard let self = self, !self.setupComplete else { return }
+                    self.setupScene()
+                    self.hasSetupScene = true
+                }
+            } else {
+                setupScene()
+                hasSetupScene = true
+            }
         }
         
         // Update SCNView frame
@@ -88,8 +130,38 @@ class NatureVsNoiseView: ScreenSaverView {
         }
     }
     
+    // Enhanced logging with context
+    private func logDiagnostics(_ context: String, details: [String: Any] = [:]) {
+        var message = "[DIAG] \(context)"
+        message += " | isPreview: \(isPreview)"
+        message += " | isFullScreen: \(isFullScreenMode)"
+        message += " | bounds: \(Int(bounds.width))x\(Int(bounds.height))"
+        message += " | setupComplete: \(setupComplete)"
+        
+        for (key, value) in details {
+            message += " | \(key): \(value)"
+        }
+        
+        logToFile(message)
+    }
+    
     private func setupScene() {
+        guard !setupComplete else {
+            logDiagnostics("SETUP_SKIP", details: ["reason": "already_complete"])
+            return
+        }
+        
+        setupStartTime = Date().timeIntervalSince1970
+        
+        // Initialize feature flags defaults
+        FeatureFlags.initializeDefaults()
+        
         logToFile("=== SCREENSAVER INIT START ===")
+        logDiagnostics("SETUP_START", details: [
+            "isFullScreen": "\(isFullScreenMode)",
+            "isPreview": "\(isPreview)",
+            "bounds": "\(Int(bounds.width))x\(Int(bounds.height))"
+        ])
         logToFile("Bundle path: \(Bundle(for: type(of: self)).bundlePath)")
         
         if let resourcePath = Bundle(for: type(of: self)).resourcePath {
@@ -103,11 +175,19 @@ class NatureVsNoiseView: ScreenSaverView {
         // Create SceneKit view
         sceneView = SCNView(frame: bounds)
         sceneView.autoresizingMask = [.width, .height]
-        // Space background
-        sceneView.backgroundColor = .black 
+        sceneView.backgroundColor = .black
         sceneView.antialiasingMode = .multisampling4X
         sceneView.preferredFramesPerSecond = 60
+        
+        // Set up the renderer delegate to track first frame
+        sceneView.delegate = self
+        
         addSubview(sceneView)
+        
+        logDiagnostics("SCNVIEW_CREATED", details: [
+            "superview": sceneView.superview != nil ? "yes" : "no",
+            "window": sceneView.window != nil ? "yes" : "no"
+        ])
         
         // Create scene
         scene = SCNScene()
@@ -159,6 +239,13 @@ class NatureVsNoiseView: ScreenSaverView {
         
         sceneView.isPlaying = true
         
+        // Mark setup complete
+        setupComplete = true
+        let setupDuration = Date().timeIntervalSince1970 - setupStartTime
+        logDiagnostics("SETUP_COMPLETE", details: [
+            "duration": String(format: "%.3f", setupDuration)
+        ])
+        
         // Initialize UI (Phase 3)
         // hudOverlay = HUDOverlay(size: bounds.size)
         // sceneView.overlaySKScene = hudOverlay
@@ -173,8 +260,29 @@ class NatureVsNoiseView: ScreenSaverView {
     
     /// Setup renderers based on feature flags
     private func setupRenderers() {
+        // SAFE MODE: In full-screen, apply conservative settings to avoid black screen
+        var effectiveUseMetal = FeatureFlags.enableSwarm
+        var effectiveToySats = FeatureFlags.enableToySats
+        
+        if isFullScreenMode {
+            logDiagnostics("SAFE_MODE_CHECK", details: [
+                "enableSwarm": "\(FeatureFlags.enableSwarm)",
+                "enableToySats": "\(FeatureFlags.enableToySats)"
+            ])
+            
+            // In full-screen, disable Metal by default (known to cause black screen)
+            // Only enable if user explicitly set it
+            if FeatureFlags.enableSwarm {
+                logToFile("⚠️ WARNING: Metal swarm enabled in full-screen - may cause black screen")
+            }
+            
+            // Force safe values in full-screen mode
+            effectiveUseMetal = false  // Always disable Metal in full-screen for now
+            effectiveToySats = true    // Keep toy sats enabled
+        }
+        
         // Initialize Metal renderer if swarm is enabled
-        if featureFlags.enableSwarm {
+        if effectiveUseMetal {
             metalRenderer = MetalSatelliteRenderer()
             if metalRenderer != nil {
                 useMetalRendering = true
@@ -182,7 +290,7 @@ class NatureVsNoiseView: ScreenSaverView {
 
                 // Configure Metal renderer for firefly swarm
                 metalRenderer?.earthPosition = SIMD3<Float>(0, 0, 0) // Earth at origin
-                metalRenderer?.showTrails = featureFlags.showTrails
+                metalRenderer?.showTrails = FeatureFlags.enableSwarm && FeatureFlags.showTrails
                 metalRenderer?.trailLength = 1.5
                 metalRenderer?.setTimeAcceleration(Float(satelliteManager.timeAcceleration))
 
@@ -193,7 +301,7 @@ class NatureVsNoiseView: ScreenSaverView {
         }
 
         // Initialize SceneKit renderer if toy sats are enabled
-        if featureFlags.enableToySats {
+        if effectiveToySats {
             satelliteRenderer = SatelliteRenderer(scene: scene)
         }
 
@@ -635,6 +743,17 @@ class NatureVsNoiseView: ScreenSaverView {
     // MARK: - Animation
     
     override func animateOneFrame() {
+        // Track first frame render
+        if !firstFrameRendered, let sceneView = sceneView {
+            firstFrameRendered = true
+            firstFrameTime = Date().timeIntervalSince1970
+            let setupDuration = firstFrameTime - setupStartTime
+            logDiagnostics("FIRST_FRAME", details: [
+                "setupDuration": String(format: "%.3f", setupDuration),
+                "totalDuration": String(format: "%.3f", firstFrameTime - setupStartTime)
+            ])
+        }
+        
         // SceneKit handles animation automatically
         // Update Audio System
         /*
@@ -662,6 +781,20 @@ class NatureVsNoiseView: ScreenSaverView {
             hud.updateStats(satelliteCount: qualityLevel.maxSatellites, fps: 60)
         }
         */
+    }
+    
+    // MARK: - SCNSceneRendererDelegate
+    
+    func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
+        // Called every frame - can be used for per-frame diagnostics
+        if !firstFrameRendered {
+            firstFrameRendered = true
+            firstFrameTime = Date().timeIntervalSince1970
+            let setupDuration = firstFrameTime - setupStartTime
+            logDiagnostics("FIRST_FRAME_RENDERED", details: [
+                "setupDuration": String(format: "%.3f", setupDuration)
+            ])
+        }
     }
     
     private func findNearestPlanet(to position: SCNVector3) -> SCNNode? {
@@ -765,10 +898,10 @@ enum QualityLevel: Int, Comparable {
     /// Maximum satellites to render at this quality level
     var maxSatellites: Int {
         switch self {
-        case .low: return 5000
-        case .medium: return 15000
-        case .high: return 30000
-        case .ultra: return 50000
+        case .low: return 200      // SceneKit safe limit
+        case .medium: return 500   // SceneKit acceptable
+        case .high: return 1000    // Metal capable only
+        case .ultra: return 5000   // Metal high-end only
         }
     }
     
