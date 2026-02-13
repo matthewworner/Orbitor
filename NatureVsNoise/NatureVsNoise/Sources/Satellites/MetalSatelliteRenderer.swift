@@ -69,19 +69,23 @@ class MetalSatelliteRenderer {
     
     // State
     private var satelliteCount: Int = 0
-    private var maxSatellites: Int = 50000
+    private var maxSatellites: Int = 5000  // Reduced from 50000 for stability
     private var currentTime: Float = 0
     private var timeAcceleration: Float = 100.0
     
+    // Tracking
+    private var isInitialized: Bool = false
+    private var initializationError: String?
+    
     // Configuration
-    var earthPosition: SIMD3<Float> = SIMD3<Float>(30, 0, 0)
-    var renderScale: Float = 0.5  // Tuned size for visible firefly dots
+    var earthPosition: SIMD3<Float> = SIMD3<Float>(0, 0, 0)  // Fixed: Earth at origin
+    var renderScale: Float = 1.5  // Increased for visibility
     var showTrails: Bool = true
-    var trailLength: Float = 1.5  // Longer trails for subtle motion streaks
+    var trailLength: Float = 1.5
     var lodDistance: Float = 100.0
     weak var cameraNode: SCNNode?
-    var swarmSize: Float = 0.5
-    var swarmBrightness: Float = 0.8
+    var swarmSize: Float = 1.5
+    var swarmBrightness: Float = 1.0
     
     // MARK: - Initialization
     
@@ -119,20 +123,36 @@ class MetalSatelliteRenderer {
             throw MetalRendererError.shaderLoadFailed
         }
         
-        // Compute pipeline for propagation
+        // Try to create compute pipeline for propagation (optional - may fail)
         if let propagateFunction = library.makeFunction(name: "propagateSatellites") {
-            propagatePipeline = try device.makeComputePipelineState(function: propagateFunction)
+            do {
+                propagatePipeline = try device.makeComputePipelineState(function: propagateFunction)
+                print("✅ MetalSatelliteRenderer: Propagation pipeline created")
+            } catch {
+                print("⚠️ MetalSatelliteRenderer: Could not create propagation pipeline: \(error)")
+            }
+        } else {
+            print("⚠️ MetalSatelliteRenderer: propagateSatellites function not found in shaders")
         }
         
-        // Compute pipeline for culling
+        // Try to create compute pipeline for culling (optional)
         if let cullFunction = library.makeFunction(name: "cullAndLOD") {
-            cullPipeline = try device.makeComputePipelineState(function: cullFunction)
+            do {
+                cullPipeline = try device.makeComputePipelineState(function: cullFunction)
+            } catch {
+                print("⚠️ MetalSatelliteRenderer: Could not create cull pipeline: \(error)")
+            }
         }
         
-        // Render pipeline for satellites
+        // Render pipeline for satellites - this is required
+        guard let vertexFunction = library.makeFunction(name: "satelliteVertex"),
+              let fragmentFunction = library.makeFunction(name: "satelliteFragment") else {
+            throw MetalRendererError.shaderLoadFailed
+        }
+        
         let renderDescriptor = MTLRenderPipelineDescriptor()
-        renderDescriptor.vertexFunction = library.makeFunction(name: "satelliteVertex")
-        renderDescriptor.fragmentFunction = library.makeFunction(name: "satelliteFragment")
+        renderDescriptor.vertexFunction = vertexFunction
+        renderDescriptor.fragmentFunction = fragmentFunction
         renderDescriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
         renderDescriptor.colorAttachments[0].isBlendingEnabled = true
         renderDescriptor.colorAttachments[0].sourceRGBBlendFactor = .sourceAlpha
@@ -141,19 +161,34 @@ class MetalSatelliteRenderer {
         renderDescriptor.colorAttachments[0].destinationAlphaBlendFactor = .oneMinusSourceAlpha
         renderDescriptor.depthAttachmentPixelFormat = .depth32Float
         
-        renderPipeline = try device.makeRenderPipelineState(descriptor: renderDescriptor)
+        do {
+            renderPipeline = try device.makeRenderPipelineState(descriptor: renderDescriptor)
+            print("✅ MetalSatelliteRenderer: Render pipeline created")
+        } catch {
+            print("❌ MetalSatelliteRenderer: Failed to create render pipeline: \(error)")
+            throw MetalRendererError.pipelineCreationFailed
+        }
         
-        // Trail render pipeline
-        let trailDescriptor = MTLRenderPipelineDescriptor()
-        trailDescriptor.vertexFunction = library.makeFunction(name: "trailVertex")
-        trailDescriptor.fragmentFunction = library.makeFunction(name: "trailFragment")
-        trailDescriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
-        trailDescriptor.colorAttachments[0].isBlendingEnabled = true
-        trailDescriptor.colorAttachments[0].sourceRGBBlendFactor = .sourceAlpha
-        trailDescriptor.colorAttachments[0].destinationRGBBlendFactor = .one // Additive blending for trails
-        trailDescriptor.depthAttachmentPixelFormat = .depth32Float
+        // Trail render pipeline (optional)
+        if let trailVertex = library.makeFunction(name: "trailVertex"),
+           let trailFragment = library.makeFunction(name: "trailFragment") {
+            let trailDescriptor = MTLRenderPipelineDescriptor()
+            trailDescriptor.vertexFunction = trailVertex
+            trailDescriptor.fragmentFunction = trailFragment
+            trailDescriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
+            trailDescriptor.colorAttachments[0].isBlendingEnabled = true
+            trailDescriptor.colorAttachments[0].sourceRGBBlendFactor = .sourceAlpha
+            trailDescriptor.colorAttachments[0].destinationRGBBlendFactor = .one // Additive blending for trails
+            trailDescriptor.depthAttachmentPixelFormat = .depth32Float
+            
+            do {
+                trailRenderPipeline = try device.makeRenderPipelineState(descriptor: trailDescriptor)
+            } catch {
+                print("⚠️ MetalSatelliteRenderer: Could not create trail pipeline: \(error)")
+            }
+        }
         
-        trailRenderPipeline = try device.makeRenderPipelineState(descriptor: trailDescriptor)
+        isInitialized = true
     }
     
     private func setupBuffers() {
@@ -181,7 +216,10 @@ class MetalSatelliteRenderer {
     func uploadSatellites(_ satellites: [SatelliteManager.Satellite], colors: [SIMD4<Float>]) {
         guard let elementsBuffer = elementsBuffer,
               let colorBuffer = colorBuffer,
-              let instanceBuffer = instanceBuffer else { return }
+              let instanceBuffer = instanceBuffer else { 
+            print("❌ MetalSatelliteRenderer: Buffers not initialized")
+            return 
+        }
 
         satelliteCount = min(satellites.count, maxSatellites)
 
@@ -204,13 +242,14 @@ class MetalSatelliteRenderer {
             )
             colorsPtr[i] = colors[i]
 
-            // Set firefly swarm properties: small size, moderate brightness
+            // Set firefly swarm properties: larger size, higher brightness
             instancePtr[i] = SatelliteInstanceData(
-                position: SIMD3<Float>(0, 0, 0), // Will be set by propagation shader
-                velocity: SIMD3<Float>(0, 0, 0), // Will be set by propagation shader
+                position: SIMD3<Float>(0, 0, 0), // Will be set by propagation shader or CPU fallback
+                velocity: SIMD3<Float>(0, 0, 0),
                 color: colors[i],
-                size: 0.5, // Small dots for firefly effect
-                brightness: 0.8 // Moderate brightness, visible but not overwhelming
+                size: swarmSize, // 1.5 for better visibility
+                brightness: swarmBrightness, // 1.0 for full brightness
+                _padding: .zero
             )
         }
 
@@ -223,12 +262,18 @@ class MetalSatelliteRenderer {
     
     /// Execute GPU propagation for all satellites
     func propagate(deltaTime: Float) {
-        guard let commandBuffer = commandQueue.makeCommandBuffer(),
+        // If compute pipeline not available, skip GPU propagation
+        // SceneKit fallback will handle positioning
+        guard propagatePipeline != nil,
+              let commandBuffer = commandQueue.makeCommandBuffer(),
               let computeEncoder = commandBuffer.makeComputeCommandEncoder(),
               let propagatePipeline = propagatePipeline,
               let elementsBuffer = elementsBuffer,
               let instanceBuffer = instanceBuffer,
-              let colorBuffer = colorBuffer else { return }
+              let colorBuffer = colorBuffer else { 
+            // GPU propagation not available - this is fine, SceneKit handles it
+            return 
+        }
         
         currentTime += deltaTime
         

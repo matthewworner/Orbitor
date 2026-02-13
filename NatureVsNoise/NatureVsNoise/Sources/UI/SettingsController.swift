@@ -1,5 +1,8 @@
 import AppKit
 import ScreenSaver
+import Foundation
+
+// Access FeatureFlags from the main sources
 
 class SettingsController: NSObject {
     
@@ -41,7 +44,7 @@ class SettingsController: NSObject {
     
     func makeConfigureSheet() -> NSWindow {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 450, height: 320),
+            contentRect: NSRect(x: 0, y: 0, width: 450, height: 400),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -53,32 +56,91 @@ class SettingsController: NSObject {
         
         // Logo / Title
         let titleLabel = createLabel(text: "NATURE vs NOISE", fontSize: 24, bold: true)
-        titleLabel.frame = NSRect(x: 20, y: 270, width: 410, height: 30)
+        titleLabel.frame = NSRect(x: 20, y: 350, width: 410, height: 30)
         container.addSubview(titleLabel)
         
-        // Satellites Toggle
-        let satToggle = createCheckbox(title: "Show Satellites", state: bool(for: Keys.showSatellites))
-        satToggle.frame = NSRect(x: 20, y: 230, width: 200, height: 24)
-        satToggle.target = self
-        satToggle.action = #selector(toggleSatellites(_:))
-        container.addSubview(satToggle)
+        // Subtitle
+        let subtitleLabel = createLabel(text: "Screensaver Options", fontSize: 12, bold: false)
+        subtitleLabel.textColor = .secondaryLabelColor
+        subtitleLabel.frame = NSRect(x: 20, y: 330, width: 410, height: 20)
+        container.addSubview(subtitleLabel)
         
-        // HUD Toggle
-        let hudToggle = createCheckbox(title: "Show HUD Overlay", state: bool(for: Keys.showHUD))
-        hudToggle.frame = NSRect(x: 20, y: 200, width: 200, height: 24)
-        hudToggle.target = self
-        hudToggle.action = #selector(toggleHUD(_:))
-        container.addSubview(hudToggle)
+        // === VISUALS SECTION ===
+        let visualsLabel = createLabel(text: "VISUALS", fontSize: 11, bold: true)
+        visualsLabel.textColor = .secondaryLabelColor
+        visualsLabel.frame = NSRect(x: 20, y: 290, width: 100, height: 16)
+        container.addSubview(visualsLabel)
         
-        // Quality Segmented Control
-        let qualityLabel = createLabel(text: "Visual Quality:", fontSize: 13, bold: false)
-        qualityLabel.frame = NSRect(x: 20, y: 160, width: 100, height: 20)
+        // Starfield Toggle
+        let starfieldToggle = createCheckbox(title: "Show Starfield", state: FeatureFlags.enableStarfield)
+        starfieldToggle.frame = NSRect(x: 20, y: 260, width: 200, height: 24)
+        starfieldToggle.target = self
+        starfieldToggle.action = #selector(toggleStarfield(_:))
+        container.addSubview(starfieldToggle)
+        
+        // Toy Satellites Toggle
+        let toySatToggle = createCheckbox(title: "Show Toy Satellites", state: FeatureFlags.enableToySats)
+        toySatToggle.frame = NSRect(x: 20, y: 230, width: 200, height: 24)
+        toySatToggle.target = self
+        toySatToggle.action = #selector(toggleToySats(_:))
+        container.addSubview(toySatToggle)
+        
+        // Metal Swarm Toggle
+        let metalToggle = createCheckbox(title: "Metal Rendering (Experimental)", state: FeatureFlags.enableSwarm)
+        metalToggle.frame = NSRect(x: 20, y: 200, width: 250, height: 24)
+        metalToggle.target = self
+        metalToggle.action = #selector(toggleMetal(_:))
+        container.addSubview(metalToggle)
+        
+        // Motion Trails Toggle
+        let trailsToggle = createCheckbox(title: "Motion Trails", state: FeatureFlags.showTrails)
+        trailsToggle.frame = NSRect(x: 20, y: 170, width: 200, height: 24)
+        trailsToggle.target = self
+        trailsToggle.action = #selector(toggleTrails(_:))
+        container.addSubview(trailsToggle)
+        
+        // === AUDIO SECTION ===
+        let audioLabel = createLabel(text: "AUDIO", fontSize: 11, bold: true)
+        audioLabel.textColor = .secondaryLabelColor
+        audioLabel.frame = NSRect(x: 240, y: 290, width: 100, height: 16)
+        container.addSubview(audioLabel)
+        
+        // Audio Toggle
+        let audioToggle = createCheckbox(title: "Enable Audio", state: FeatureFlags.enableAudio)
+        audioToggle.frame = NSRect(x: 240, y: 260, width: 200, height: 24)
+        audioToggle.target = self
+        audioToggle.action = #selector(toggleAudio(_:))
+        container.addSubview(audioToggle)
+        
+        // Info label
+        let audioInfoLabel = createLabel(text: "Requires real audio files in bundle", fontSize: 10, bold: false)
+        audioInfoLabel.textColor = .tertiaryLabelColor
+        audioInfoLabel.frame = NSRect(x: 240, y: 240, width: 200, height: 16)
+        container.addSubview(audioInfoLabel)
+        
+        // === QUALITY SECTION ===
+        let qualityLabel = createLabel(text: "QUALITY", fontSize: 11, bold: true)
+        qualityLabel.textColor = .secondaryLabelColor
+        qualityLabel.frame = NSRect(x: 20, y: 130, width: 100, height: 16)
         container.addSubview(qualityLabel)
         
+        // Quality Segmented Control
         let qualitySeg = NSSegmentedControl(labels: ["Low", "Med", "High", "Ultra"], trackingMode: .selectOne, target: self, action: #selector(changeQuality(_:)))
-        qualitySeg.frame = NSRect(x: 120, y: 155, width: 250, height: 24)
-        qualitySeg.selectedSegment = integer(for: Keys.qualityLevel)
+        qualitySeg.frame = NSRect(x: 20, y: 95, width: 250, height: 24)
+        qualitySeg.selectedSegment = 1  // Medium by default
         container.addSubview(qualitySeg)
+        
+        // Quality description
+        let qualityDescLabel = createLabel(text: "Low: 200 sats | Med: 500 | High: 1000 | Ultra: 5000", fontSize: 10, bold: false)
+        qualityDescLabel.textColor = .tertiaryLabelColor
+        qualityDescLabel.frame = NSRect(x: 20, y: 75, width: 300, height: 16)
+        container.addSubview(qualityDescLabel)
+        
+        // Reset Button
+        let resetButton = NSButton(title: "Reset to Safe", target: self, action: #selector(resetToSafe(_:)))
+        resetButton.bezelStyle = .rounded
+        resetButton.frame = NSRect(x: 240, y: 90, width: 120, height: 28)
+        container.addSubview(resetButton)
         
         // Done Button
         let doneButton = NSButton(title: "Done", target: self, action: #selector(closeSheet(_:)))
@@ -87,9 +149,9 @@ class SettingsController: NSObject {
         container.addSubview(doneButton)
         
         // Version Info
-        let versionLabel = createLabel(text: "v1.0.0 (Phase 3)", fontSize: 10, bold: false)
+        let versionLabel = createLabel(text: "v1.0.4", fontSize: 10, bold: false)
         versionLabel.textColor = .secondaryLabelColor
-        versionLabel.frame = NSRect(x: 20, y: 20, width: 200, height: 20)
+        versionLabel.frame = NSRect(x: 20, y: 28, width: 200, height: 20)
         container.addSubview(versionLabel)
         
         return window
@@ -97,17 +159,36 @@ class SettingsController: NSObject {
     
     // MARK: - Actions
     
-    @objc private func toggleSatellites(_ sender: NSButton) {
-        defaults?.set(sender.state == .on, forKey: Keys.showSatellites)
-        defaults?.synchronize()
+    @objc private func toggleStarfield(_ sender: NSButton) {
+        FeatureFlags.enableStarfield = (sender.state == .on)
     }
     
-    @objc private func toggleHUD(_ sender: NSButton) {
-        defaults?.set(sender.state == .on, forKey: Keys.showHUD)
-        defaults?.synchronize()
+    @objc private func toggleToySats(_ sender: NSButton) {
+        FeatureFlags.enableToySats = (sender.state == .on)
+    }
+    
+    @objc private func toggleMetal(_ sender: NSButton) {
+        FeatureFlags.enableSwarm = (sender.state == .on)
+    }
+    
+    @objc private func toggleTrails(_ sender: NSButton) {
+        FeatureFlags.showTrails = (sender.state == .on)
+    }
+    
+    @objc private func toggleAudio(_ sender: NSButton) {
+        FeatureFlags.enableAudio = (sender.state == .on)
+    }
+    
+    @objc private func resetToSafe(_ sender: NSButton) {
+        FeatureFlags.resetToSafePreset()
+        // Reload the sheet to reflect changes
+        if let window = sender.window {
+            window.sheetParent?.endSheet(window)
+        }
     }
     
     @objc private func changeQuality(_ sender: NSSegmentedControl) {
+        // Save quality level preference (0-3 maps to QualityLevel.low-.ultra)
         defaults?.set(sender.selectedSegment, forKey: Keys.qualityLevel)
         defaults?.synchronize()
     }

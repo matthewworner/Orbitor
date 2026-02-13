@@ -36,13 +36,16 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     private var firstFrameTime: TimeInterval = 0
 
     // Audio
-    // private var audioController: AudioController?
+    private var audioController: AudioController?
 
     // UI
     // private var hudOverlay: HUDOverlay?
 
-    // Quality settings
-    private var qualityLevel: QualityLevel = .high
+    // Quality settings - read from UserDefaults, fallback to high
+    private var qualityLevel: QualityLevel = {
+        let saved = UserDefaults.standard.integer(forKey: "qualityLevel")
+        return QualityLevel(rawValue: saved + 1) ?? .high
+    }()
     
     // MARK: - Initialization
     
@@ -223,21 +226,33 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         
         // CINEMATIC FLY-THROUGH: 2001 style
         // Phase 1: Approach Earth from distance
-        let approach = SCNAction.move(to: SCNVector3(x: 0, y: 1, z: 4), duration: 15)
+        let approach = SCNAction.move(to: SCNVector3(x: 0, y: 2, z: 8), duration: 15)
         approach.timingMode = .easeInEaseOut
         
-        // Phase 2: Fly PAST Earth, through the satellite shell
-        let flyPast = SCNAction.move(to: SCNVector3(x: -3, y: 2, z: -8), duration: 10)
+        // Phase 2: Fly PAST Earth, through the satellite shell - GET CLOSER
+        let flyPast = SCNAction.move(to: SCNVector3(x: -2, y: 1, z: 3), duration: 15)
         flyPast.timingMode = .easeIn
         
-        // Phase 3: Swing around and reset
-        let swingAround = SCNAction.move(to: SCNVector3(x: 0, y: 0, z: 20), duration: 15)
+        // Phase 3: Swing around and reset - FARTHER to see the shell
+        let swingAround = SCNAction.move(to: SCNVector3(x: 0, y: 5, z: 15), duration: 15)
         swingAround.timingMode = .easeOut
         
         let cinematicSequence = SCNAction.sequence([approach, flyPast, swingAround])
         cameraNode.runAction(SCNAction.repeatForever(cinematicSequence))
         
         sceneView.isPlaying = true
+        
+        // Initialize audio if enabled
+        if FeatureFlags.enableAudio {
+            // Check if audio files exist in bundle before initializing
+            if let _ = Bundle.main.path(forResource: "ambient_solar_wind", ofType: "wav", inDirectory: "Audio/Ambient") ??
+                         Bundle.main.path(forResource: "solar_wind_preview", ofType: "mp3", inDirectory: "Audio/Ambient") {
+                audioController = AudioController()
+                logToFile("🔊 Audio enabled and initialized")
+            } else {
+                logToFile("⚠️ Audio files not found in bundle - audio disabled")
+            }
+        }
         
         // Mark setup complete
         setupComplete = true
@@ -649,9 +664,9 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         var names: [String] = []
 
         let earthOffset = SIMD3<Float>(x: 0, y: 0, z: 0)
-        // PHASE 3 FIXED: Hard restrict count for SceneKit fallback
-        // Rendering 20k individual nodes freezes the main thread.
-        let safeMaxSatellites = min(qualityLevel.maxSatellites, 2000)
+        // Use reasonable satellite count based on quality level
+        // SceneKit can handle ~500-1000 nodes smoothly
+        let safeMaxSatellites = qualityLevel.maxSatellites
         
         let scale: Float = 2.0 / 6371.0 // Scale KM (Radius 6371) to SceneKit (Radius 2.0)
 
@@ -821,7 +836,7 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     }
     
     override var configureSheet: NSWindow? {
-        return nil // SettingsController.shared.makeConfigureSheet()
+        return SettingsController.shared.makeConfigureSheet()
     }
     
     // MARK: - Hardware Detection
