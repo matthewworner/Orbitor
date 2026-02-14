@@ -48,7 +48,7 @@ struct RenderUniforms {
 
 /// High-performance satellite renderer using Metal compute shaders
 /// Replaces SceneKit's SCNNode-based rendering with GPU-instanced particles
-class MetalSatelliteRenderer {
+class MetalSatelliteRenderer: NSObject {
     
     // MARK: - Properties
     
@@ -88,31 +88,35 @@ class MetalSatelliteRenderer {
     var swarmBrightness: Float = 1.0
     
     // MARK: - Initialization
-    
-    init?() {
+
+    static func create() -> MetalSatelliteRenderer? {
         guard let device = MTLCreateSystemDefaultDevice() else {
             print("❌ MetalSatelliteRenderer: Metal is not supported on this device")
             return nil
         }
-        
-        self.device = device
-        
+
         guard let commandQueue = device.makeCommandQueue() else {
             print("❌ MetalSatelliteRenderer: Failed to create command queue")
             return nil
         }
-        
-        self.commandQueue = commandQueue
-        
-        // Load shaders and create pipelines
+
+        let renderer = MetalSatelliteRenderer(device: device, commandQueue: commandQueue)
+
         do {
-            try setupPipelines()
-            setupBuffers()
+            try renderer.setupPipelines()
+            renderer.setupBuffers()
             print("✅ MetalSatelliteRenderer: Initialized with \(device.name)")
+            return renderer
         } catch {
             print("❌ MetalSatelliteRenderer: Failed to setup pipelines: \(error)")
             return nil
         }
+    }
+
+    private init(device: MTLDevice, commandQueue: MTLCommandQueue) {
+        self.device = device
+        self.commandQueue = commandQueue
+        super.init()
     }
     
     // MARK: - Pipeline Setup

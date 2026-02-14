@@ -57,7 +57,7 @@ kernel void propagateSatellites(
     OrbitalElementsGPU el = elements[id];
     
     // Simplified orbital propagation (Keplerian)
-    float t = time[0] * timeAcceleration[0] * 0.001; // Scale time
+    float t = time * timeAcceleration * 0.001; // Scale time
     float n = el.meanMotion * 2.0 * M_PI_F / 1440.0; // Convert to rad/min
     
     // Mean anomaly

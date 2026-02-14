@@ -62,27 +62,27 @@ struct MissionControlTheme {
     static let elementSpacing: CGFloat = 8
     static let cornerRadius: CGFloat = 6
     
-    // MARK: - SKColor Conversions
-    
-    static var cyan: SKColor { SKColor(cgColor: primaryCyan)! }
-    static var amber: SKColor { SKColor(cgColor: secondaryAmber)! }
-    static var magenta: SKColor { SKColor(cgColor: accentMagenta)! }
-    static var deepSpaceColor: SKColor { SKColor(cgColor: deepSpace)! }
-    static var panelBg: SKColor { SKColor(cgColor: panelBackground)! }
+    // MARK: - SKColor Conversions (SKColor == NSColor on macOS)
+
+    static var cyan: SKColor { primaryCyan }
+    static var amber: SKColor { secondaryAmber }
+    static var magenta: SKColor { accentMagenta }
+    static var deepSpaceColor: SKColor { deepSpace }
+    static var panelBg: SKColor { panelBackground }
     static var white: SKColor { SKColor.white }
-    static var textSec: SKColor { SKColor(cgColor: textSecondary)! }
-    static var textMut: SKColor { SKColor(cgColor: textMuted)! }
-    
-    static var russia: SKColor { SKColor(cgColor: russiaRed)! }
-    static var usa: SKColor { SKColor(cgColor: usaBlue)! }
-    static var china: SKColor { SKColor(cgColor: chinaYellow)! }
-    static var other: SKColor { SKColor(cgColor: otherGreen)! }
-    
-    static var leo: SKColor { SKColor(cgColor: leoCyan)! }
-    static var meo: SKColor { SKColor(cgColor: meoYellow)! }
-    static var geo: SKColor { SKColor(cgColor: geoMagenta)! }
-    
-    static var gold: SKColor { SKColor(cgColor: achievementGold)! }
+    static var textSec: SKColor { textSecondary }
+    static var textMut: SKColor { textMuted }
+
+    static var russia: SKColor { russiaRed }
+    static var usa: SKColor { usaBlue }
+    static var china: SKColor { chinaYellow }
+    static var other: SKColor { otherGreen }
+
+    static var leo: SKColor { leoCyan }
+    static var meo: SKColor { meoYellow }
+    static var geo: SKColor { geoMagenta }
+
+    static var gold: SKColor { achievementGold }
 }
 
 /// Info density levels

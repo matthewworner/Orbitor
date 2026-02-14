@@ -146,11 +146,11 @@ class FactOverlay: SKNode {
         let delay = SKAction.wait(forDuration: 0.1)
         let showElements = SKAction.fadeIn(withDuration: 0.3)
         
-        run(SKAction.sequence([delay, SKAction.group([
-            iconLabel.run(showElements),
-            factLabel.run(showElements),
-            categoryLabel.run(showElements)
-        ])]))
+        run(SKAction.sequence([delay, SKAction.run { [weak self] in
+            self?.iconLabel.run(showElements)
+            self?.factLabel.run(showElements)
+            self?.categoryLabel.run(showElements)
+        }]))
         
         // Animate scanline
         if let scanlines = container.childNode(withName: "scanline") as? SKEffectNode,

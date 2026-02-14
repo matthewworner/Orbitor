@@ -298,7 +298,7 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         
         // Initialize Metal renderer if swarm is enabled
         if effectiveUseMetal {
-            metalRenderer = MetalSatelliteRenderer()
+            metalRenderer = MetalSatelliteRenderer.create()
             if metalRenderer != nil {
                 useMetalRendering = true
                 qualityLevel = .ultra
@@ -800,7 +800,7 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
             
             // Update HUD with current state
             hud.updateCamera(altitude: altitudeKm, velocity: max(3.0, velocity))
-            hud.updateStats(satelliteCount: qualityLevel.maxSatellites)
+            hud.updateStats(satelliteCount: qualityLevel.maxSatellites, fps: 60)
             
             let targetName = findNearestPlanet(to: cameraNode.position)?.name ?? "DEEP SPACE"
             let coords = String(format: "%.1f, %.1f, %.1f", cameraNode.position.x, cameraNode.position.y, cameraNode.position.z)

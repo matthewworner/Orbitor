@@ -17,6 +17,18 @@
 		E01111112B5A00000000019 /* MetalSatelliteRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A0000000001A /* MetalSatelliteRenderer.swift */; };
 		E01111112B5A000000000B1 /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A0000000002F /* FeatureFlags.swift */; };
 		E01111112B5A000000000B3 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000B2 /* Shaders.metal */; };
+		E01111112B5A000000000D1 /* AudioController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C1 /* AudioController.swift */; };
+		E01111112B5A000000000D2 /* ImageLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C2 /* ImageLoader.swift */; };
+		E01111112B5A000000000D4 /* HUDOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C4 /* HUDOverlay.swift */; };
+		E01111112B5A000000000D5 /* SettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C5 /* SettingsController.swift */; };
+		E01111112B5A000000000D6 /* DiscoveryBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C6 /* DiscoveryBanner.swift */; };
+		E01111112B5A000000000D7 /* FactOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C7 /* FactOverlay.swift */; };
+		E01111112B5A000000000D8 /* InfoCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C8 /* InfoCardView.swift */; };
+		E01111112B5A000000000D9 /* StatsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C9 /* StatsPanel.swift */; };
+		E01111112B5A000000000DA /* Achievements.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000CA /* Achievements.swift */; };
+		E01111112B5A000000000DB /* EducationalFacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000CB /* EducationalFacts.swift */; };
+		E01111112B5A000000000DC /* SatelliteDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000CC /* SatelliteDatabase.swift */; };
+		E01111112B5A000000000DD /* MissionControlTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000CD /* MissionControlTheme.swift */; };
 		150CE03D2F07C800003B3D7F /* earth_8k_clouds.png in Resources */ = {isa = PBXBuildFile; fileRef = 150CE02F2F07C7D6003B3D7F /* earth_8k_clouds.png */; };
 		150CE03E2F07C800003B3D7F /* earth_8k_day.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE0302F07C7D6003B3D7F /* earth_8k_day.jpg */; };
 		150CE03F2F07C800003B3D7F /* earth_8k_night.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE0312F07C7D6003B3D7F /* earth_8k_night.jpg */; };
@@ -58,6 +70,18 @@
 		E01111112B5A0000000001A /* MetalSatelliteRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalSatelliteRenderer.swift; sourceTree = "<group>"; };
 		E01111112B5A0000000002F /* FeatureFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureFlags.swift; sourceTree = "<group>"; };
 		E01111112B5A000000000B2 /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
+		E01111112B5A000000000C1 /* AudioController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioController.swift; sourceTree = "<group>"; };
+		E01111112B5A000000000C2 /* ImageLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageLoader.swift; sourceTree = "<group>"; };
+		E01111112B5A000000000C4 /* HUDOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDOverlay.swift; sourceTree = "<group>"; };
+		E01111112B5A000000000C5 /* SettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsController.swift; sourceTree = "<group>"; };
+		E01111112B5A000000000C6 /* DiscoveryBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryBanner.swift; sourceTree = "<group>"; };
+		E01111112B5A000000000C7 /* FactOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FactOverlay.swift; sourceTree = "<group>"; };
+		E01111112B5A000000000C8 /* InfoCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoCardView.swift; sourceTree = "<group>"; };
+		E01111112B5A000000000C9 /* StatsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsPanel.swift; sourceTree = "<group>"; };
+		E01111112B5A000000000CA /* Achievements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Achievements.swift; sourceTree = "<group>"; };
+		E01111112B5A000000000CB /* EducationalFacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EducationalFacts.swift; sourceTree = "<group>"; };
+		E01111112B5A000000000CC /* SatelliteDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteDatabase.swift; sourceTree = "<group>"; };
+		E01111112B5A000000000CD /* MissionControlTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissionControlTheme.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -114,9 +138,13 @@
 			isa = PBXGroup;
 			children = (
 				E01111112B5A00000000002 /* NatureVsNoiseView.swift */,
-				E01111112B5A00000000024 /* Planets */,
+				E01111112B5A0000000002F /* FeatureFlags.swift */,
+				E01111112B5A000000000E1 /* Audio */,
 				E01111112B5A00000000025 /* Camera */,
+				E01111112B5A000000000E2 /* CrossPlatform */,
+				E01111112B5A00000000024 /* Planets */,
 				E01111112B5A00000000026 /* Satellites */,
+				E01111112B5A000000000E3 /* UI */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -152,7 +180,7 @@
 				E01111112B5A00000000014 /* SGP4Propagator.swift */,
 				E01111112B5A00000000016 /* TLEFetcher.swift */,
 				E01111112B5A0000000001A /* MetalSatelliteRenderer.swift */,
-				E01111112B5A0000000002F /* FeatureFlags.swift */,
+				E01111112B5A000000000B2 /* Shaders.metal */,
 			);
 			path = Satellites;
 			sourceTree = "<group>";
@@ -163,6 +191,63 @@
 				E01111112B5A00000000010 /* NatureVsNoise.saver */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		E01111112B5A000000000E1 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				E01111112B5A000000000C1 /* AudioController.swift */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+		E01111112B5A000000000E2 /* CrossPlatform */ = {
+			isa = PBXGroup;
+			children = (
+				E01111112B5A000000000C2 /* ImageLoader.swift */,
+			);
+			path = CrossPlatform;
+			sourceTree = "<group>";
+		};
+		E01111112B5A000000000E3 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				E01111112B5A000000000C4 /* HUDOverlay.swift */,
+				E01111112B5A000000000C5 /* SettingsController.swift */,
+				E01111112B5A000000000E4 /* Components */,
+				E01111112B5A000000000E5 /* Data */,
+				E01111112B5A000000000E6 /* Themes */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		E01111112B5A000000000E4 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				E01111112B5A000000000C6 /* DiscoveryBanner.swift */,
+				E01111112B5A000000000C7 /* FactOverlay.swift */,
+				E01111112B5A000000000C8 /* InfoCardView.swift */,
+				E01111112B5A000000000C9 /* StatsPanel.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		E01111112B5A000000000E5 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				E01111112B5A000000000CA /* Achievements.swift */,
+				E01111112B5A000000000CB /* EducationalFacts.swift */,
+				E01111112B5A000000000CC /* SatelliteDatabase.swift */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		E01111112B5A000000000E6 /* Themes */ = {
+			isa = PBXGroup;
+			children = (
+				E01111112B5A000000000CD /* MissionControlTheme.swift */,
+			);
+			path = Themes;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -246,17 +331,29 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-					E01111112B5A00000000001 /* NatureVsNoiseView.swift in Sources */,
-					E01111112B5A00000000003 /* PlanetFactory.swift in Sources */,
-					E01111112B5A00000000005 /* CameraController.swift in Sources */,
-					E01111112B5A00000000009 /* SatelliteManager.swift in Sources */,
-					E01111112B5A00000000012 /* SatelliteRenderer.swift in Sources */,
-					E01111112B5A00000000013 /* SGP4Propagator.swift in Sources */,
-					E01111112B5A00000000015 /* TLEFetcher.swift in Sources */,
-					E01111112B5A00000000019 /* MetalSatelliteRenderer.swift in Sources */,
-					E01111112B5A000000000B1 /* FeatureFlags.swift in Sources */,
-					E01111112B5A000000000B3 /* Shaders.metal in Sources */,
-				);
+				E01111112B5A00000000001 /* NatureVsNoiseView.swift in Sources */,
+				E01111112B5A00000000003 /* PlanetFactory.swift in Sources */,
+				E01111112B5A00000000005 /* CameraController.swift in Sources */,
+				E01111112B5A00000000009 /* SatelliteManager.swift in Sources */,
+				E01111112B5A00000000012 /* SatelliteRenderer.swift in Sources */,
+				E01111112B5A00000000013 /* SGP4Propagator.swift in Sources */,
+				E01111112B5A00000000015 /* TLEFetcher.swift in Sources */,
+				E01111112B5A00000000019 /* MetalSatelliteRenderer.swift in Sources */,
+				E01111112B5A000000000B1 /* FeatureFlags.swift in Sources */,
+				E01111112B5A000000000B3 /* Shaders.metal in Sources */,
+				E01111112B5A000000000D1 /* AudioController.swift in Sources */,
+				E01111112B5A000000000D2 /* ImageLoader.swift in Sources */,
+				E01111112B5A000000000D4 /* HUDOverlay.swift in Sources */,
+				E01111112B5A000000000D5 /* SettingsController.swift in Sources */,
+				E01111112B5A000000000D6 /* DiscoveryBanner.swift in Sources */,
+				E01111112B5A000000000D7 /* FactOverlay.swift in Sources */,
+				E01111112B5A000000000D8 /* InfoCardView.swift in Sources */,
+				E01111112B5A000000000D9 /* StatsPanel.swift in Sources */,
+				E01111112B5A000000000DA /* Achievements.swift in Sources */,
+				E01111112B5A000000000DB /* EducationalFacts.swift in Sources */,
+				E01111112B5A000000000DC /* SatelliteDatabase.swift in Sources */,
+				E01111112B5A000000000DD /* MissionControlTheme.swift in Sources */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */

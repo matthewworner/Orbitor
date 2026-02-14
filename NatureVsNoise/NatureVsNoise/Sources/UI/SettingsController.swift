@@ -63,7 +63,7 @@ class SettingsController: NSObject {
         )
         window.title = "Nature vs Noise Settings"
         
-        let container = NSView(frame: window.contentRect)
+        let container = NSView(frame: window.contentLayoutRect)
         window.contentView = container
         
         // Logo / Title

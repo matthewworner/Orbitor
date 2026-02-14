@@ -113,7 +113,7 @@ class AudioController {
         guard isEngineRunning else { return }
 
         // Update spatial listener position (Phase 4)
-        listenerPosition = AVAudio3DPoint(x: cameraPosition.x, y: cameraPosition.y, z: cameraPosition.z)
+        listenerPosition = AVAudio3DPoint(x: Float(cameraPosition.x), y: Float(cameraPosition.y), z: Float(cameraPosition.z))
         spatialMixer?.listenerPosition = listenerPosition
 
         // Logic:
@@ -152,7 +152,7 @@ class AudioController {
 
             // Update spatial position for active planet (Phase 4)
             if name == targetName, let position = targetPosition {
-                layer.player.position = AVAudio3DPoint(x: position.x, y: position.y, z: position.z)
+                layer.player.position = AVAudio3DPoint(x: Float(position.x), y: Float(position.y), z: Float(position.z))
             }
         }
 
