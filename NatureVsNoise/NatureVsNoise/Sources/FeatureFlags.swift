@@ -2,33 +2,37 @@ import Foundation
 
 struct FeatureFlags {
     // User defaults keys
-    private static let useMetalSatellitesKey = "useMetalSatellites"
     private static let showLabelsKey = "showLabels"
     private static let maxSatelliteCountKey = "maxSatelliteCount"
     private static let enableStarfieldKey = "enableStarfield"
     private static let enableToySatsKey = "enableToySats"
-    private static let enableSwarmKey = "enableSwarm"
+    private static let enableSwarmKey = "enableSwarm"  // Controls Metal swarm rendering
     private static let showTrailsKey = "showTrails"
     private static let enableAudioKey = "enableAudio"
 
     // Default values for safe preset
     static let safePreset: [String: Any] = [
-        useMetalSatellitesKey: false,
         showLabelsKey: false,
         maxSatelliteCountKey: 50,
         enableStarfieldKey: true,
         enableToySatsKey: true,
-        enableSwarmKey: false,  // Start with swarm off for safety
-        showTrailsKey: true,     // Motion trails on by default
-        enableAudioKey: false    // Audio off by default for macOS
+        enableSwarmKey: true,   // Metal swarm enabled (now works in full-screen)
+        showTrailsKey: true,
+        enableAudioKey: false
+    ]
+    
+    // Full preset with all features enabled
+    static let fullPreset: [String: Any] = [
+        showLabelsKey: true,
+        maxSatelliteCountKey: 5000,
+        enableStarfieldKey: true,
+        enableToySatsKey: true,
+        enableSwarmKey: true,
+        showTrailsKey: true,
+        enableAudioKey: true
     ]
 
     // Getters with defaults
-    static var useMetalSatellites: Bool {
-        get { UserDefaults.standard.bool(forKey: useMetalSatellitesKey) }
-        set { UserDefaults.standard.set(newValue, forKey: useMetalSatellitesKey) }
-    }
-
     static var showLabels: Bool {
         get { UserDefaults.standard.bool(forKey: showLabelsKey) }
         set { UserDefaults.standard.set(newValue, forKey: showLabelsKey) }
@@ -49,6 +53,8 @@ struct FeatureFlags {
         set { UserDefaults.standard.set(newValue, forKey: enableToySatsKey) }
     }
 
+    /// Enable Metal swarm rendering (thousands of point sprites)
+    /// This now works in full-screen mode via SceneKit delegate integration
     static var enableSwarm: Bool {
         get { UserDefaults.standard.bool(forKey: enableSwarmKey) }
         set { UserDefaults.standard.set(newValue, forKey: enableSwarmKey) }
@@ -78,6 +84,14 @@ struct FeatureFlags {
     static func resetToSafePreset() {
         let defaults = UserDefaults.standard
         for (key, value) in safePreset {
+            defaults.set(value, forKey: key)
+        }
+    }
+    
+    // Apply full preset
+    static func applyFullPreset() {
+        let defaults = UserDefaults.standard
+        for (key, value) in fullPreset {
             defaults.set(value, forKey: key)
         }
     }

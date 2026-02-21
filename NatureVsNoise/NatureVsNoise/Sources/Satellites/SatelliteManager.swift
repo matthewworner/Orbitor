@@ -175,11 +175,13 @@ class SatelliteManager {
             }
         }
 
-        // Priority 3: Development fallback
+        #if DEBUG
+        // Development fallback - only in debug builds
         let devPath = "/Users/pro/Projects/Side Projects/Screensaver/Assets/Raw/Data/\(name).tle"
         if FileManager.default.fileExists(atPath: devPath) {
             return try? String(contentsOfFile: devPath)
         }
+        #endif
 
         return nil
     }
@@ -379,5 +381,36 @@ class SatelliteManager {
             z: 1.0 - clamped, // Blue decreases with speed
             w: 1.0
         )
+    }
+    
+    // MARK: - Classification & Age
+    
+    /// Classify a satellite for visual rendering
+    func classifySatellite(_ satellite: Satellite) -> SatelliteClass {
+        return SatelliteClassifier.classify(
+            name: satellite.name,
+            isDebris: satellite.isDebris,
+            country: satellite.country
+        )
+    }
+    
+    /// Calculate satellite age in years since launch
+    func calculateAge(_ satellite: Satellite) -> Double {
+        return SatelliteClassifier.calculateAge(epoch: satellite.epoch)
+    }
+    
+    /// Get all classification data for a batch of satellites
+    func getClassificationData(for satellites: [Satellite]) -> (classifications: [SatelliteClass], ages: [Double]) {
+        var classifications: [SatelliteClass] = []
+        var ages: [Double] = []
+        classifications.reserveCapacity(satellites.count)
+        ages.reserveCapacity(satellites.count)
+        
+        for satellite in satellites {
+            classifications.append(classifySatellite(satellite))
+            ages.append(calculateAge(satellite))
+        }
+        
+        return (classifications, ages)
     }
 }

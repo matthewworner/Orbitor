@@ -32,3 +32,10 @@ Thumbs.db
 # Sensitive files (auto-detected)
 screensaver_debug.log
 
+
+# xcode-build-server files
+buildServer.json
+.compile
+
+# Local build artifacts
+.build/

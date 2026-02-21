@@ -70,6 +70,7 @@ class MetalSatelliteRenderer: NSObject {
     // State
     private var satelliteCount: Int = 0
     private var maxSatellites: Int = 5000  // Reduced from 50000 for stability
+    private let maxTrailInstances: Int = 1000  // Maximum trails to render
     private var currentTime: Float = 0
     private var timeAcceleration: Float = 100.0
     
@@ -89,7 +90,9 @@ class MetalSatelliteRenderer: NSObject {
     
     // MARK: - Initialization
 
-    static func create() -> MetalSatelliteRenderer? {
+    /// Create a Metal satellite renderer
+    /// - Parameter maxSatelliteCount: Maximum satellites to render (default from FeatureFlags)
+    static func create(maxSatelliteCount: Int? = nil) -> MetalSatelliteRenderer? {
         guard let device = MTLCreateSystemDefaultDevice() else {
             print("❌ MetalSatelliteRenderer: Metal is not supported on this device")
             return nil
@@ -100,12 +103,13 @@ class MetalSatelliteRenderer: NSObject {
             return nil
         }
 
-        let renderer = MetalSatelliteRenderer(device: device, commandQueue: commandQueue)
+        let count = maxSatelliteCount ?? FeatureFlags.maxSatelliteCount
+        let renderer = MetalSatelliteRenderer(device: device, commandQueue: commandQueue, maxSatellites: count)
 
         do {
             try renderer.setupPipelines()
             renderer.setupBuffers()
-            print("✅ MetalSatelliteRenderer: Initialized with \(device.name)")
+            print("✅ MetalSatelliteRenderer: Initialized with \(device.name), max \(count) satellites")
             return renderer
         } catch {
             print("❌ MetalSatelliteRenderer: Failed to setup pipelines: \(error)")
@@ -113,9 +117,10 @@ class MetalSatelliteRenderer: NSObject {
         }
     }
 
-    private init(device: MTLDevice, commandQueue: MTLCommandQueue) {
+    private init(device: MTLDevice, commandQueue: MTLCommandQueue, maxSatellites: Int) {
         self.device = device
         self.commandQueue = commandQueue
+        self.maxSatellites = maxSatellites
         super.init()
     }
     
@@ -378,6 +383,70 @@ class MetalSatelliteRenderer: NSObject {
         }
         
         renderEncoder.endEncoding()
+    }
+    
+    // MARK: - SceneKit Integration (Hybrid Rendering)
+    
+    /// Render satellites using SceneKit's existing Metal render context
+    /// Call this from SCNSceneRendererDelegate.renderer(_:willRenderScene:atTime:)
+    func render(into renderer: SCNSceneRenderer, camera: SCNNode) {
+        guard let renderEncoder = renderer.currentRenderCommandEncoder,
+              let renderPipeline = renderPipeline,
+              let instanceBuffer = instanceBuffer,
+              let renderUniformBuffer = renderUniformBuffer,
+              satelliteCount > 0 else { return }
+        
+        // Calculate view-projection matrix from camera
+        let viewMatrix = camera.simdTransform.inverse
+        let projectionMatrix: simd_float4x4
+        if let cameraObj = camera.camera {
+            projectionMatrix = simd_float4x4(cameraObj.projectionTransform)
+        } else {
+            projectionMatrix = matrix_identity_float4x4
+        }
+        let vpMatrix = simd_mul(projectionMatrix, viewMatrix)
+        
+        // Update uniforms buffer
+        var renderUniforms = RenderUniforms(
+            modelViewProjection: vpMatrix,
+            earthPosition: earthPosition,
+            scale: renderScale,
+            trailLength: trailLength,
+            showTrails: showTrails ? 1 : 0
+        )
+        memcpy(renderUniformBuffer.contents(), &renderUniforms, MemoryLayout<RenderUniforms>.stride)
+        
+        // Encode render commands directly into SceneKit's render pass
+        renderEncoder.setRenderPipelineState(renderPipeline)
+        renderEncoder.setVertexBuffer(instanceBuffer, offset: 0, index: 0)
+        renderEncoder.setVertexBuffer(renderUniformBuffer, offset: 0, index: 2)
+        
+        // Draw all satellites as point sprites in a single draw call
+        renderEncoder.drawPrimitives(type: .point, vertexStart: 0, vertexCount: 1, instanceCount: satelliteCount)
+        
+        // Render trails if enabled
+        if showTrails, let trailPipeline = trailRenderPipeline {
+            renderEncoder.setRenderPipelineState(trailPipeline)
+            renderEncoder.setVertexBuffer(instanceBuffer, offset: 0, index: 0)
+            renderEncoder.setVertexBuffer(renderUniformBuffer, offset: 0, index: 2)
+            // Draw trail lines (2 vertices per satellite, instanced)
+            renderEncoder.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 2, instanceCount: min(satelliteCount, maxTrailInstances))
+        }
+    }
+    
+    /// Update satellite positions on CPU (for hybrid mode when GPU propagation unavailable)
+    func updatePositionsCPU(positions: [SIMD3<Float>], velocities: [SIMD3<Float>]) {
+        guard let instanceBuffer = instanceBuffer else { return }
+        
+        let ptr = instanceBuffer.contents().bindMemory(to: SatelliteInstanceData.self, capacity: satelliteCount)
+        let count = min(positions.count, satelliteCount)
+        
+        for i in 0..<count {
+            ptr[i].position = positions[i]
+            if i < velocities.count {
+                ptr[i].velocity = velocities[i]
+            }
+        }
     }
     
     // MARK: - Configuration

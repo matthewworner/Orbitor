@@ -275,46 +275,35 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     
     /// Setup renderers based on feature flags
     private func setupRenderers() {
-        // SAFE MODE: In full-screen, apply conservative settings to avoid black screen
-        var effectiveUseMetal = FeatureFlags.enableSwarm
-        var effectiveToySats = FeatureFlags.enableToySats
+        // Hybrid rendering: Use Metal for swarm (via SceneKit delegate), SceneKit for hero satellites
+        let effectiveUseMetal = FeatureFlags.enableSwarm
+        let effectiveToySats = FeatureFlags.enableToySats
         
-        if isFullScreenMode {
-            logDiagnostics("SAFE_MODE_CHECK", details: [
-                "enableSwarm": "\(FeatureFlags.enableSwarm)",
-                "enableToySats": "\(FeatureFlags.enableToySats)"
-            ])
-            
-            // In full-screen, disable Metal by default (known to cause black screen)
-            // Only enable if user explicitly set it
-            if FeatureFlags.enableSwarm {
-                logToFile("⚠️ WARNING: Metal swarm enabled in full-screen - may cause black screen")
-            }
-            
-            // Force safe values in full-screen mode
-            effectiveUseMetal = false  // Always disable Metal in full-screen for now
-            effectiveToySats = true    // Keep toy sats enabled
-        }
+        logDiagnostics("RENDERER_SETUP", details: [
+            "enableSwarm": "\(effectiveUseMetal)",
+            "enableToySats": "\(effectiveToySats)",
+            "isFullScreen": "\(isFullScreenMode)"
+        ])
         
         // Initialize Metal renderer if swarm is enabled
+        // Now works in full-screen via SCNSceneRendererDelegate integration
         if effectiveUseMetal {
             metalRenderer = MetalSatelliteRenderer.create()
             if metalRenderer != nil {
                 useMetalRendering = true
-                qualityLevel = .ultra
 
                 // Configure Metal renderer for firefly swarm
                 metalRenderer?.earthPosition = SIMD3<Float>(0, 0, 0) // Earth at origin
-                metalRenderer?.showTrails = FeatureFlags.enableSwarm && FeatureFlags.showTrails
+                metalRenderer?.showTrails = FeatureFlags.showTrails
                 metalRenderer?.trailLength = 1.5
                 metalRenderer?.setTimeAcceleration(Float(satelliteManager.timeAcceleration))
 
-                #if DEBUG
-                print("✅ Metal renderer initialized for swarm")
-                #endif
+                logToFile("✅ Metal renderer initialized for swarm (hybrid mode)")
+            } else {
+                logToFile("⚠️ Metal renderer creation failed - falling back to SceneKit only")
             }
         }
-
+        
         // Initialize SceneKit renderer if toy sats are enabled
         if effectiveToySats {
             satelliteRenderer = SatelliteRenderer(scene: scene)
@@ -662,15 +651,17 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         var colors: [SIMD4<Float>] = []
         var velocities: [SIMD3<Float>] = []
         var names: [String] = []
+        var classifications: [SatelliteClass] = []
+        var ages: [Double] = []
 
         let earthOffset = SIMD3<Float>(x: 0, y: 0, z: 0)
-        // Use reasonable satellite count based on quality level
-        // SceneKit can handle ~500-1000 nodes smoothly
         let safeMaxSatellites = qualityLevel.maxSatellites
         
-        let scale: Float = 2.0 / 6371.0 // Scale KM (Radius 6371) to SceneKit (Radius 2.0)
+        let scale: Float = 2.0 / 6371.0
 
-        for satellite in satelliteManager.satellites.prefix(safeMaxSatellites) {
+        let satellites = Array(satelliteManager.satellites.prefix(safeMaxSatellites))
+        
+        for satellite in satellites {
             let (position, velocity) = satelliteManager.getPositionAndVelocity(for: satellite, at: animationTime)
 
             positions.append(SIMD3<Float>(
@@ -681,6 +672,8 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
             colors.append(satelliteManager.colorForSatellite(satellite))
             velocities.append(SIMD3<Float>(velocity))
             names.append(satellite.name)
+            classifications.append(satelliteManager.classifySatellite(satellite))
+            ages.append(satelliteManager.calculateAge(satellite))
         }
 
         satelliteRenderer.updateSatellites(
@@ -688,20 +681,13 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
             colors: colors,
             velocities: velocities,
             names: names,
+            classifications: classifications,
+            ages: ages,
             earthOffset: earthOffset
         )
 
-        // Add motion trails for high-orbit satellites (only if quality allows)
         if qualityLevel >= .medium {
             satelliteRenderer.addMotionTrails(positions: positions, velocities: velocities, earthOffset: earthOffset)
-        }
-    }
-
-    private func setupAnimationTimer() {
-        // Update satellites periodically for orbital motion
-        let updateInterval = qualityLevel.updateInterval
-        Timer.scheduledTimer(withTimeInterval: updateInterval, repeats: true) { [weak self] _ in
-            self?.updateSatellites()
         }
     }
 
@@ -736,7 +722,8 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
             }
         }
         
-        // Priority 3: Development fallback (project directory)
+        #if DEBUG
+        // Development fallback (project directory) - only in debug builds
         let projectPaths = [
             "/Users/pro/Projects/Screensaver/Resources/Textures/8K/\(name).jpg",
             "/Users/pro/Projects/Screensaver/Resources/Textures/8K/\(name).png"
@@ -748,7 +735,6 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
             }
         }
         
-        #if DEBUG
         print("⚠️ NatureVsNoiseView: Texture '\(name)' not found")
         #endif
         
@@ -819,6 +805,25 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
             logDiagnostics("FIRST_FRAME_RENDERED", details: [
                 "setupDuration": String(format: "%.3f", setupDuration)
             ])
+        }
+        
+        // Update satellite positions and render Metal swarm
+        let deltaTime = time - lastUpdateTime
+        if deltaTime >= qualityLevel.updateInterval {
+            updateSatellites()
+            lastUpdateTime = time
+        }
+        
+        // Render Metal swarm directly into SceneKit's render context
+        if useMetalRendering, let metalRenderer = metalRenderer, let cameraNode = cameraNode {
+            metalRenderer.render(into: renderer, camera: cameraNode)
+        }
+    }
+    
+    func renderer(_ renderer: SCNSceneRenderer, willRenderScene scene: SCNScene, atTime time: TimeInterval) {
+        // Pre-render hook - Metal rendering happens here for proper layering
+        if useMetalRendering, let metalRenderer = metalRenderer, let cameraNode = cameraNode {
+            metalRenderer.render(into: renderer, camera: cameraNode)
         }
     }
     

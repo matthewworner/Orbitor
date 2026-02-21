@@ -181,7 +181,7 @@ class StatsPanel: SKNode {
             let progress = elapsedTime / CGFloat(duration)
             let currentValue = self?.displayedCount ?? 0
             let displayValue = Int(Double(currentValue) * Double(progress))
-            self?.satelliteCountLabel.text = formatNumber(displayValue)
+            self?.satelliteCountLabel.text = self?.formatNumber(displayValue)
         }
         
         satelliteCountLabel.run(action)

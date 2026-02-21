@@ -2,79 +2,57 @@
 
 A macOS screensaver contrasting cosmic serenity with the chaotic swarm of 23,000+ satellites orbiting Earth.
 
-## Current Status (2026-01-07)
+## Features
 
-**Working:**
-- ✅ Solar system renders (Sun + 8 planets with 8K textures)
-- ✅ Earth with cloud layer
-- ✅ Starfield (5000 procedural stars, optional)
-- ✅ Satellite rendering with multiple modes:
-  - Toy satellites: 50 simplified cross/T shapes (SceneKit)
-  - Firefly swarm: Thousands of glowing points (Metal, optional)
-  - Combined rendering with feature flags
-- ✅ Cinematic fly-through camera (40-second loop)
-- ✅ Multi-display support
-- ✅ Feature flags system for safe/stable presets
-- ✅ Comprehensive logging to ~/Library/Logs/NatureVsNoise.log
-
-**In Progress:**
-- 🔧 Debugging full-screen black screen issue (logging added)
-- ⚠️ Performance optimization and Metal stability
-- ⚠️ Audio integration (ambient + planetary clips)
-- ⚠️ Settings UI for user customization
+- **Solar System**: Sun + 8 planets with 8K NASA textures
+- **Hybrid Rendering**: SceneKit for planets/hero satellites, Metal for 5000+ swarm points
+- **Satellite Classification**: ISS, Starlink, notable satellites, and debris each render differently
+- **NASA 3D Models**: Hubble, TESS, TDRS, Juno integrated from NASA assets
+- **Visual Effects**: Motion trails, material aging, thermal glow
+- **Real Orbital Data**: SGP4 propagation from CelesTrak TLE files
 
 ## Quick Start
 
 ```bash
-# Build and install
+# Build
 cd NatureVsNoise
 xcodebuild -scheme NatureVsNoise -configuration Release build
+
+# Install
 cp -R ~/Library/Developer/Xcode/DerivedData/NatureVsNoise-*/Build/Products/Release/NatureVsNoise.saver ~/Library/Screen\ Savers/
 ```
 
-## Feature Flags & Presets
+Select **NatureVsNoise** in System Settings → Screen Saver.
 
-The screensaver uses feature flags stored in UserDefaults for stability. Default "safe" preset:
-- Planets + starfield + 800 toy satellites
-- No Metal rendering, no labels
-- Stable for most systems
+## Requirements
 
-Available presets:
-- **Safe**: Basic features, maximum stability
-- **Full**: All features enabled (may be unstable)
-- **Toy Only**: Just simplified satellites
-- **Swarm Only**: Just Metal firefly points
+- macOS 13.0+
+- Apple Silicon recommended (Intel supported)
 
-Check logs at `~/Library/Logs/NatureVsNoise.log` for debugging.
+## Documentation
 
-## Troubleshooting
-
-- **Black screen in full-screen mode**: Check logs for lifecycle events and FPS
-- **Performance issues**: Use safe preset or reduce satellite count
-- **Metal rendering fails**: Feature automatically disabled on unsupported hardware
+| File | Description |
+|------|-------------|
+| [CHANGELOG.md](CHANGELOG.md) | Version history and changes |
+| [prd.md](prd.md) | Full product requirements |
+| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues and fixes |
+| [plans/LAUNCH_ROADMAP.md](plans/LAUNCH_ROADMAP.md) | Development status |
 
 ## Project Structure
 
 ```
-├── prd.md              # Full product specifications
-├── LAUNCH_ROADMAP.md   # Development roadmap and status
-├── Assets/Raw/         # Source textures (8K) & TLE data
-├── NatureVsNoise/      # Xcode project
-│   └── NatureVsNoise/Sources/
-│       ├── NatureVsNoiseView.swift  # Main screensaver view
-│       ├── FeatureFlags.swift       # User defaults and presets
-│       ├── Planets/                  # Planet factory
-│       └── Satellites/               # Satellite rendering (SceneKit + Metal)
-└── DEBUG_SESSION_*.md  # Development logs
+NatureVsNoise/
+├── NatureVsNoise.xcodeproj
+└── NatureVsNoise/
+    ├── Info.plist
+    └── Sources/
+        ├── NatureVsNoiseView.swift    # Main screensaver view
+        ├── FeatureFlags.swift         # User settings
+        ├── Planets/                   # Planet rendering
+        ├── Satellites/                # Satellite systems
+        ├── Audio/                     # Audio controller
+        └── UI/                        # HUD overlay
 ```
-
-## Tech Stack
-
-- **Framework:** SceneKit + Metal (hybrid rendering)
-- **Language:** Swift 5.9
-- **Target:** macOS 13.0+, Apple Silicon preferred
-- **Performance:** 60fps target, adaptive quality
-- **Features:** Feature flags, presets, comprehensive logging
 
 ## License
 

@@ -17,6 +17,8 @@
 		E01111112B5A00000000019 /* MetalSatelliteRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A0000000001A /* MetalSatelliteRenderer.swift */; };
 		E01111112B5A000000000B1 /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A0000000002F /* FeatureFlags.swift */; };
 		E01111112B5A000000000B3 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000B2 /* Shaders.metal */; };
+		BDCA39D714B59410A8E879CD0 /* SatelliteClassification.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD7BD4D76C8594EA5B4414D44 /* SatelliteClassification.swift */; };
+
 		E01111112B5A000000000D1 /* AudioController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C1 /* AudioController.swift */; };
 		E01111112B5A000000000D2 /* ImageLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C2 /* ImageLoader.swift */; };
 		E01111112B5A000000000D4 /* HUDOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C4 /* HUDOverlay.swift */; };
@@ -82,6 +84,8 @@
 		E01111112B5A000000000CB /* EducationalFacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EducationalFacts.swift; sourceTree = "<group>"; };
 		E01111112B5A000000000CC /* SatelliteDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteDatabase.swift; sourceTree = "<group>"; };
 		E01111112B5A000000000CD /* MissionControlTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissionControlTheme.swift; sourceTree = "<group>"; };
+		AD7BD4D76C8594EA5B4414D44 /* SatelliteClassification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteClassification.swift; sourceTree = "<group>"; };
+
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -177,6 +181,7 @@
 			children = (
 				E01111112B5A00000000007 /* SatelliteManager.swift */,
 				E01111112B5A00000000008 /* SatelliteRenderer.swift */,
+				AD7BD4D76C8594EA5B4414D44 /* SatelliteClassification.swift */,
 				E01111112B5A00000000014 /* SGP4Propagator.swift */,
 				E01111112B5A00000000016 /* TLEFetcher.swift */,
 				E01111112B5A0000000001A /* MetalSatelliteRenderer.swift */,
@@ -336,6 +341,7 @@
 				E01111112B5A00000000005 /* CameraController.swift in Sources */,
 				E01111112B5A00000000009 /* SatelliteManager.swift in Sources */,
 				E01111112B5A00000000012 /* SatelliteRenderer.swift in Sources */,
+				BDCA39D714B59410A8E879CD0 /* SatelliteClassification.swift in Sources */,
 				E01111112B5A00000000013 /* SGP4Propagator.swift in Sources */,
 				E01111112B5A00000000015 /* TLEFetcher.swift in Sources */,
 				E01111112B5A00000000019 /* MetalSatelliteRenderer.swift in Sources */,

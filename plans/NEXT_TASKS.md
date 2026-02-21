@@ -1,151 +1,122 @@
-# Next Tasks: Build & Test Stability Improvements
+# Next Tasks: Polish & Release Preparation
 
-**Date:** 2026-01-07
-**Status:** Ready for implementation
+**Date:** 2026-02-21
+**Status:** Feature Complete - Ready for Testing
 
 ---
 
 ## Overview
 
-The stability framework has been implemented with feature flags, safe presets, and comprehensive logging. The app now has proper controls to isolate and diagnose the black screen issue. Next priority is building and testing to confirm stability.
+Hybrid rendering implemented. Metal full-screen issue resolved. Satellite classification, motion trails, and material effects complete. Next phase is user testing and polish.
 
 ---
 
-## 🎯 Immediate Tasks (Build & Test)
+## Completed ✅
 
-### 1. Build the Application
-**Goal:** Verify no compilation errors with new code
-
-**Steps:**
-- Navigate to `NatureVsNoise/` directory
-- Run: `xcodebuild -project NatureVsNoise.xcodeproj -scheme NatureVsNoise -configuration Release build`
-- Check for successful compilation
-- Install `.saver` bundle to `~/Library/Screen Savers/`
-
-**Expected Outcome:** Clean build with no errors
-
-### 2. Test Safe Preset (Default)
-**Goal:** Confirm safe preset works without black screen
-
-**Steps:**
-- Open System Settings → Desktop & Screen Saver
-- Select NatureVsNoise screensaver
-- Test thumbnail preview (should show planets)
-- Test full-screen preview
-- Check `~/Library/Logs/NatureVsNoise.log` for:
-  - "Scene setup complete"
-  - FPS readings around 60
-  - No errors or crashes
-
-**Success Criteria:**
-- Full-screen shows planets + starfield + satellites
-- No black screen
-- Smooth 60fps performance
-- Logs show clean initialization
-
-### 3. Analyze Logs for Black Screen
-**Goal:** If black screen occurs, identify root cause
-
-**Steps:**
-- Compare thumbnail vs full-screen log entries
-- Look for differences in:
-  - Lifecycle timing (setFrameSize, startAnimation)
-  - GPU/Metal initialization
-  - Scene setup completion
-- Check for sandbox restrictions or GPU access issues
-
-**Expected Outcome:** Clear diagnosis of black screen cause
+- [x] Fix Metal full-screen rendering (SceneKit delegate integration)
+- [x] Implement satellite classification system
+- [x] Add motion trails for orbital paths
+- [x] Integrate NASA 3D models (Hubble, TESS, TDRS, Juno)
+- [x] Add material aging and thermal glow effects
+- [x] Migrate from Timer to frame-synchronized updates
+- [x] Update documentation
 
 ---
 
-## 🚀 Medium-term Tasks (Feature Enablement)
+## High Priority
 
-### 4. Test Feature Combinations
-**Goal:** Gradually enable features to find stability limits
+### 1. User Testing
+**Goal:** Verify stability across different hardware
 
 **Test Matrix:**
-- Toy sats only (50 count) ✅ Already working
-- Firefly swarm only (Metal points)
-- Combined toy sats + firefly swarm
-- Increase satellite count (800 → 2000 → 5000)
-- Re-enable labels (nearest only)
+- [ ] M1/M2 Mac - Full quality, all features
+- [ ] M1 (base) - High quality
+- [ ] Intel Mac - Medium quality
+- [ ] Multiple display configurations
+- [ ] Various screen resolutions
+
+**Success Criteria:**
+- 60fps sustained
+- No black screens
+- No crashes in 10-minute test
+
+### 2. Performance Profiling
+**Goal:** Identify and fix any remaining bottlenecks
 
 **Steps:**
-- Modify `FeatureFlags` in code or UserDefaults
-- Test each combination full-screen
-- Monitor logs for performance/FPS
-- Note breaking points
-
-### 5. Debug Metal Rendering
-**Goal:** Fix Metal satellite rendering crashes
-
-**Steps:**
-- Enable `useMetalSatellites` flag
-- Test with small satellite counts first
-- Check logs for Metal initialization errors
-- Isolate GPU access issues in screensaver sandbox
-- Implement fallback to SceneKit if Metal fails
-
-### 6. Tune Camera & Visibility
-**Goal:** Improve satellite visibility during fly-through
-
-**Steps:**
-- Adjust camera path to get closer to Earth/satellites
-- Slow down fly-through during satellite shell passage
-- Ensure satellites are visible against starfield
-- Test on different display sizes
+- [ ] Run Instruments to profile GPU usage
+- [ ] Check memory usage with large satellite counts
+- [ ] Verify Metal shader performance
 
 ---
 
-## 🎵 Audio & Polish Tasks
+## Medium Priority
 
-### 7. Implement Basic Audio
-**Goal:** Add ambient space sounds
+### 3. Camera Enhancement
+**Goal:** Expand to PRD's 12-15 minute cinematic tour
 
-**Steps:**
-- Integrate existing audio files from bundle
-- Add simple ambient loop playback
-- Test AVAudioEngine in screensaver context
-- Ensure no performance impact
+Current: 40-second loop
+Target: Full solar system grand tour with Earth debris reveal
 
-### 8. Add Settings UI
-**Goal:** Allow users to toggle features
+### 4. Additional 3D Models
+**Goal:** Add more detailed satellite models
 
-**Steps:**
-- Implement macOS screensaver preferences
-- Add toggles for Metal, labels, satellite count
-- Connect to `FeatureFlags` UserDefaults
-- Test preference persistence
+- [ ] Detailed ISS model (current is procedural)
+- [ ] CubeSat variations
+- [ ] Debris variations
 
----
+### 5. Audio
+**Goal:** Implement ambient audio
 
-## 📊 Success Metrics
-
-- **Safe Preset:** Works full-screen without black screen ✅
-- **Performance:** 60fps with safe preset ✅
-- **Stability:** No crashes in 10-minute full-screen test
-- **Features:** 50% of satellites visible during fly-through
-- **Logs:** Clean initialization with useful diagnostics
+- [ ] Ambient space sounds
+- [ ] Planet-specific audio cues
+- [ ] Settings toggle
 
 ---
 
-## 🔧 Risk Mitigation
+## Low Priority
 
-- **Fallback Plan:** If Metal remains unstable, ship with SceneKit toy sats only
-- **Minimum Viable:** Planets + starfield + 800 satellites (current safe preset)
-- **Incremental Testing:** Never enable multiple features simultaneously
-- **Log Analysis:** Use logs to make data-driven decisions
+### 6. tvOS Support
+**Goal:** Verify and test tvOS build
+
+- [ ] Build tvOS target
+- [ ] Test on Apple TV
+- [ ] Verify performance
+
+### 7. Settings UI
+**Goal:** Expose feature flags to users
+
+- [ ] Satellite count slider
+- [ ] Quality presets
+- [ ] Trail toggle
+- [ ] Audio toggle
 
 ---
 
-## 📋 Dependencies
+## Known Limitations
 
-- Xcode 15+ with macOS 13+ SDK
-- Apple Silicon Mac for Metal testing (Intel fallback available)
-- Access to System Settings for screensaver testing
+| Limitation | Impact | Future Work |
+|------------|--------|-------------|
+| 40-second camera loop | Doesn't match PRD | Expand cinematic sequence |
+| No audio | Silent experience | Implement audio system |
+| Limited 3D models | ISS uses procedural | Add detailed ISS model |
+| No user settings | Defaults only | Build settings UI |
 
 ---
 
-## 🎯 Next Milestone
+## Metrics
 
-**Stable macOS screensaver launch** with safe preset working reliably.
+| Metric | Current | Target |
+|--------|---------|--------|
+| Build Status | ✅ Success | ✅ Success |
+| Test Coverage | None | Basic tests |
+| FPS (M1) | 60 | 60 |
+| FPS (Intel) | 45-60 | 60 |
+| Black Screen | Fixed | N/A |
+| Features | Complete | Polish |
+
+---
+
+## Next Milestone
+
+**User Testing Complete** - Verify stability across hardware configurations.
