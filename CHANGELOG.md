@@ -2,6 +2,45 @@
 
 All notable changes to Nature vs Noise Screensaver.
 
+## [2026-05-17] - Apple-Tier Audit Complete
+
+### Fixed (Critical Bugs)
+- **Earth Position Offset** (`NatureVsNoiseView.swift:670`)
+  - `earthOffset` was `(30,0,0)` but Earth is at origin `(0,0,0)`
+  - Satellites were orbiting 30 units away from Earth
+  - Now renders correctly at Earth-centered position
+
+- **QualityLevel Off-by-One** (`NatureVsNoiseView.swift`)
+  - Enum started at 1 (low=1, medium=2, high=3, ultra=4)
+  - UserDefaults stores 0-3 (low=0, medium=1, high=2, ultra=3)
+  - Quality level was always +1 off
+  - Fixed enum to start at 0 to match UserDefaults
+
+- **Bundle.main Fallback** (`SatelliteManager.swift`, `NatureVsNoiseView.swift`)
+  - `Bundle.main` points to ScreenSaverEngine, not our screensaver
+  - TLE files and textures wouldn't load without explicit bundle
+  - Changed to `Bundle(for: type(of: self))` throughout
+
+- **SGP4 Division by Zero** (`SGP4Propagator.swift:283`)
+  - `c3 = coef * tsi * j3oj2 * no * sin(inclo) / ecco`
+  - Crashes when eccentricity = 0 (circular orbit)
+  - Added guard: `(ecco > 1e-10) ? ... : 0.0`
+
+- **SGP4 sqrt Edge Case** (`SGP4Propagator.swift:220-221`)
+  - `sqrt(1 - ecc^2)` fails when ecc >= 1
+  - Parabolic/hyperbolic orbits not supported by SGP4
+  - Added guard against non-elliptical orbits
+
+### Documentation
+- Added `DEPLOYMENT.md` with signing and notarization instructions
+- Updated README with new project structure
+- Added thumbnail.png for System Preferences preview
+
+### Build Status
+- ✅ All 5 critical bugs fixed
+- ✅ Build: SUCCEEDED (arm64 + x86_64)
+- ⏸️ Runtime: Blocked by macOS 26.5 code signing requirement
+
 ## [2026-05-16] - Engineering Stabilization
 
 ### Fixed

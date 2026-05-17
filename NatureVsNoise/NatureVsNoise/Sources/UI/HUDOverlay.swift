@@ -267,6 +267,13 @@ class HUDOverlay: SKScene {
     
     // MARK: - Cleanup
     
+    /// Stop update timer - called when screensaver is disabled
+    func stopUpdateTimer() {
+        updateTimer?.invalidate()
+        updateTimer = nil
+        factOverlay.stopAutoShow()
+    }
+    
     deinit {
         updateTimer?.invalidate()
         factOverlay.stopAutoShow()

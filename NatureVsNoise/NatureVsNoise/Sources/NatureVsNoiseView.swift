@@ -126,6 +126,17 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         super.startAnimation()
     }
     
+    override func stopAnimation() {
+        // Clean up resources when screensaver is disabled
+        sceneView?.isPlaying = false
+        sceneView?.delegate = nil
+        
+        // Stop HUD update timer
+        hudOverlay?.stopUpdateTimer()
+        
+        super.stopAnimation()
+    }
+    
     // MARK: - Scene Setup
     
     // Diagnostic log file for debugging screensaver issues
