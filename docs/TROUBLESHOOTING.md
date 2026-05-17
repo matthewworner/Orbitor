@@ -108,6 +108,26 @@ Check `~/Library/Logs/NatureVsNoise.log` for:
 
 ---
 
+## macOS 26.5 Code Signing (RESOLVED in documentation)
+
+**Issue:** Ad-hoc signed screensaver killed with "Launch Constraint Violation"
+**Root Cause:** macOS 26.5 (Platform ID 26) requires Developer ID signed binaries for executables loaded by system services (ScreenSaverEngine)
+**Solution:**
+1. Sign with Developer ID Application certificate
+   ```bash
+   codesign --force --deep --sign "Developer ID Application: YOUR_NAME" \
+     --options runtime NatureVsNoise.saver
+   ```
+2. Notarize with Apple (required for distribution)
+   ```bash
+   xcrun notarytool submit NatureVsNoise.saver.zip --apple-id "your@email.com"
+   xcrun stapler staple NatureVsNoise.saver
+   ```
+
+See [DEPLOYMENT.md](NatureVsNoise/DEPLOYMENT.md) for full instructions.
+
+---
+
 ## Reinstallation
 
 ```bash
@@ -116,6 +136,6 @@ rm -rf ~/Library/Screen\ Savers/NatureVsNoise.saver
 
 # Build and install fresh
 cd /path/to/NatureVsNoise
-xcodebuild -scheme NatureVsNoise -configuration Release build
+xcodebuild -project NatureVsNoise.xcodeproj -target NatureVsNoise -configuration Release build
 cp -R ~/Library/Developer/Xcode/DerivedData/NatureVsNoise-*/Build/Products/Release/NatureVsNoise.saver ~/Library/Screen\ Savers/
 ```
