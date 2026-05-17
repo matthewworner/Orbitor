@@ -3,6 +3,8 @@ import MetalKit
 import SceneKit
 import simd
 
+// FeatureFlags is now in Sources/FeatureFlags.swift
+
 // MARK: - GPU Data Structures (Must match Metal shader)
 
 struct OrbitalElementsGPU {
@@ -106,15 +108,18 @@ class MetalSatelliteRenderer: NSObject {
         let count = maxSatelliteCount ?? FeatureFlags.maxSatelliteCount
         let renderer = MetalSatelliteRenderer(device: device, commandQueue: commandQueue, maxSatellites: count)
 
-        do {
-            try renderer.setupPipelines()
-            renderer.setupBuffers()
+        // setupPipelines may fail for optional pipelines - that's OK, we fall back to SceneKit-only
+        renderer.setupPipelines()
+        renderer.setupBuffers()
+        
+        // Check if we have a functional render pipeline
+        if renderer.renderPipeline == nil {
+            print("⚠️ MetalSatelliteRenderer: No functional render pipeline - using SceneKit-only mode")
+        } else {
             print("✅ MetalSatelliteRenderer: Initialized with \(device.name), max \(count) satellites")
-            return renderer
-        } catch {
-            print("❌ MetalSatelliteRenderer: Failed to setup pipelines: \(error)")
-            return nil
         }
+        
+        return renderer
     }
 
     private init(device: MTLDevice, commandQueue: MTLCommandQueue, maxSatellites: Int) {
@@ -126,10 +131,11 @@ class MetalSatelliteRenderer: NSObject {
     
     // MARK: - Pipeline Setup
     
-    private func setupPipelines() throws {
+    private func setupPipelines() {
         // Load the shader library
         guard let library = device.makeDefaultLibrary() else {
-            throw MetalRendererError.shaderLoadFailed
+            initializationError = "Failed to load Metal shader library"
+            return
         }
         
         // Try to create compute pipeline for propagation (optional - may fail)
@@ -156,7 +162,8 @@ class MetalSatelliteRenderer: NSObject {
         // Render pipeline for satellites - this is required
         guard let vertexFunction = library.makeFunction(name: "satelliteVertex"),
               let fragmentFunction = library.makeFunction(name: "satelliteFragment") else {
-            throw MetalRendererError.shaderLoadFailed
+            initializationError = "Required shader functions not found in Metal library"
+            return
         }
         
         let renderDescriptor = MTLRenderPipelineDescriptor()
@@ -174,8 +181,11 @@ class MetalSatelliteRenderer: NSObject {
             renderPipeline = try device.makeRenderPipelineState(descriptor: renderDescriptor)
             print("✅ MetalSatelliteRenderer: Render pipeline created")
         } catch {
-            print("❌ MetalSatelliteRenderer: Failed to create render pipeline: \(error)")
-            throw MetalRendererError.pipelineCreationFailed
+            print("⚠️ MetalSatelliteRenderer: Failed to create render pipeline: \(error)")
+            // Don't throw - we'll use SceneKit-only mode as fallback
+            // This allows the screensaver to work even if Metal shaders fail
+            initializationError = "Render pipeline creation failed: \(error.localizedDescription)"
+            return
         }
         
         // Trail render pipeline (optional)

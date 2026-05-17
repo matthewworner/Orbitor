@@ -160,9 +160,9 @@ class SatelliteManager {
     }
 
     private func loadTLEContent(named name: String) -> String? {
-        let bundle = self.bundle ?? Bundle.main
+        let bundle = self.bundle ?? Bundle(for: type(of: self))
 
-        // Priority 1: Bundle resources
+        // Priority 1: Bundle resources (root)
         if let bundlePath = bundle.path(forResource: name, ofType: "tle") {
             return try? String(contentsOfFile: bundlePath)
         }
@@ -173,13 +173,24 @@ class SatelliteManager {
             if FileManager.default.fileExists(atPath: dataPath) {
                 return try? String(contentsOfFile: dataPath)
             }
+            // Priority 3: Bundle Resources subdirectory (flat structure)
+            let resourcesPath = "\(resourcePath)/\(name).tle"
+            if FileManager.default.fileExists(atPath: resourcesPath) {
+                return try? String(contentsOfFile: resourcesPath)
+            }
         }
 
         #if DEBUG
         // Development fallback - only in debug builds
-        let devPath = "/Users/pro/Projects/Side Projects/Screensaver/Assets/Raw/Data/\(name).tle"
-        if FileManager.default.fileExists(atPath: devPath) {
-            return try? String(contentsOfFile: devPath)
+        let devPaths = [
+            "/Users/pro/Projects/Side Projects/Screensaver/Assets/Raw/Data/\(name).tle",
+            "/Users/pro/Projects/Secondary/Screensaver/NatureVsNoise/NatureVsNoise/Resources/Data/\(name).tle",
+            "/Users/pro/Projects/Secondary/Screensaver/NatureVsNoise/NatureVsNoise/Resources/\(name).tle"
+        ]
+        for devPath in devPaths {
+            if FileManager.default.fileExists(atPath: devPath) {
+                return try? String(contentsOfFile: devPath)
+            }
         }
         #endif
 

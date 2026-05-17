@@ -43,15 +43,24 @@ Select **NatureVsNoise** in System Settings → Screen Saver.
 ```
 NatureVsNoise/
 ├── NatureVsNoise.xcodeproj
-└── NatureVsNoise/
-    ├── Info.plist
-    └── Sources/
-        ├── NatureVsNoiseView.swift    # Main screensaver view
-        ├── FeatureFlags.swift         # User settings
-        ├── Planets/                   # Planet rendering
-        ├── Satellites/                # Satellite systems
-        ├── Audio/                     # Audio controller
-        └── UI/                        # HUD overlay
+├── 8K/                           # Textures + bundled TLE data
+│   ├── earth_8k_day.jpg
+│   ├── jupiter_8k.jpg
+│   ├── ...other planet textures...
+│   └── active_satellites.tle     # Bundled satellite data (14 satellites)
+├── NatureVsNoise/
+│   ├── Info.plist
+│   ├── Resources/                # Audio, Models, Textures
+│   └── Sources/
+│       ├── NatureVsNoiseView.swift    # Main screensaver view
+│       ├── FeatureFlags.swift         # User settings
+│       ├── Planets/                   # Planet rendering
+│       ├── Satellites/                # Satellite systems
+│       ├── Audio/                     # Audio controller
+│       └── UI/                        # HUD overlay
+└── NatureVsNoiseTests/           # Unit tests
+    ├── SGP4PropagatorTests.swift
+    └── FeatureFlagsAndTLETests.swift
 ```
 
 ## License

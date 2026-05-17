@@ -10,6 +10,8 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     private var sceneView: SCNView!
     private var scene: SCNScene!
     private var cameraNode: SCNNode!
+    private var groundCameraNode: SCNNode!
+    private var earthNode: SCNNode?
     private var cameraController: CameraController!
     private var satelliteManager: SatelliteManager!
     private var satelliteRenderer: SatelliteRenderer!
@@ -34,6 +36,14 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     private var firstFrameRendered: Bool = false
     private var setupStartTime: TimeInterval = 0
     private var firstFrameTime: TimeInterval = 0
+    
+    // Viewpoint Cycling
+    private enum ViewMode {
+        case cinematicOrbit
+        case groundStellarium
+    }
+    private var currentViewMode: ViewMode = .cinematicOrbit
+    private var lastViewModeSwitchTime: TimeInterval = 0
 
     // Audio
     private var audioController: AudioController?
@@ -44,7 +54,7 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     // Quality settings - read from UserDefaults, fallback to high
     private var qualityLevel: QualityLevel = {
         let saved = UserDefaults.standard.integer(forKey: "qualityLevel")
-        return QualityLevel(rawValue: saved + 1) ?? .high
+        return QualityLevel(rawValue: saved) ?? .high
     }()
     
     // MARK: - Initialization
@@ -240,13 +250,16 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         let cinematicSequence = SCNAction.sequence([approach, flyPast, swingAround])
         cameraNode.runAction(SCNAction.repeatForever(cinematicSequence))
         
+        setupGroundCamera()
+        lastViewModeSwitchTime = Date().timeIntervalSince1970
+        
         sceneView.isPlaying = true
         
         // Initialize audio if enabled
         if FeatureFlags.enableAudio {
             // Check if audio files exist in bundle before initializing
-            if let _ = Bundle.main.path(forResource: "ambient_solar_wind", ofType: "wav", inDirectory: "Audio/Ambient") ??
-                         Bundle.main.path(forResource: "solar_wind_preview", ofType: "mp3", inDirectory: "Audio/Ambient") {
+            if let _ = Bundle(for: type(of: self)).path(forResource: "ambient_solar_wind", ofType: "wav", inDirectory: "Audio/Ambient") ??
+                         Bundle(for: type(of: self)).path(forResource: "solar_wind_preview", ofType: "mp3", inDirectory: "Audio/Ambient") {
                 audioController = AudioController()
                 logToFile("🔊 Audio enabled and initialized")
             } else {
@@ -370,9 +383,10 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         logToFile("Camera initial position - Pivot: \(cameraPivot.position), Camera: \(cameraNode.position)")
         
         // PBR Lighting Environment
-        // Simulates light coming from stars/galaxy
-        scene.lightingEnvironment.contents = NSColor(white: 0.02, alpha: 1.0) // Very dark ambient
-        scene.lightingEnvironment.intensity = 1.0
+        // SceneKit requires a valid lighting environment for PBR, but large 8-bit NSImages can fail causing black screens.
+        // Using a solid mid-grey color ensures all PBR metallic materials (satellites) reflect light safely.
+        scene.lightingEnvironment.contents = NSColor(white: 0.3, alpha: 1.0)
+        scene.lightingEnvironment.intensity = 2.0
         
         // Minimal ambient light fill (for shadowed sides of planets)
         let ambientLight = SCNNode()
@@ -381,6 +395,28 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         ambientLight.light?.intensity = 50 // Reduced from 100
         ambientLight.light?.color = NSColor(white: 0.2, alpha: 1.0)
         scene.rootNode.addChildNode(ambientLight)
+    }
+    
+    private func setupGroundCamera() {
+        guard let earth = earthNode else { return }
+        
+        groundCameraNode = SCNNode()
+        groundCameraNode.camera = SCNCamera()
+        groundCameraNode.camera?.zNear = 0.05
+        groundCameraNode.camera?.zFar = 10000
+        groundCameraNode.camera?.fieldOfView = 90 // Wide angle for looking up at the sky
+        groundCameraNode.camera?.wantsHDR = true
+        groundCameraNode.camera?.exposureOffset = 0.5 // Slightly brighter to see stars better
+        
+        // Attach to Earth's surface. 
+        // Earth radius is 2.0 in the scene. Cloud layer is 2.02.
+        // We place the camera at z = 2.03 to be "on the ground" just above the clouds.
+        groundCameraNode.position = SCNVector3(0, 0, 2.03)
+        // Rotate camera 180 deg around Y-axis so it points AWAY from the center of the Earth (upwards into space)
+        // SceneKit cameras point down -Z by default.
+        groundCameraNode.eulerAngles.y = .pi
+        
+        earth.addChildNode(groundCameraNode)
     }
     
     
@@ -516,6 +552,7 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
             if planetData.name == "Earth" {
                 planetNode.position = SCNVector3(0, 0, 0)
                 addEarthClouds(parent: planetNode)
+                earthNode = planetNode
             }
             
             scene.rootNode.addChildNode(planetNode)
@@ -630,7 +667,7 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         
         guard let satelliteRenderer = satelliteRenderer else { return }
         
-        let earthOffset = SIMD3<Float>(30, 0, 0)
+        let earthOffset = SIMD3<Float>(0, 0, 0)
         let velocities: [SIMD3<Float>] = Array(repeating: .zero, count: positions.count)
         
         satelliteRenderer.updateSatellites(
@@ -709,9 +746,11 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
             return NSImage(contentsOfFile: bundlePath)
         }
         
-        // Priority 2: Bundle's Resources/Textures/8K subdirectory
+        // Priority 2: Bundle's Resources/8K subdirectory (textures in 8K folder)
         if let resourcePath = bundle.resourcePath {
             let texturePaths = [
+                "\(resourcePath)/8K/\(name).jpg",
+                "\(resourcePath)/8K/\(name).png",
                 "\(resourcePath)/Textures/8K/\(name).jpg",
                 "\(resourcePath)/Textures/8K/\(name).png"
             ]
@@ -726,7 +765,9 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         // Development fallback (project directory) - only in debug builds
         let projectPaths = [
             "/Users/pro/Projects/Screensaver/Resources/Textures/8K/\(name).jpg",
-            "/Users/pro/Projects/Screensaver/Resources/Textures/8K/\(name).png"
+            "/Users/pro/Projects/Screensaver/Resources/Textures/8K/\(name).png",
+            "/Users/pro/Projects/Secondary/Screensaver/NatureVsNoise/8K/\(name).jpg",
+            "/Users/pro/Projects/Secondary/Screensaver/NatureVsNoise/8K/\(name).png"
         ]
         
         for path in projectPaths {
@@ -745,7 +786,7 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     
     override func animateOneFrame() {
         // Track first frame render
-        if !firstFrameRendered, let sceneView = sceneView {
+        if !firstFrameRendered, sceneView != nil {
             firstFrameRendered = true
             firstFrameTime = Date().timeIntervalSince1970
             let setupDuration = firstFrameTime - setupStartTime
@@ -788,9 +829,35 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
             hud.updateCamera(altitude: altitudeKm, velocity: max(3.0, velocity))
             hud.updateStats(satelliteCount: qualityLevel.maxSatellites, fps: 60)
             
+            
             let targetName = findNearestPlanet(to: cameraNode.position)?.name ?? "DEEP SPACE"
             let coords = String(format: "%.1f, %.1f, %.1f", cameraNode.position.x, cameraNode.position.y, cameraNode.position.z)
-            hud.updateTarget(targetName, coordinates: coords)
+            // Adjust HUD text for current mode
+            if currentViewMode == .groundStellarium {
+                hud.updateTarget("STELLARIUM MODE", coordinates: "SURFACE")
+            } else {
+                hud.updateTarget(targetName, coordinates: coords)
+            }
+        }
+        
+        // Viewpoint Cycling
+        let currentTime = Date().timeIntervalSince1970
+        if currentTime - lastViewModeSwitchTime > 30.0 { // Switch perspective every 30 seconds
+            lastViewModeSwitchTime = currentTime
+            
+            SCNTransaction.begin()
+            SCNTransaction.animationDuration = 2.0
+            SCNTransaction.animationTimingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            
+            if currentViewMode == .cinematicOrbit {
+                currentViewMode = .groundStellarium
+                sceneView?.pointOfView = groundCameraNode
+            } else {
+                currentViewMode = .cinematicOrbit
+                sceneView?.pointOfView = cameraNode
+            }
+            
+            SCNTransaction.commit()
         }
     }
     
@@ -907,10 +974,10 @@ struct HardwareCapabilities: CustomStringConvertible {
 }
 
 enum HardwareTier: Int, Comparable {
-    case low = 1
-    case medium = 2
-    case high = 3
-    case ultra = 4
+    case low = 0
+    case medium = 1
+    case high = 2
+    case ultra = 3
     
     static func < (lhs: HardwareTier, rhs: HardwareTier) -> Bool {
         return lhs.rawValue < rhs.rawValue
@@ -920,10 +987,10 @@ enum HardwareTier: Int, Comparable {
 // MARK: - Quality Level
 
 enum QualityLevel: Int, Comparable {
-    case low = 1
-    case medium = 2
-    case high = 3
-    case ultra = 4
+    case low = 0
+    case medium = 1
+    case high = 2
+    case ultra = 3
     
     /// Maximum satellites to render at this quality level
     var maxSatellites: Int {

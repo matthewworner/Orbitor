@@ -213,11 +213,25 @@ class SGP4Propagator {
         no = elements.meanMotionRadPerMin
         epochDays = elements.epoch
         
+        // Guard against parabolic/hyperbolic orbits (ecc >= 1.0) - SGP4 only works for elliptical orbits
+        guard ecco < 0.9999 else {
+            // Orbit is parabolic (ecc=1) or hyperbolic (ecc>1) - use safe defaults for circular
+            ecco = 0.0
+            return
+        }
+        
         // Common initialization
         let cosio = cos(inclo)
         let cosio2 = cosio * cosio
         let eccsq = ecco * ecco
-        let omeosq = 1.0 - eccsq
+        var omeosq = 1.0 - eccsq
+        
+        // Guard against near-parabolic orbits where omeosq approaches 0
+        if omeosq <= 1e-10 {
+            // Orbit is nearly parabolic - use safe defaults
+            omeosq = 1e-10
+        }
+        
         let rteosq = sqrt(omeosq)
         
         // Semi-major axis and perigee
@@ -280,7 +294,7 @@ class SGP4Propagator {
                                (8.0 + 3.0 * etasq * (8.0 + etasq)))
         
         cc1 = bstar * c2
-        let c3 = coef * tsi * SGP4Constants.j3oj2 * no * sin(inclo) / ecco
+        let c3 = (ecco > 1e-10) ? coef * tsi * SGP4Constants.j3oj2 * no * sin(inclo) / ecco : 0.0
         cc4 = 2.0 * no * coef1 * a * omeosq *
               (eta * (2.0 + 0.5 * etasq) + ecco * (0.5 + 2.0 * etasq) -
                SGP4Constants.j2 * tsi / (a * psisq) *

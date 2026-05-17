@@ -31,13 +31,27 @@ public class ImageLoader {
             #endif
         }
 
-        // Try bundle's Resources/Textures/8K subdirectory
+        // Priority 2: Bundle's Resources/8K subdirectory (textures in 8K folder)
         if let resourcePath = bundle.resourcePath {
             let texturePaths = [
+                "\(resourcePath)/8K/\(name).jpg",
+                "\(resourcePath)/8K/\(name).png"
+            ]
+            for path in texturePaths {
+                if FileManager.default.fileExists(atPath: path) {
+                    #if os(macOS)
+                    return NSImage(contentsOfFile: path)
+                    #else
+                    return UIImage(contentsOfFile: path)
+                    #endif
+                }
+            }
+            // Also try Resources/Textures/8K for backwards compatibility
+            let legacyPaths = [
                 "\(resourcePath)/Textures/8K/\(name).jpg",
                 "\(resourcePath)/Textures/8K/\(name).png"
             ]
-            for path in texturePaths {
+            for path in legacyPaths {
                 if FileManager.default.fileExists(atPath: path) {
                     #if os(macOS)
                     return NSImage(contentsOfFile: path)
@@ -52,7 +66,9 @@ public class ImageLoader {
         // Only used during Xcode development/debugging
         let devPaths = [
             "/Users/pro/Projects/Screensaver/Resources/Textures/8K/\(name).jpg",
-            "/Users/pro/Projects/Screensaver/Resources/Textures/8K/\(name).png"
+            "/Users/pro/Projects/Screensaver/Resources/Textures/8K/\(name).png",
+            "/Users/pro/Projects/Secondary/Screensaver/NatureVsNoise/8K/\(name).jpg",
+            "/Users/pro/Projects/Secondary/Screensaver/NatureVsNoise/8K/\(name).png"
         ]
 
         for path in devPaths {

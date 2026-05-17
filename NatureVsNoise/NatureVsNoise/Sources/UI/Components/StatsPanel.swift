@@ -172,7 +172,7 @@ class StatsPanel: SKNode {
         
         let duration: TimeInterval = 0.5
         let steps = 20
-        let stepValue = Double(target - displayedCount) / Double(steps)
+        _ = Double(target - displayedCount) / Double(steps)
         
         displayedCount = target
         

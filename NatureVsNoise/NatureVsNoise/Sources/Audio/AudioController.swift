@@ -121,7 +121,7 @@ class AudioController {
         // 2. Proximity to Earth -> Human Noise increases
         // 3. Target Planet -> Specific Planet Voice increases, others fade out
 
-        let distanceToOrigin = sqrt(cameraPosition.x*cameraPosition.x + cameraPosition.y*cameraPosition.y + cameraPosition.z*cameraPosition.z)
+        _ = sqrt(cameraPosition.x*cameraPosition.x + cameraPosition.y*cameraPosition.y + cameraPosition.z*cameraPosition.z)
         let distanceToEarth = distance(from: cameraPosition, to: SCNVector3(30, 0, 0)) // Earth is at 30
 
         // Human Layer: Strongest near Earth, falls off quickly

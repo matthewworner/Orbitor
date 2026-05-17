@@ -1,0 +1,27 @@
+name: MinimalTest
+options:
+  bundleIdPrefix: com.test
+  deploymentTarget:
+    macOS: "13.0"
+
+targets:
+  MinimalTest:
+    type: bundle
+    platform: macOS
+    sources:
+      - Sources
+    resources:
+      - Resources
+    settings:
+      base:
+        PRODUCT_NAME: MinimalTest
+        PRODUCT_BUNDLE_IDENTIFIER: com.test.screensaver
+        WRAPPER_EXTENSION: saver
+        INFOPLIST_FILE: Sources/Info.plist
+        SWIFT_VERSION: "5.9"
+        MACOSX_DEPLOYMENT_TARGET: "13.0"
+        ENABLE_HARDENED_RUNTIME: NO
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGNING_ALLOWED: NO
+        COMBINE_HIDPI_IMAGES: YES

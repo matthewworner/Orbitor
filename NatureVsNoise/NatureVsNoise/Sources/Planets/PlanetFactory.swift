@@ -85,22 +85,8 @@ class PlanetFactory {
     
     // MARK: - Planet Creation
     
-    // Diagnostic log file
-    private static func logToFile(_ message: String) {
-        let logPath = NSHomeDirectory() + "/Desktop/screensaver_debug.log"
-        let logMessage = "[PlanetFactory] \(message)\n"
-        if let handle = FileHandle(forWritingAtPath: logPath) {
-            handle.seekToEndOfFile()
-            handle.write(logMessage.data(using: .utf8)!)
-            handle.closeFile()
-        } else {
-            try? logMessage.write(toFile: logPath, atomically: true, encoding: .utf8)
-        }
-    }
-    
     /// Creates a planet node with texture and rotation
     static func createPlanet(_ data: PlanetData) -> SCNNode {
-        logToFile("Creating planet: \(data.name) with texture prefix: \(data.texturePrefix)")
         
         let geometry = SCNSphere(radius: CGFloat(data.radius * 2))
         geometry.segmentCount = 96 // Increased smoothness for PBR
@@ -113,7 +99,6 @@ class PlanetFactory {
         
         // Try to load texture
         if let texture = loadTexture(named: data.texturePrefix) {
-            logToFile("✅ Texture LOADED for \(data.name): \(data.texturePrefix)")
             material.diffuse.contents = texture
             
             // Emissive for sun
@@ -122,8 +107,6 @@ class PlanetFactory {
                 material.emission.intensity = 2.0 // High intensity for bloom
                 material.lightingModel = .constant // Sun emits light, doesn't receive
             }
-        } else {
-            logToFile("❌ Texture FAILED for \(data.name): \(data.texturePrefix)")
         }
         
         // Load Normal Map if available

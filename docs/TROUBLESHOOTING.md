@@ -39,8 +39,9 @@ If black screen still occurs:
 ### 2. Planets look white or grey
 **Cause:** Missing textures
 **Fix:**
-- Check `Resources/Textures/8K` contains all planet textures
+- Check `8K/` folder contains all planet textures
 - Verify file names match exactly (e.g., `earth_8k_day.jpg`)
+- Ensure textures are copied to bundle (check Xcode Build Phases → Resources)
 
 ### 3. Low FPS / Stuttering
 **Fix:**
@@ -55,12 +56,13 @@ If black screen still occurs:
 
 ### 1. No satellites visible
 **Causes:**
-- Satellite data files missing from `Resources/Data/`
+- TLE data file missing from bundle
 - Satellite count set too low
 - Camera too far from Earth
 
 **Fix:**
-- Verify TLE files exist: `active.tle`, `starlink.tle`, `debris.tle`
+- Verify TLE file exists in bundle: `Resources/8K/active_satellites.tle`
+- Bundled dataset includes 14 sample satellites (ISS, Hubble, Starlinks, etc.)
 - Increase satellite count in settings
 - Check camera is passing near Earth during fly-through
 

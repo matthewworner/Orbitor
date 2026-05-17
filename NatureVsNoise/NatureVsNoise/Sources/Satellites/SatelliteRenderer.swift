@@ -144,6 +144,7 @@ class SatelliteRenderer {
                 let node = scene.rootNode.clone()
                 // Scale down for satellite rendering
                 node.scale = SCNVector3(0.02, 0.02, 0.02)
+                enhanceMaterials(node: node)
                 return node
             }
         }
@@ -162,7 +163,32 @@ class SatelliteRenderer {
             }
         }
         
+        
         return nil
+    }
+    
+    /// Enhance loaded materials for realistic SceneKit PBR
+    private func enhanceMaterials(node: SCNNode) {
+        if let geometry = node.geometry {
+            for material in geometry.materials {
+                // Ensure physical lighting
+                if material.lightingModel != .physicallyBased {
+                    material.lightingModel = .physicallyBased
+                }
+                
+                // Boost metalness to ensure it reflects the HDRI environment
+                // Only if it doesn't already have a strong map
+                if let metalness = material.metalness.contents as? NSNumber, metalness.floatValue < 0.1 {
+                    material.metalness.contents = 0.8
+                } else if material.metalness.contents == nil {
+                    material.metalness.contents = 0.9
+                }
+            }
+        }
+        
+        for child in node.childNodes {
+            enhanceMaterials(node: child)
+        }
     }
     
     private func createISSPlaceholder() -> SCNNode {
@@ -444,8 +470,15 @@ class SatelliteRenderer {
         node.enumerateChildNodes { child, _ in
             if let geometry = child.geometry {
                 for material in geometry.materials {
-                    material.roughness.contents = roughness
-                    material.emission.intensity = emissionIntensity
+                    // Only apply flat roughness if it's NOT a complex texture map
+                    // Otherwise we destroy the detailed PBR textures from the GLB
+                    if !(material.roughness.contents is NSImage) && !(material.roughness.contents is NSString) {
+                        material.roughness.contents = roughness
+                    }
+                    
+                    if material.emission.intensity > 0.05 { // Don't add emission to everything, only stuff that glows
+                        material.emission.intensity = emissionIntensity
+                    }
                 }
             }
         }

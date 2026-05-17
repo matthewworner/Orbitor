@@ -2,6 +2,49 @@
 
 All notable changes to Nature vs Noise Screensaver.
 
+## [2026-05-16] - Engineering Stabilization
+
+### Fixed
+- **Duplicate FeatureFlags Removed**
+  - Removed `Sources/Satellites/FeatureFlags.swift` (duplicate)
+  - Unified to single `Sources/FeatureFlags.swift`
+  - Prevents settings inconsistencies across components
+
+- **Texture Path Search Fixed** (`ImageLoader.swift`, `NatureVsNoiseView.swift`)
+  - Textures are in `8K/` folder, not `Resources/Textures/8K/`
+  - Added search path: `Resources/8K/`
+  - Added dev fallback for `/Users/pro/Projects/Secondary/Screensaver/NatureVsNoise/8K/`
+
+- **Bundled TLE Fallback Added** (`SatelliteManager.swift`)
+  - Created `8K/active_satellites.tle` with 14 sample satellites
+  - Includes: ISS, Hubble, Starlinks (3), NOAA (2), TESS, Juno, GPS, Galileo, debris (2)
+  - Added search paths: `Resources/Data/`, `Resources/` root, dev fallback
+  - Screensaver now works offline without network fetch
+
+- **Shader Error Handling** (`MetalSatelliteRenderer.swift`)
+  - `setupPipelines()` no longer throws
+  - Optional pipelines (propagation, culling) fail gracefully
+  - Render pipeline failure falls back to SceneKit-only mode
+  - Prevents screensaver crash on Metal initialization failure
+
+### Added
+- **Unit Tests** (`NatureVsNoiseTests/`)
+  - `SGP4PropagatorTests.swift`: Orbital mechanics validation
+    - LEO velocity ~7.8 km/s ✓
+    - GEO velocity ~3 km/s ✓
+    - Period calculations ✓
+  - `FeatureFlagsAndTLETests.swift`: Settings + TLE parsing
+    - Feature flags persistence ✓
+    - TLE structure validation ✓
+    - Satellite classification ✓
+
+### Changed
+- **Updated Documentation**
+  - README.md: Updated project structure
+  - TROUBLESHOOTING.md: Fixed texture and TLE paths
+  - STATUS.md: Updated stage and health
+  - TASKS.md: Added engineering tasks
+
 ## [2026-02-21] - Hybrid Rendering & Data-Driven Visualization
 
 ### Added
