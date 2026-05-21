@@ -1,0 +1,337 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		CINEMATIC001 /* KubrickView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CINEMATIC002 /* KubrickView.swift */; };
+		CINEMATIC003 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = CINEMATIC004 /* Info.plist */; };
+		CINEMATIC020 /* earth_8k_day.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CINEMATIC021 /* earth_8k_day.jpg */; };
+		CINEMATIC022 /* earth_8k_night.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CINEMATIC023 /* earth_8k_night.jpg */; };
+		CINEMATIC024 /* earth_8k_clouds.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CINEMATIC025 /* earth_8k_clouds.jpg */; };
+		CINEMATIC026 /* sun_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CINEMATIC027 /* sun_8k.jpg */; };
+		CINEMATIC028 /* moon_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CINEMATIC029 /* moon_8k.jpg */; };
+		CINEMATIC030 /* mars_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CINEMATIC031 /* mars_8k.jpg */; };
+		CINEMATIC032 /* venus_8k_surface.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CINEMATIC033 /* venus_8k_surface.jpg */; };
+		CINEMATIC034 /* mercury_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CINEMATIC035 /* mercury_8k.jpg */; };
+		CINEMATIC036 /* jupiter_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CINEMATIC037 /* jupiter_8k.jpg */; };
+		CINEMATIC038 /* saturn_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CINEMATIC039 /* saturn_8k.jpg */; };
+		CINEMATIC040 /* starfield_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CINEMATIC041 /* starfield_8k.jpg */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		CINEMATIC002 /* KubrickView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KubrickView.swift; sourceTree = "<group>"; };
+		CINEMATIC004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		CINEMATIC005 /* Kubrick.saver */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Kubrick.saver; sourceTree = BUILT_PRODUCTS_DIR; };
+		CINEMATIC021 /* earth_8k_day.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "earth_8k_day.jpg"; sourceTree = "<group>"; };
+		CINEMATIC023 /* earth_8k_night.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "earth_8k_night.jpg"; sourceTree = "<group>"; };
+		CINEMATIC025 /* earth_8k_clouds.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "earth_8k_clouds.jpg"; sourceTree = "<group>"; };
+		CINEMATIC027 /* sun_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "sun_8k.jpg"; sourceTree = "<group>"; };
+		CINEMATIC029 /* moon_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "moon_8k.jpg"; sourceTree = "<group>"; };
+		CINEMATIC031 /* mars_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "mars_8k.jpg"; sourceTree = "<group>"; };
+		CINEMATIC033 /* venus_8k_surface.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "venus_8k_surface.jpg"; sourceTree = "<group>"; };
+		CINEMATIC035 /* mercury_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "mercury_8k.jpg"; sourceTree = "<group>"; };
+		CINEMATIC037 /* jupiter_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "jupiter_8k.jpg"; sourceTree = "<group>"; };
+		CINEMATIC039 /* saturn_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "saturn_8k.jpg"; sourceTree = "<group>"; };
+		CINEMATIC041 /* starfield_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "starfield_8k.jpg"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		CINEMATIC006 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		CINEMATIC007 = {
+			isa = PBXGroup;
+			children = (
+				CINEMATIC008 /* Sources */,
+				CINEMATIC009 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		CINEMATIC008 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				CINEMATIC002 /* KubrickView.swift */,
+				CINEMATIC004 /* Info.plist */,
+				CINEMATIC042 /* 8K */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		CINEMATIC042 /* 8K */ = {
+			isa = PBXGroup;
+			children = (
+				CINEMATIC021 /* earth_8k_day.jpg */,
+				CINEMATIC023 /* earth_8k_night.jpg */,
+				CINEMATIC025 /* earth_8k_clouds.jpg */,
+				CINEMATIC027 /* sun_8k.jpg */,
+				CINEMATIC029 /* moon_8k.jpg */,
+				CINEMATIC031 /* mars_8k.jpg */,
+				CINEMATIC033 /* venus_8k_surface.jpg */,
+				CINEMATIC035 /* mercury_8k.jpg */,
+				CINEMATIC037 /* jupiter_8k.jpg */,
+				CINEMATIC039 /* saturn_8k.jpg */,
+				CINEMATIC041 /* starfield_8k.jpg */,
+			);
+			path = 8K;
+			sourceTree = "<group>";
+		};
+		CINEMATIC009 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CINEMATIC005 /* Kubrick.saver */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		CINEMATIC010 /* Kubrick */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CINEMATIC011 /* Build configuration list for PBXNativeTarget "Kubrick" */;
+			buildPhases = (
+				CINEMATIC012 /* Sources */,
+				CINEMATIC006 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Kubrick;
+			productName = Kubrick;
+			productReference = CINEMATIC005 /* Kubrick.saver */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		CINEMATIC013 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1700;
+				TargetAttributes = {
+					CINEMATIC010 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = CINEMATIC014 /* Build configuration list for PBXProject "Kubrick" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = CINEMATIC007;
+			productRefGroup = CINEMATIC009 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				CINEMATIC010 /* Kubrick */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		CINEMATIC015 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CINEMATIC003 /* Info.plist in Resources */,
+				CINEMATIC020 /* earth_8k_day.jpg in Resources */,
+				CINEMATIC022 /* earth_8k_night.jpg in Resources */,
+				CINEMATIC024 /* earth_8k_clouds.jpg in Resources */,
+				CINEMATIC026 /* sun_8k.jpg in Resources */,
+				CINEMATIC028 /* moon_8k.jpg in Resources */,
+				CINEMATIC030 /* mars_8k.jpg in Resources */,
+				CINEMATIC032 /* venus_8k_surface.jpg in Resources */,
+				CINEMATIC034 /* mercury_8k.jpg in Resources */,
+				CINEMATIC036 /* jupiter_8k.jpg in Resources */,
+				CINEMATIC038 /* saturn_8k.jpg in Resources */,
+				CINEMATIC040 /* starfield_8k.jpg in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		CINEMATIC012 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CINEMATIC001 /* KubrickView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		CINEMATIC016 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		CINEMATIC017 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		CINEMATIC018 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Sources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Cosmic Kubrick";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025. All rights reserved.";
+				INFOPLIST_KEY_NSPrincipalClass = "KubrickView";
+				INSTALL_PATH = "$(HOME)/Library/Screen Savers";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.naturevsnoise.kubrick;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				WRAPPER_EXTENSION = saver;
+			};
+			name = Debug;
+		};
+		CINEMATIC019 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Sources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Cosmic Kubrick";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025. All rights reserved.";
+				INFOPLIST_KEY_NSPrincipalClass = "KubrickView";
+				INSTALL_PATH = "$(HOME)/Library/Screen Savers";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.naturevsnoise.kubrick;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				WRAPPER_EXTENSION = saver;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CINEMATIC014 /* Build configuration list for PBXProject "Kubrick" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CINEMATIC016 /* Debug */,
+				CINEMATIC017 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CINEMATIC011 /* Build configuration list for PBXNativeTarget "Kubrick" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CINEMATIC018 /* Debug */,
+				CINEMATIC019 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = CINEMATIC013 /* Project object */;
+}
