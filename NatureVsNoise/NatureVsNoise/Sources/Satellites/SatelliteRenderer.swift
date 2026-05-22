@@ -26,50 +26,8 @@ class SatelliteRenderer {
     private let trailHistoryLength = 10
 
     // Shared Materials (Lazy loaded for performance)
-    private lazy var goldFoilMaterial: SCNMaterial = {
-        let m = SCNMaterial()
-        m.diffuse.contents = NSColor(red: 0.9, green: 0.75, blue: 0.3, alpha: 1.0)
-        m.metalness.contents = 1.0
-        m.roughness.contents = 0.2
-        m.lightingModel = .physicallyBased
-        m.emission.contents = NSColor(red: 0.3, green: 0.25, blue: 0.1, alpha: 1.0)
-        m.emission.intensity = 0.5
-        return m
-    }()
-    
-    private lazy var solarPanelMaterial: SCNMaterial = {
-        let m = SCNMaterial()
-        m.diffuse.contents = NSColor(red: 0.08, green: 0.15, blue: 0.35, alpha: 1.0)
-        m.emission.contents = NSColor(red: 0.1, green: 0.2, blue: 0.4, alpha: 1.0)
-        m.emission.intensity = 0.6
-        m.metalness.contents = 0.4
-        m.roughness.contents = 0.25
-        m.lightingModel = .physicallyBased
-        return m
-    }()
-    
-    private lazy var whitePaintMaterial: SCNMaterial = {
-        let m = SCNMaterial()
-        m.diffuse.contents = NSColor(white: 0.98, alpha: 1.0)
-        m.metalness.contents = 0.0
-        m.roughness.contents = 0.6
-        m.lightingModel = .physicallyBased
-        m.emission.contents = NSColor(white: 0.3, alpha: 1.0)
-        m.emission.intensity = 0.3
-        return m
-    }()
-    
-    private lazy var debrisMaterial: SCNMaterial = {
-        let m = SCNMaterial()
-        m.diffuse.contents = NSColor(white: 0.3, alpha: 1.0)
-        m.metalness.contents = 0.8
-        m.roughness.contents = 0.7
-        m.lightingModel = .physicallyBased
-        m.emission.contents = NSColor(white: 0.05, alpha: 1.0)
-        m.emission.intensity = 0.1
-        return m
-    }()
-    
+
+
     // MARK: - Quality Settings
     
     enum Quality {
@@ -198,13 +156,13 @@ class SatelliteRenderer {
         
         // Main truss
         let truss = SCNBox(width: 4.0, height: 0.2, length: 0.2, chamferRadius: 0.02)
-        truss.materials = [whitePaintMaterial]
+        truss.materials = [MaterialFactory.whiteCached]
         let trussNode = SCNNode(geometry: truss)
         node.addChildNode(trussNode)
         
         // Habitat modules
         let module = SCNCylinder(radius: 0.3, height: 1.0)
-        module.materials = [whitePaintMaterial]
+        module.materials = [MaterialFactory.whiteCached]
         let moduleNode = SCNNode(geometry: module)
         moduleNode.eulerAngles.z = .pi / 2
         moduleNode.position = SCNVector3(0, 0.4, 0)
@@ -215,7 +173,7 @@ class SatelliteRenderer {
             let x = CGFloat(i - 1) * 1.2 - 0.3
             for sign in [-1.0, 1.0] {
                 let panel = SCNBox(width: 0.8, height: 0.02, length: 2.0, chamferRadius: 0.01)
-                panel.materials = [solarPanelMaterial]
+                panel.materials = [MaterialFactory.solarPanelCached]
                 let panelNode = SCNNode(geometry: panel)
                 panelNode.position = SCNVector3(x, CGFloat(sign) * 1.2, 0)
                 node.addChildNode(panelNode)
@@ -231,13 +189,13 @@ class SatelliteRenderer {
         node.scale = SCNVector3(0.15, 0.15, 0.15)
         
         let body = SCNBox(width: 1.0, height: 1.0, length: 1.0, chamferRadius: 0.05)
-        body.materials = [debrisMaterial]
+        body.materials = [MaterialFactory.metalCached]
         let bodyNode = SCNNode(geometry: body)
         node.addChildNode(bodyNode)
         
         // Small solar panel
         let panel = SCNBox(width: 1.2, height: 0.02, length: 0.8, chamferRadius: 0.01)
-        panel.materials = [solarPanelMaterial]
+        panel.materials = [MaterialFactory.solarPanelCached]
         let panelNode = SCNNode(geometry: panel)
         panelNode.position = SCNVector3(0, 0.6, 0)
         node.addChildNode(panelNode)
@@ -515,7 +473,7 @@ class SatelliteRenderer {
         node.scale = SCNVector3(0.15, 0.15, 0.15)
 
         let body = SCNBox(width: 1.0, height: 0.6, length: 0.6, chamferRadius: 0.05)
-        body.materials = [goldFoilMaterial]
+        body.materials = [MaterialFactory.goldCached]
         let bodyNode = SCNNode(geometry: body)
         node.addChildNode(bodyNode)
 
@@ -531,7 +489,7 @@ class SatelliteRenderer {
         node.addChildNode(crossWingNode)
 
         let dish = SCNCone(topRadius: 0.4, bottomRadius: 0.05, height: 0.3)
-        dish.materials = [whitePaintMaterial]
+        dish.materials = [MaterialFactory.whiteCached]
         let dishNode = SCNNode(geometry: dish)
         dishNode.position = SCNVector3(0.6, 0.2, 0.35)
         dishNode.eulerAngles.x = .pi / 6
@@ -552,7 +510,7 @@ class SatelliteRenderer {
                 length: CGFloat.random(in: 0.2...0.6),
                 chamferRadius: 0.05
             )
-            chunk.materials = [debrisMaterial]
+            chunk.materials = [MaterialFactory.metalCached]
             let chunkNode = SCNNode(geometry: chunk)
             chunkNode.position = SCNVector3(
                 CGFloat.random(in: -0.3...0.3),
@@ -576,13 +534,13 @@ class SatelliteRenderer {
         
         // Starlink "pizza box" design - flat rectangular body
         let body = SCNBox(width: 2.0, height: 0.1, length: 1.0, chamferRadius: 0.02)
-        body.materials = [whitePaintMaterial]
+        body.materials = [MaterialFactory.whiteCached]
         let bodyNode = SCNNode(geometry: body)
         node.addChildNode(bodyNode)
         
         // Single large solar panel
         let panel = SCNBox(width: 3.0, height: 0.02, length: 1.0, chamferRadius: 0.01)
-        panel.materials = [solarPanelMaterial]
+        panel.materials = [MaterialFactory.solarPanelCached]
         let panelNode = SCNNode(geometry: panel)
         panelNode.position = SCNVector3(0, 0.5, 0)
         node.addChildNode(panelNode)
@@ -592,7 +550,7 @@ class SatelliteRenderer {
     
     private func createPanelGeometry(width: CGFloat, height: CGFloat) -> SCNGeometry {
         let box = SCNBox(width: width, height: height, length: 0.05, chamferRadius: 0.01)
-        box.materials = [solarPanelMaterial]
+        box.materials = [MaterialFactory.solarPanelCached]
         return box
     }
 }

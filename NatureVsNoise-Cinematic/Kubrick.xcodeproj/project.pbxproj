@@ -8,6 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		CINEMATIC001 /* KubrickView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CINEMATIC002 /* KubrickView.swift */; };
+		CINEMATIC050 /* TextureManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CINEMATIC051 /* TextureManager.swift */; };
+		CINEMATIC052 /* MaterialFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = CINEMATIC053 /* MaterialFactory.swift */; };
+		CINEMATIC054 /* SatelliteBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CINEMATIC055 /* SatelliteBuilder.swift */; };
+		CINEMATIC056 /* SceneBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CINEMATIC057 /* SceneBuilder.swift */; };
+		CINEMATIC058 /* SatelliteOrbitSimulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CINEMATIC059 /* SatelliteOrbitSimulator.swift */; };
+		CINEMATIC060 /* OrbitalModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CINEMATIC061 /* OrbitalModels.swift */; };
+		CINEMATIC060 /* OrbitalModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CINEMATIC061 /* OrbitalModels.swift */; };
 		CINEMATIC003 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = CINEMATIC004 /* Info.plist */; };
 		CINEMATIC020 /* earth_8k_day.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CINEMATIC021 /* earth_8k_day.jpg */; };
 		CINEMATIC022 /* earth_8k_night.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CINEMATIC023 /* earth_8k_night.jpg */; };
@@ -25,6 +32,13 @@
 /* Begin PBXFileReference section */
 		CINEMATIC002 /* KubrickView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KubrickView.swift; sourceTree = "<group>"; };
 		CINEMATIC004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		CINEMATIC051 /* TextureManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextureManager.swift; sourceTree = "<group>"; };
+		CINEMATIC053 /* MaterialFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaterialFactory.swift; sourceTree = "<group>"; };
+		CINEMATIC055 /* SatelliteBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteBuilder.swift; sourceTree = "<group>"; };
+		CINEMATIC057 /* SceneBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneBuilder.swift; sourceTree = "<group>"; };
+		CINEMATIC059 /* SatelliteOrbitSimulator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteOrbitSimulator.swift; sourceTree = "<group>"; };
+		CINEMATIC061 /* OrbitalModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitalModels.swift; sourceTree = "<group>"; };
+		CINEMATIC061 /* OrbitalModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitalModels.swift; sourceTree = "<group>"; };
 		CINEMATIC005 /* Kubrick.saver */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Kubrick.saver; sourceTree = BUILT_PRODUCTS_DIR; };
 		CINEMATIC021 /* earth_8k_day.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "earth_8k_day.jpg"; sourceTree = "<group>"; };
 		CINEMATIC023 /* earth_8k_night.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "earth_8k_night.jpg"; sourceTree = "<group>"; };
@@ -64,7 +78,14 @@
 				CINEMATIC002 /* KubrickView.swift */,
 				CINEMATIC004 /* Info.plist */,
 				CINEMATIC042 /* 8K */,
-			);
+			
+				CINEMATIC051 /* TextureManager.swift */,
+				CINEMATIC053 /* MaterialFactory.swift */,
+				CINEMATIC055 /* SatelliteBuilder.swift */,
+				CINEMATIC057 /* SceneBuilder.swift */,
+				CINEMATIC059 /* SatelliteOrbitSimulator.swift */,
+				CINEMATIC061 /* OrbitalModels.swift */,
+				CINEMATIC061 /* OrbitalModels.swift */,);
 			path = Sources;
 			sourceTree = "<group>";
 		};
@@ -174,7 +195,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				CINEMATIC001 /* KubrickView.swift in Sources */,
-			);
+			
+				CINEMATIC050 /* TextureManager.swift in Sources */,
+				CINEMATIC052 /* MaterialFactory.swift in Sources */,
+				CINEMATIC054 /* SatelliteBuilder.swift in Sources */,
+				CINEMATIC056 /* SceneBuilder.swift in Sources */,
+				CINEMATIC058 /* SatelliteOrbitSimulator.swift in Sources */,
+				CINEMATIC060 /* OrbitalModels.swift in Sources */,
+				CINEMATIC060 /* OrbitalModels.swift in Sources */,);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */

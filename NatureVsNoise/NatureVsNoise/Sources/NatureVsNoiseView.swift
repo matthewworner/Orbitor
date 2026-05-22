@@ -442,13 +442,16 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         let earthMaterial = SCNMaterial()
         earthMaterial.diffuse.contents = NSColor.blue
         
-        // Try to load day texture
-        if let dayTexture = loadTexture(named: "earth_8k_day") {
+        // Load all Earth textures via TextureManager
+	let textures = TextureManager.shared.loadEarthTextures()
+	
+	// Try to load day texture
+	if let dayTexture = textures.day {
             earthMaterial.diffuse.contents = dayTexture
         }
         
         // Try to load night texture for emission (city lights)
-        if let nightTexture = loadTexture(named: "earth_8k_night") {
+        if let nightTexture = textures.night {
             earthMaterial.emission.contents = nightTexture
             earthMaterial.emission.intensity = 0.3
         }
@@ -473,10 +476,10 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         earthNode.runAction(SCNAction.repeatForever(rotation))
         
         // Add cloud layer
-        addEarthClouds(parent: earthNode)
+        addEarthClouds(parent: earthNode, cloudTexture: textures.clouds)
     }
     
-    private func addEarthClouds(parent: SCNNode) {
+    private func addEarthClouds(parent: SCNNode, cloudTexture: NSImage?) {
         let cloudGeometry = SCNSphere(radius: 2.02) // Slightly larger than Earth
         cloudGeometry.segmentCount = 64
         
@@ -486,7 +489,8 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         cloudMaterial.transparencyMode = .rgbZero
         cloudMaterial.isDoubleSided = true
         
-        if let cloudTexture = loadTexture(named: "earth_8k_clouds") {
+        let textures = TextureManager.shared.loadEarthTextures()
+        if let cloudTexture = cloudTexture {
             cloudMaterial.transparent.contents = cloudTexture
         }
         
@@ -562,7 +566,7 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
             // CENTER EARTH FIX
             if planetData.name == "Earth" {
                 planetNode.position = SCNVector3(0, 0, 0)
-                addEarthClouds(parent: planetNode)
+                addEarthClouds(parent: planetNode, cloudTexture: TextureManager.shared.load(named: "earth_8k_clouds"))
                 earthNode = planetNode
             }
             
@@ -744,55 +748,6 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         addSatellites()
     }
 
-    // MARK: - Texture Loading
-    
-    private func loadTexture(named name: String) -> NSImage? {
-        let bundle = Bundle(for: type(of: self))
-        
-        // Priority 1: Bundle resources root
-        if let bundlePath = bundle.path(forResource: name, ofType: "jpg") {
-            return NSImage(contentsOfFile: bundlePath)
-        }
-        if let bundlePath = bundle.path(forResource: name, ofType: "png") {
-            return NSImage(contentsOfFile: bundlePath)
-        }
-        
-        // Priority 2: Bundle's Resources/8K subdirectory (textures in 8K folder)
-        if let resourcePath = bundle.resourcePath {
-            let texturePaths = [
-                "\(resourcePath)/8K/\(name).jpg",
-                "\(resourcePath)/8K/\(name).png",
-                "\(resourcePath)/Textures/8K/\(name).jpg",
-                "\(resourcePath)/Textures/8K/\(name).png"
-            ]
-            for path in texturePaths {
-                if FileManager.default.fileExists(atPath: path) {
-                    return NSImage(contentsOfFile: path)
-                }
-            }
-        }
-        
-        #if DEBUG
-        // Development fallback (project directory) - only in debug builds
-        let projectPaths = [
-            "/Users/pro/Projects/Screensaver/Resources/Textures/8K/\(name).jpg",
-            "/Users/pro/Projects/Screensaver/Resources/Textures/8K/\(name).png",
-            "/Users/pro/Projects/Secondary/Screensaver/NatureVsNoise/8K/\(name).jpg",
-            "/Users/pro/Projects/Secondary/Screensaver/NatureVsNoise/8K/\(name).png"
-        ]
-        
-        for path in projectPaths {
-            if FileManager.default.fileExists(atPath: path) {
-                return NSImage(contentsOfFile: path)
-            }
-        }
-        
-        print("⚠️ NatureVsNoiseView: Texture '\(name)' not found")
-        #endif
-        
-        return nil
-    }
-    
     // MARK: - Animation
     
     override func animateOneFrame() {
