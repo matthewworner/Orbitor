@@ -2,6 +2,38 @@
 
 All notable changes to Nature vs Noise Screensaver.
 
+## [2026-06-06] - Astra HUD Redesign
+
+Ported the Google Stitch "Astra" mission-control HUD into the native SpriteKit overlay. See
+`docs/ASTRA_HUD.md` for the full design reference and `docs/STITCH_PROMPTS.md` for the Stitch source.
+
+### Added
+- **Design system** (`MissionControlTheme.swift`): Astra tokens (soft-cyan, nature-blue, glass
+  fill/border, corner brackets, hairline), a reusable `GlassPanel` node, and a `SatelliteClass →
+  color/legend-code` map as the single source of truth for the legend + dossiers.
+- **Bundled JetBrains Mono** (`8K/JetBrainsMono-Regular.ttf`, `-Bold.ttf`): registered via CoreText
+  at HUD init (`registerFonts`), with `hudFont`/`hudFontName` helpers and a system-mono fallback.
+- **Orbital census** (`SatelliteManager.OrbitalCensus`): cached counts per classification, fed to
+  the HUD via `updateCensus` / `updateFocus`.
+- **HUD components** (in `HUDOverlay.swift`): mission cluster with live UTC clock + TRACKING pill,
+  telemetry dashboard, `ContextualFocusPanel` (NAME/ALT/VEL/INCL), `ClassificationLegend` with live
+  counts, focus reticle, sweeping scanline, `AmbientTicker`, and a `BootSequenceOverlay`.
+
+### Changed
+- **`StatsPanel`** reworked into the top-right telemetry dashboard (hero total + ACTIVE/DEBRIS).
+- **`InfoCardView`** restyled into a type-colored dossier card; **`FactOverlay`** and
+  **`DiscoveryBanner`** moved to the glass treatment + bundled font.
+- **Configure sheet** (`SettingsController.makeConfigureSheet`): fixed overlapping-frame layout bug;
+  reorganized into PERFORMANCE / VISUALS / AUDIO / PRESETS with a clean top-down layout.
+
+### Removed
+- **DECAY column** from the telemetry dashboard — "decaying this week" isn't derivable from TLE data,
+  so the dashboard shows ACTIVE/DEBRIS only rather than a placeholder.
+
+### Notes
+- Verification is build-only (Release `xcodebuild` green; fonts confirmed in the bundle). Runtime
+  remains blocked by macOS 26.5 signing; no Developer ID cert is available locally yet.
+
 ## [2026-05-17] - Apple-Tier Audit Complete
 
 ### Fixed (Critical Bugs)

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nature vs Noise — HUD Base Objects (for Stitch code-to-design)</title>
+<!--
+  BASE OBJECTS for Google Stitch (code-to-design).
+  These are faithful HTML/CSS recreations of the screensaver's current SpriteKit overlay
+  components, using the real values from:
+    Sources/UI/Themes/MissionControlTheme.swift
+    Sources/UI/Components/StatsPanel.swift        (180x130)
+    Sources/UI/Components/InfoCardView.swift       (220x100)
+    Sources/UI/HUDOverlay.swift                    (corner layout, grid, mode label)
+  Stitch should treat these as the starting point and generate improved variants.
+  Aesthetic: NASA mission-control telemetry over a live 3D solar-system scene; panels are
+  semi-transparent glass and must stay legible over both bright planets and black space.
+-->
+<style>
+  :root {
+    /* ---- MissionControlTheme tokens (exact) ---- */
+    --cyan:        #00D4FF;   /* primaryCyan  — orbital indicators, active */
+    --amber:       #FFB800;   /* secondaryAmber — notable sats, warnings */
+    --magenta:     #FF00AA;   /* accentMagenta — ISS, crewed */
+    --deep-space:  rgba(5,10,20,0.85);
+    --panel-bg:    rgba(10,20,40,0.75);
+    --text-primary:   #ffffff;
+    --text-secondary: rgba(255,255,255,0.70);
+    --text-muted:     rgba(255,255,255,0.50);
+
+    /* country origin */
+    --russia: #DC3C3C;  --usa: #3C78DC;  --china: #F0C828;  --other: #3CC878;
+    /* orbital zones */
+    --leo: rgba(0,200,255,0.6);  --meo: rgba(255,200,0,0.6);  --geo: rgba(255,0,200,0.6);
+    /* achievements */
+    --gold: #FFD700;  --silver: #C0C0C0;  --bronze: #CD7F32;
+
+    --radius: 6px;
+    --pad: 12px;
+    --gap: 8px;
+    --mono: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--mono);
+    color: var(--text-primary);
+    /* stand-in for the live 3D scene behind the HUD */
+    background:
+      radial-gradient(120% 90% at 70% 30%, rgba(40,80,160,0.35), transparent 55%),
+      radial-gradient(80% 80% at 20% 80%, rgba(120,40,120,0.25), transparent 60%),
+      #05060c;
+    min-height: 100vh;
+  }
+
+  /* ============================================================
+     A) FULL HUD COMPOSITION — corner-anchored, as in HUDOverlay.swift
+     ============================================================ */
+  .stage {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+  }
+  .anchor { position: absolute; }
+  .top-left     { top: 20px; left: 20px; }
+  .top-right    { top: 20px; right: 20px; }
+  .bottom-left  { bottom: 20px; left: 20px; }
+  .bottom-right { bottom: 20px; right: 20px; }
+  .center-top   { top: 22%; left: 50%; transform: translateX(-50%); }
+  .center-bottom{ bottom: 80px; left: 50%; transform: translateX(-50%); }
+
+  /* faint cyan grid behind stats panel (HUDOverlay.setupBackground) */
+  .grid {
+    position: absolute; top: 14px; left: 0;
+    width: 200px; height: 150px; opacity: 0.5;
+    background-image:
+      linear-gradient(var(--cyan) 0.5px, transparent 0.5px),
+      linear-gradient(90deg, var(--cyan) 0.5px, transparent 0.5px);
+    background-size: 33.3px 30px;
+    /* lines at 10% alpha per theme */
+    opacity: 0.1;
+    pointer-events: none;
+  }
+
+  /* ---- shared glass panel ---- */
+  .panel {
+    position: relative;
+    background: var(--panel-bg);
+    border: 1px solid;
+    border-radius: var(--radius);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: var(--pad);
+  }
+  .panel .bracket { position:absolute; width:10px; height:10px; pointer-events:none; }
+  .bracket.tl { top:4px;  left:4px;  border-top:1px solid var(--cyan); border-left:1px solid var(--cyan); opacity:.3; }
+  .bracket.br { bottom:4px; right:4px; border-bottom:1px solid var(--cyan); border-right:1px solid var(--cyan); opacity:.3; }
+
+  .label-muted { color: var(--text-muted); font-size: 10px; letter-spacing: .12em; }
+  .tiny        { font-size: 8px; color: var(--text-muted); letter-spacing:.1em; }
+
+  /* ============================================================
+     1) StatsPanel  (StatsPanel.swift — 180x130, cyan border .5)
+     ============================================================ */
+  .stats-panel { width: 180px; height: 130px; border-color: rgba(0,212,255,0.5); }
+  .stats-panel .title { color: var(--text-muted); font-size: 10px; letter-spacing:.14em; }
+  .stats-panel .count { color: var(--cyan); font-size: 18px; margin-top: 14px; font-variant-numeric: tabular-nums; }
+  .stats-panel .count-sub { margin-top: 2px; }
+  .stats-panel .readout { color: var(--text-secondary); font-size: 11px; margin-top: 10px; font-variant-numeric: tabular-nums; }
+  .stats-panel .zone {
+    position:absolute; top: 12px; right: 12px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .zone-dot { width:12px; height:12px; border-radius:50%; background: var(--leo); }
+  .zone-label { color: var(--cyan); font-size:10px; }
+
+  /* ============================================================
+     2) InfoCardView (InfoCardView.swift — 220x100, amber border .6)
+     ============================================================ */
+  .info-card { width: 220px; height: 100px; border-color: rgba(255,184,0,0.6); }
+  .info-card .head { display:flex; align-items:flex-start; gap:10px; }
+  .info-card .emoji { font-size: 24px; line-height: 1; }
+  .info-card .title { color: var(--amber); font-size: 14px; }
+  .info-card .subtitle { color: var(--text-muted); font-size: 10px; margin-top: 3px; }
+  .info-card hr { border:0; border-top:1px solid rgba(255,255,255,0.3); margin: 8px 0; }
+  .info-card .details { color: var(--text-secondary); font-size: 10px; line-height: 1.45; white-space: pre-line; }
+  .info-card .corner-accent {
+    position:absolute; top:4px; right:4px; width:16px; height:16px;
+    border-top:2px solid rgba(255,184,0,0.5); border-right:2px solid rgba(255,184,0,0.5);
+  }
+
+  /* ============================================================
+     3) FactOverlay (educational fact, bottom-center)
+     ============================================================ */
+  .fact-overlay { width: 320px; border-color: rgba(0,212,255,0.4); }
+  .fact-overlay .tag { color: var(--cyan); font-size: 9px; letter-spacing:.2em; }
+  .fact-overlay .fact { color: var(--text-primary); font-size: 12px; margin-top: 6px; line-height:1.5; }
+
+  /* ============================================================
+     4) DiscoveryBanner (achievement / discovery, center)
+     ============================================================ */
+  .discovery { width: 280px; border-color: rgba(255,215,0,0.6); }
+  .discovery .kicker { color: var(--gold); font-size: 9px; letter-spacing:.2em; }
+  .discovery .name { color: var(--text-primary); font-size: 15px; margin-top: 4px; }
+  .discovery .desc { color: var(--text-secondary); font-size: 10px; margin-top: 4px; line-height:1.4; }
+
+  /* ============================================================
+     5) Mode label (bottom-right, HUDOverlay.setupModeLabel)
+     ============================================================ */
+  .mode-label { color: var(--text-muted); font-size: 10px; letter-spacing:.1em; }
+
+  /* ============================================================
+     COMPONENT SHEET — each base object isolated, for code-to-design
+     ============================================================ */
+  .sheet { padding: 48px; display:flex; flex-wrap:wrap; gap:40px; align-items:flex-start; }
+  .spec { display:flex; flex-direction:column; gap:10px; }
+  .spec h3 { font-size:11px; color:var(--text-muted); font-weight:400; letter-spacing:.15em; margin:0; }
+  .divider-section { border-top:1px solid rgba(255,255,255,0.08); }
+  .legend { display:flex; flex-direction:column; gap:8px; }
+  .legend .row { display:flex; align-items:center; gap:10px; font-size:11px; color:var(--text-secondary); }
+  .swatch { width:14px; height:14px; border-radius:3px; }
+</style>
+</head>
+<body>
+
+<!-- ========================================================== -->
+<!-- A) FULL HUD COMPOSITION (the real corner layout)           -->
+<!-- ========================================================== -->
+<section class="stage">
+
+  <!-- TOP-LEFT: grid + Mission Stats panel -->
+  <div class="anchor top-left">
+    <div class="grid"></div>
+    <div class="panel stats-panel">
+      <span class="bracket tl"></span><span class="bracket br"></span>
+      <div class="zone"><span class="zone-dot"></span><span class="zone-label">LEO</span></div>
+      <div class="title">MISSION STATS</div>
+      <div class="count">23,418</div>
+      <div class="count-sub tiny">OBJECTS TRACKED</div>
+      <div class="readout">ALT: 408 km</div>
+      <div class="readout">VEL: 7.8 km/s</div>
+    </div>
+  </div>
+
+  <!-- TOP-RIGHT / contextual: Satellite Info Card -->
+  <div class="anchor top-right">
+    <div class="panel info-card">
+      <span class="corner-accent"></span>
+      <div class="head">
+        <div class="emoji">🛰️</div>
+        <div>
+          <div class="title">ISS (ZARYA)</div>
+          <div class="subtitle">Crewed • USA / Russia</div>
+        </div>
+      </div>
+      <hr />
+      <div class="details">Continuously crewed since 2000.
+Orbits Earth every ~92 min at ~28,000 km/h.</div>
+    </div>
+  </div>
+
+  <!-- CENTER: Discovery banner -->
+  <div class="anchor center-top">
+    <div class="panel discovery">
+      <span class="bracket tl"></span><span class="bracket br"></span>
+      <div class="kicker">★ DISCOVERY UNLOCKED</div>
+      <div class="name">Hubble Space Telescope</div>
+      <div class="desc">You spotted a notable science satellite.</div>
+    </div>
+  </div>
+
+  <!-- CENTER-BOTTOM: Educational fact -->
+  <div class="anchor center-bottom">
+    <div class="panel fact-overlay">
+      <div class="tag">SPACE DEBRIS</div>
+      <div class="fact">~23,000 tracked objects orbit Earth — plus millions too small to track, each a collision risk at 28,000 km/h.</div>
+    </div>
+  </div>
+
+  <!-- BOTTOM-RIGHT: Mode label -->
+  <div class="anchor bottom-right">
+    <div class="mode-label">MODE: CINEMATIC_AUTO</div>
+  </div>
+
+</section>
+
+<!-- ========================================================== -->
+<!-- COMPONENT SHEET — isolated base objects + tokens            -->
+<!-- ========================================================== -->
+<section class="sheet divider-section">
+
+  <div class="spec">
+    <h3>1 · STATS PANEL — 180×130</h3>
+    <div class="panel stats-panel">
+      <span class="bracket tl"></span><span class="bracket br"></span>
+      <div class="zone"><span class="zone-dot"></span><span class="zone-label">LEO</span></div>
+      <div class="title">MISSION STATS</div>
+      <div class="count">23,418</div>
+      <div class="count-sub tiny">OBJECTS TRACKED</div>
+      <div class="readout">ALT: 408 km</div>
+      <div class="readout">VEL: 7.8 km/s</div>
+    </div>
+  </div>
+
+  <div class="spec">
+    <h3>2 · INFO CARD — 220×100 (border = type color)</h3>
+    <div class="panel info-card">
+      <span class="corner-accent"></span>
+      <div class="head">
+        <div class="emoji">🔭</div>
+        <div>
+          <div class="title">HUBBLE</div>
+          <div class="subtitle">Telescope • USA</div>
+        </div>
+      </div>
+      <hr />
+      <div class="details">Launched 1990. Low Earth Orbit at ~540 km.</div>
+    </div>
+  </div>
+
+  <div class="spec">
+    <h3>3 · FACT OVERLAY</h3>
+    <div class="panel fact-overlay">
+      <div class="tag">ORBITAL MECHANICS</div>
+      <div class="fact">Satellites in LEO travel at ~7.8 km/s — fast enough to cross a continent in minutes.</div>
+    </div>
+  </div>
+
+  <div class="spec">
+    <h3>4 · DISCOVERY BANNER</h3>
+    <div class="panel discovery">
+      <span class="bracket tl"></span><span class="bracket br"></span>
+      <div class="kicker">★ DISCOVERY UNLOCKED</div>
+      <div class="name">First Starlink Spotted</div>
+      <div class="desc">One of 5,000+ in the constellation.</div>
+    </div>
+  </div>
+
+  <div class="spec">
+    <h3>5 · CLASSIFICATION / ZONE LEGEND</h3>
+    <div class="panel" style="border-color: rgba(0,212,255,0.5); width:220px;">
+      <div class="title" style="color:var(--text-muted);font-size:10px;letter-spacing:.14em;">ORBITAL ZONES</div>
+      <div class="legend" style="margin-top:10px;">
+        <div class="row"><span class="swatch" style="background:var(--leo)"></span> LEO · 200–2,000 km</div>
+        <div class="row"><span class="swatch" style="background:var(--meo)"></span> MEO · 2,000–35,786 km</div>
+        <div class="row"><span class="swatch" style="background:var(--geo)"></span> GEO · 35,786 km</div>
+        <div class="row"><span class="swatch" style="background:var(--amber)"></span> HEO · variable</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="spec">
+    <h3>6 · COUNTRY / ORIGIN COLORS</h3>
+    <div class="panel" style="border-color: rgba(255,255,255,0.2); width:200px;">
+      <div class="legend">
+        <div class="row"><span class="swatch" style="background:var(--usa)"></span> USA</div>
+        <div class="row"><span class="swatch" style="background:var(--russia)"></span> Russia</div>
+        <div class="row"><span class="swatch" style="background:var(--china)"></span> China</div>
+        <div class="row"><span class="swatch" style="background:var(--other)"></span> Other</div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+</body>
+</html>

@@ -10,7 +10,10 @@ A macOS screensaver contrasting cosmic serenity with the chaotic swarm of 23,000
 - **Satellite Classification**: ISS, Starlink, notable satellites, and debris each render differently
 - **NASA 3D Models**: Hubble, TESS, TDRS, Juno integrated
 - **Visual Effects**: Motion trails, material aging, thermal glow
-- **Mission Control HUD**: Real-time satellite counts, altitudes, velocities
+- **Astra Mission Control HUD**: glass telemetry panels in bundled JetBrains Mono — live UTC clock,
+  total/active/debris dashboard, contextual focus (altitude/velocity/inclination), classification
+  legend with live counts, ambient ticker, focus reticle + scanline, and a boot sequence
+  (see [docs/ASTRA_HUD.md](docs/ASTRA_HUD.md))
 - **Educational Facts**: Orbital mechanics, satellite trivia
 
 ## Quick Start
@@ -81,6 +84,13 @@ NatureVsNoise/
 └── DEPLOYMENT.md                 # Code signing instructions
 ```
 
+## Astra HUD Redesign (2026-06-06)
+
+The overlay UI was redesigned in Google Stitch and re-implemented natively in SpriteKit — glass
+panels, bundled JetBrains Mono, telemetry dashboard, classification legend, ambient ticker, and a
+boot sequence. Full design reference: [docs/ASTRA_HUD.md](docs/ASTRA_HUD.md). Stitch prompts and base
+objects: [docs/STITCH_PROMPTS.md](docs/STITCH_PROMPTS.md), `docs/stitch-base/`.
+
 ## Bug Fixes (2026-05-17)
 
 1. **Earth Position** - Satellites orbit at correct Earth-centered position
@@ -92,6 +102,8 @@ NatureVsNoise/
 
 | File | Description |
 |------|-------------|
+| [ASTRA_HUD.md](docs/ASTRA_HUD.md) | HUD design reference (tokens, components, fonts) |
+| [STITCH_PROMPTS.md](docs/STITCH_PROMPTS.md) | Google Stitch prompts + base objects |
 | [DEPLOYMENT.md](NatureVsNoise/DEPLOYMENT.md) | Code signing & notarization |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
 | [STATUS.md](STATUS.md) | Current project status |

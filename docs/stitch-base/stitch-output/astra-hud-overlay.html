@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ORBITAL_OS_v4.2 | MISSION_CONTROL</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Design System Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary": "#ffd3e4",
+                    "primary-fixed": "#b4ebff",
+                    "on-error": "#690005",
+                    "on-primary-container": "#00586b",
+                    "secondary": "#ffdb9d",
+                    "tertiary-fixed-dim": "#ffafd2",
+                    "surface-container-low": "#171c20",
+                    "tertiary-container": "#ffa9d0",
+                    "surface-container-high": "#262b2f",
+                    "primary-container": "#00d4ff",
+                    "on-tertiary-container": "#9b0066",
+                    "on-surface": "#dfe3e9",
+                    "china-yellow": "#F0C828",
+                    "surface-container": "#1b2024",
+                    "on-surface-variant": "#bbc9cf",
+                    "nature-blue": "#7FA8FF",
+                    "panel-bg": "rgba(10, 20, 40, 0.75)",
+                    "on-secondary-fixed": "#271900",
+                    "text-secondary": "rgba(255, 255, 255, 0.70)",
+                    "on-error-container": "#ffdad6",
+                    "surface-bright": "#353a3e",
+                    "text-muted": "rgba(255, 255, 255, 0.50)",
+                    "other-green": "#3CC878",
+                    "surface-variant": "#30353a",
+                    "on-secondary-container": "#6b4b00",
+                    "on-tertiary-fixed-variant": "#8b005b",
+                    "russia-red": "#DC3C3C",
+                    "on-primary-fixed": "#001f27",
+                    "on-secondary-fixed-variant": "#5e4200",
+                    "outline": "#859398",
+                    "primary-fixed-dim": "#3cd7ff",
+                    "surface-container-highest": "#30353a",
+                    "on-primary": "#003642",
+                    "inverse-surface": "#dfe3e9",
+                    "on-secondary": "#412d00",
+                    "error-container": "#93000a",
+                    "secondary-container": "#feb700",
+                    "surface-tint": "#3cd7ff",
+                    "on-primary-fixed-variant": "#004e5f",
+                    "gold-achievement": "#FFD700",
+                    "error": "#ffb4ab",
+                    "usa-blue": "#3C78DC",
+                    "secondary-fixed-dim": "#ffba20",
+                    "on-background": "#dfe3e9",
+                    "outline-variant": "#3c494e",
+                    "surface-container-lowest": "#0a0f13",
+                    "secondary-fixed": "#ffdea8",
+                    "on-tertiary": "#63003f",
+                    "deep-space": "rgba(5, 10, 20, 0.85)",
+                    "background": "#0f1418",
+                    "inverse-primary": "#00677e",
+                    "on-tertiary-fixed": "#3d0025",
+                    "tertiary-fixed": "#ffd8e7",
+                    "primary": "#a8e8ff",
+                    "surface": "#0f1418",
+                    "surface-dim": "#0f1418",
+                    "inverse-on-surface": "#2c3136"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "margin-viewport": "20px",
+                    "grid-unit-y": "30px",
+                    "gap-element": "8px",
+                    "pad-panel": "12px",
+                    "grid-unit-x": "33.3px"
+            },
+            "fontFamily": {
+                    "meta-tiny": ["JetBrains Mono"],
+                    "label-md": ["JetBrains Mono"],
+                    "label-sm": ["JetBrains Mono"],
+                    "headline-md": ["JetBrains Mono"],
+                    "label-caps": ["JetBrains Mono"],
+                    "body-md": ["JetBrains Mono"],
+                    "headline-lg": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                    "meta-tiny": ["8px", {"lineHeight": "10px", "letterSpacing": "0.1em", "fontWeight": "400"}],
+                    "label-md": ["11px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "label-sm": ["10px", {"lineHeight": "14px", "letterSpacing": "0.14em", "fontWeight": "400"}],
+                    "headline-md": ["15px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "label-caps": ["9px", {"lineHeight": "12px", "letterSpacing": "0.2em", "fontWeight": "600"}],
+                    "body-md": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "headline-lg": ["18px", {"lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #050a14;
+            overflow: hidden;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .glass-panel {
+            backdrop-filter: blur(12px);
+            background: rgba(10, 20, 40, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            position: relative;
+        }
+
+        .corner-bracket::before, .corner-bracket::after,
+        .corner-bracket span::before, .corner-bracket span::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-color: rgba(168, 232, 255, 0.3);
+            border-style: solid;
+        }
+
+        .corner-bracket::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+        .corner-bracket::after { top: -1px; right: -1px; border-width: 1px 1px 0 0; }
+        .corner-bracket span::before { bottom: -1px; left: -1px; border-width: 0 0 1px 1px; }
+        .corner-bracket span::after { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+
+        .scanline {
+            width: 100%;
+            height: 100px;
+            z-index: 5;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(168,232,255,0.05) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.1;
+            position: absolute;
+            bottom: 100%;
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scanline {
+            0% { bottom: 100%; }
+            100% { bottom: -10%; }
+        }
+
+        .pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .telemetry-grid {
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 33.3px 30px;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen selection:bg-primary-container selection:text-on-primary-container">
+<!-- Background Space Scene (ThreeJS Placeholder) -->
+<div class="fixed inset-0 z-0 overflow-hidden">
+
+<div class="absolute inset-0 telemetry-grid pointer-events-none opacity-50"></div>
+<div class="scanline"></div>
+</div>
+<!-- UI LAYER: ANCHORED ELEMENTS -->
+<div class="relative z-10 h-full w-full p-margin-viewport flex flex-col justify-between pointer-events-none">
+<!-- TOP ROW -->
+<div class="flex justify-between items-start">
+<!-- Top-Left: Mission & Status -->
+<div class="flex flex-col gap-2 pointer-events-auto">
+<div class="glass-panel corner-bracket px-4 py-3 min-w-[320px]">
+<span class="block"></span>
+<h1 class="font-label-caps text-label-caps text-primary tracking-[0.2em]">NATURE'S CALM vs. HUMANITY'S NOISE</h1>
+<div class="mt-3 flex items-end justify-between">
+<div class="flex flex-col">
+<span class="font-meta-tiny text-meta-tiny text-text-muted">SYSTEM_TIME_UTC</span>
+<span class="font-headline-lg text-headline-lg text-on-surface tabular-nums" id="utc-clock">00:00:00</span>
+</div>
+<div class="flex items-center gap-2 bg-primary-fixed-variant/20 border border-primary-container/30 px-2 py-1 rounded-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container pulse"></span>
+<span class="font-label-caps text-label-caps text-primary-container">TRACKING</span>
+</div>
+</div>
+</div>
+<div class="text-primary-container/40 font-meta-tiny text-meta-tiny mt-1 flex gap-4">
+<span>OS_VERSION: v4.2.0-STABLE</span>
+<span>LINK: ACTIVE_DOWNLINK</span>
+</div>
+</div>
+<!-- Top-Right: Telemetry Dashboard -->
+<div class="glass-panel corner-bracket px-4 py-3 min-w-[280px] pointer-events-auto">
+<span class="block"></span>
+<div class="flex flex-col items-end">
+<span class="font-label-caps text-label-caps text-text-muted mb-1">TOTAL_TRACKED_OBJECTS</span>
+<div class="flex items-baseline gap-1">
+<span class="font-headline-lg text-[28px] leading-none text-primary-fixed font-bold tracking-tight">23,418</span>
+<span class="font-meta-tiny text-meta-tiny text-primary-fixed/50">OBJS</span>
+</div>
+</div>
+<div class="mt-4 grid grid-cols-3 gap-4 border-t border-outline-variant pt-3">
+<div class="flex flex-col">
+<span class="font-meta-tiny text-meta-tiny text-text-muted">ACTIVE</span>
+<span class="font-label-md text-label-md text-on-surface">8,210</span>
+</div>
+<div class="flex flex-col">
+<span class="font-meta-tiny text-meta-tiny text-text-muted">DEBRIS</span>
+<span class="font-label-md text-label-md text-on-surface">14,922</span>
+</div>
+<div class="flex flex-col">
+<span class="font-meta-tiny text-meta-tiny text-text-muted">DECAY</span>
+<span class="font-label-md text-label-md text-on-surface">286</span>
+</div>
+</div>
+</div>
+</div>
+<!-- CENTER AREA (Focus Brackets) -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+<div class="w-64 h-64 border border-primary/20 relative">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full font-meta-tiny text-meta-tiny text-primary py-2">AZIMUTH_LOCK_ENABLED</div>
+<div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-primary"></div>
+<div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-primary"></div>
+<div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-primary"></div>
+<div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-primary"></div>
+</div>
+</div>
+<!-- BOTTOM ROW -->
+<div class="flex justify-between items-end">
+<!-- Bottom-Left: Contextual Focus -->
+<div class="glass-panel corner-bracket px-4 py-4 min-w-[340px] pointer-events-auto">
+<span class="block"></span>
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-gold-achievement text-sm" style="font-variation-settings: 'FILL' 1;">target</span>
+<h2 class="font-label-caps text-label-caps text-on-surface">CONTEXTUAL_FOCUS</h2>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between items-center border-b border-outline-variant/30 pb-1">
+<span class="font-label-sm text-label-sm text-text-muted">NAME</span>
+<span class="font-label-md text-label-md text-gold-achievement">ISS (ZARYA)</span>
+</div>
+<div class="flex justify-between items-center border-b border-outline-variant/30 pb-1">
+<span class="font-label-sm text-label-sm text-text-muted">ALTITUDE</span>
+<span class="font-label-md text-label-md text-on-surface tabular-nums">408.22 KM</span>
+</div>
+<div class="flex justify-between items-center border-b border-outline-variant/30 pb-1">
+<span class="font-label-sm text-label-sm text-text-muted">VELOCITY</span>
+<span class="font-label-md text-label-md text-on-surface tabular-nums">7.66 KM/S</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-text-muted">INCLINATION</span>
+<span class="font-label-md text-label-md text-on-surface tabular-nums">51.64°</span>
+</div>
+</div>
+</div>
+<!-- Bottom-Right: Classification Legend -->
+<div class="glass-panel corner-bracket px-4 py-4 min-w-[220px] pointer-events-auto">
+<span class="block"></span>
+<h3 class="font-label-caps text-label-caps text-text-muted mb-4 border-b border-outline-variant/50 pb-2">CLASSIFICATION</h3>
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-3">
+<div class="w-2.5 h-2.5 bg-gold-achievement rounded-[2px]"></div>
+<span class="font-label-sm text-label-sm text-on-surface">ISS_STATION</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-2.5 h-2.5 bg-primary-container rounded-[2px]"></div>
+<span class="font-label-sm text-label-sm text-on-surface">STARLINK</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-2.5 h-2.5 bg-other-green rounded-[2px]"></div>
+<span class="font-label-sm text-label-sm text-on-surface">NOTABLE_INT</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-2.5 h-2.5 bg-white rounded-[2px]"></div>
+<span class="font-label-sm text-label-sm text-on-surface">ACTIVE_COMMS</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-2.5 h-2.5 bg-russia-red rounded-[2px]"></div>
+<span class="font-label-sm text-label-sm text-on-surface">DEBRIS_HAZARD</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Background Elements Decoration -->
+<div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+<div class="flex items-center gap-8 font-meta-tiny text-meta-tiny text-text-muted/30 uppercase tracking-[0.4em]">
+<span>COORD_REF: GRS80</span>
+<span>|</span>
+<span>VECTOR_SYNC: ENABLED</span>
+<span>|</span>
+<span>SENSOR_FEED: OPTICAL_PRIMARY</span>
+</div>
+</div>
+<script>
+        // Real-time UTC Clock
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getUTCHours()).padStart(2, '0');
+            const m = String(now.getUTCMinutes()).padStart(2, '0');
+            const s = String(now.getUTCSeconds()).padStart(2, '0');
+            document.getElementById('utc-clock').textContent = `${h}:${m}:${s}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Subtle value jitter for realism
+        function jitterValues() {
+            const velocity = document.querySelector('.tabular-nums:nth-of-type(2)');
+            if (velocity) {
+                const base = 7.66;
+                const jitter = (Math.random() * 0.02 - 0.01).toFixed(2);
+                velocity.textContent = (base + parseFloat(jitter)).toFixed(2) + ' KM/S';
+            }
+        }
+        setInterval(jitterValues, 2000);
+    </script>
+</body></html>

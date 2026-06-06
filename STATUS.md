@@ -1,16 +1,32 @@
 # Screensaver - Status
 
 ## Stage
-Apple-Tier Audit Complete ✅
+Astra HUD Redesign — Code Complete, Build Verified ✅
 
 ## Last Updated
-2026-05-17
+2026-06-06
 
 ## Health
-🟢 Green (Build Passed)
+🟢 Green (Release build SUCCEEDED)
 
 ## Summary
-Completed Apple-tier audit with 5 critical bug fixes. Code is production-ready. Deployment blocked by macOS 26.5 code signing requirement (requires Developer ID).
+Ported the Google Stitch "Astra" mission-control HUD into the native SpriteKit overlay: glass panels,
+bundled JetBrains Mono, live UTC clock, telemetry dashboard, contextual focus, classification legend,
+ambient ticker, boot sequence, and a reworked configure sheet. See `docs/ASTRA_HUD.md`.
+
+Verification this round is **build-only**. Runtime is still blocked by the macOS 26.5 code-signing
+requirement — and the current machine has only an *Apple Development* certificate, **not** a *Developer
+ID Application* cert, so the `.saver` cannot yet be notarized/run. Signing steps are documented in
+`NatureVsNoise/DEPLOYMENT.md` for when a Developer ID cert is available.
+
+## Astra HUD Redesign (2026-06-06)
+- ✅ Design system + reusable `GlassPanel` + bundled JetBrains Mono (CoreText, SF Mono fallback)
+- ✅ `OrbitalCensus` counts (ISS/Starlink/notable/active/debris), cached + fed to the HUD
+- ✅ Full HUD: UTC clock, TRACKING pill, telemetry dashboard, contextual focus (incl. inclination),
+  classification legend, focus reticle, scanline, ambient ticker
+- ✅ Restyled dossier card, fact overlay, discovery banner
+- ✅ Boot sequence overlay; reworked configure sheet (fixed overlapping layout)
+- ✅ Release build green; fonts confirmed in the built bundle
 
 ## Completed Fixes (Apple-Tier Audit)
 
@@ -55,6 +71,7 @@ Error Domain=AppleMobileFileIntegrityError Code=-423
 See [DEPLOYMENT.md](NatureVsNoise/DEPLOYMENT.md) for full instructions.
 
 ## Recent Changes
+- 2026-06-06: Astra HUD redesign ported into native SpriteKit overlay (build verified)
 - 2026-05-17: Apple-tier audit - 5 critical bugs fixed
 - 2026-05-16: Engineering stabilization complete
 - 2026-02-21: Hybrid rendering + data-driven visualization

@@ -31,8 +31,16 @@
 - [x] Unit tests exist (SGP4PropagatorTests, FeatureFlagsAndTLETests)
 - [x] Documentation complete (README, DEPLOYMENT, CHANGELOG, STATUS)
 
+## Astra HUD Redesign (2026-06-06) ✅
+- [x] Design system + GlassPanel + bundled JetBrains Mono (MissionControlTheme)
+- [x] OrbitalCensus counts wired into the HUD
+- [x] Telemetry dashboard, contextual focus, classification legend
+- [x] Mission cluster (UTC clock + TRACKING pill), focus reticle, scanline
+- [x] Restyled dossier / fact / discovery; ambient ticker; boot sequence
+- [x] Reworked configure sheet (fixed overlapping layout); DECAY column removed
+- [x] Docs updated (ASTRA_HUD.md, README, CHANGELOG, STATUS, DEPLOYMENT)
+
 ## High Priority
-- [x] User testing framework in place (unit tests)
 - [ ] Performance profiling with Instruments
 
 ## Medium Priority
@@ -41,10 +49,17 @@
 - [ ] Audio integration
 - [ ] Add more TLE satellites to bundle
 
+## Known Gaps
+- [ ] No runnable unit-test target (test files exist but aren't wired; census/legend
+      assertions added to FeatureFlagsAndTLETests.swift, ready to run once a target exists)
+- [ ] DECAY metric not derivable from TLEs (column intentionally removed)
+
 ## Deployment Blocked
+- [ ] Obtain Developer ID Application certificate (machine has only Apple Development)
 - [ ] Developer ID signing required for macOS 26.5+
 - [ ] Notarization submission to Apple
 - [ ] Staple notarization ticket
+- [ ] Runtime visual verification against docs/stitch-base/stitch-output/ screenshots
 
 ## Testing Needed
 - [ ] Preview mode in Screen Saver preferences
