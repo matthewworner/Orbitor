@@ -94,7 +94,7 @@ final class FeatureFlagsAndTLETests: XCTestCase {
             isDebris: false,
             country: "US"
         )
-        XCTAssertEqual(issClass, .internationalSpaceStation, "ISS should be classified as ISS")
+        XCTAssertEqual(issClass, .iss, "ISS should be classified as ISS")
         
         // Test Starlink classification
         let starlinkClass = SatelliteClassifier.classify(
@@ -119,6 +119,31 @@ final class FeatureFlagsAndTLETests: XCTestCase {
             country: "US"
         )
         XCTAssertEqual(activeClass, .activeSatellite, "Regular satellite should be active")
+    }
+
+    // MARK: - HUD Classification Mapping Tests (Astra redesign)
+
+    func testLegendMappingIsComplete() {
+        // legendOrder must cover every class shown in the HUD legend.
+        let order = SatelliteClass.legendOrder
+        XCTAssertEqual(order.count, 5, "Legend should list all five classes")
+
+        // Codes must be unique and non-empty.
+        let codes = order.map { $0.legendCode }
+        XCTAssertEqual(Set(codes).count, codes.count, "Legend codes must be unique")
+        XCTAssertFalse(codes.contains(where: { $0.isEmpty }), "No empty legend codes")
+
+        // Spot-check the contract used by ClassificationLegend.update(census:).
+        XCTAssertEqual(SatelliteClass.iss.legendCode, "ISS_STATION")
+        XCTAssertEqual(SatelliteClass.debris.legendCode, "DEBRIS_HAZARD")
+    }
+
+    func testActiveTotalExcludesDebris() {
+        var c = SatelliteManager.OrbitalCensus()
+        c.iss = 1; c.starlink = 10; c.notable = 4; c.active = 20; c.debris = 100
+        c.total = c.iss + c.starlink + c.notable + c.active + c.debris
+        XCTAssertEqual(c.activeTotal, 35, "activeTotal sums functioning craft, excluding debris")
+        XCTAssertEqual(c.total - c.activeTotal, c.debris, "Everything not active is debris in this fixture")
     }
     
     // MARK: - Orbital Elements Tests

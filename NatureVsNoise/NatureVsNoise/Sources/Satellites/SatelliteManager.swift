@@ -76,10 +76,51 @@ class SatelliteManager {
 
     // MARK: - Properties
 
-    var satellites: [Satellite] = []
+    var satellites: [Satellite] = [] {
+        didSet { cachedCensus = nil }  // invalidate census when the catalog changes
+    }
     private weak var bundle: Bundle?
     private let tleFetcher = TLEFetcher()
     private var updateTimer: Timer?
+
+    // MARK: - Orbital Census
+
+    /// Aggregate counts by classification, for the HUD telemetry dashboard + census panel.
+    struct OrbitalCensus {
+        var total = 0
+        var iss = 0
+        var starlink = 0
+        var notable = 0
+        var active = 0
+        var debris = 0
+        /// Everything human-made and still functioning (non-debris).
+        var activeTotal: Int { iss + starlink + notable + active }
+    }
+
+    private var cachedCensus: OrbitalCensus?
+
+    /// Cached census; computed lazily and invalidated whenever `satellites` changes.
+    var census: OrbitalCensus {
+        if let c = cachedCensus { return c }
+        let c = computeCensus()
+        cachedCensus = c
+        return c
+    }
+
+    private func computeCensus() -> OrbitalCensus {
+        var c = OrbitalCensus()
+        c.total = satellites.count
+        for s in satellites {
+            switch SatelliteClassifier.classify(name: s.name, isDebris: s.isDebris, country: s.country) {
+            case .iss:             c.iss += 1
+            case .starlink:        c.starlink += 1
+            case .notable:         c.notable += 1
+            case .activeSatellite: c.active += 1
+            case .debris:          c.debris += 1
+            }
+        }
+        return c
+    }
 
     // MARK: - Initialization
 

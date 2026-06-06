@@ -48,10 +48,14 @@
 		150CE0482F07C800003B3D7F /* uranus_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE03A2F07C7D6003B3D7F /* uranus_8k.jpg */; };
 		150CE0492F07C800003B3D7F /* venus_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE03B2F07C7D6003B3D7F /* venus_8k.jpg */; };
 		E01111112B5A000000000F1 /* active_satellites.tle in Resources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000F0 /* active_satellites.tle */; };
+		F0E1A0000000000000000B01 /* JetBrainsMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F0E1A0000000000000000R01 /* JetBrainsMono-Regular.ttf */; };
+		F0E1B0000000000000000B02 /* JetBrainsMono-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F0E1B0000000000000000R02 /* JetBrainsMono-Bold.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		E01111112B5A000000000F0 /* active_satellites.tle */ = {isa = PBXFileReference; lastKnownFileType = text; path = active_satellites.tle; sourceTree = "<group>"; };
+		F0E1A0000000000000000R01 /* JetBrainsMono-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "JetBrainsMono-Regular.ttf"; sourceTree = "<group>"; };
+		F0E1B0000000000000000R02 /* JetBrainsMono-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "JetBrainsMono-Bold.ttf"; sourceTree = "<group>"; };
 		150CE02F2F07C7D6003B3D7F /* earth_8k_clouds.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = earth_8k_clouds.png; sourceTree = "<group>"; };
 		150CE0302F07C7D6003B3D7F /* earth_8k_day.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = earth_8k_day.jpg; sourceTree = "<group>"; };
 		150CE0312F07C7D6003B3D7F /* earth_8k_night.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = earth_8k_night.jpg; sourceTree = "<group>"; };
@@ -111,6 +115,8 @@
 			isa = PBXGroup;
 			children = (
 				E01111112B5A000000000F0 /* active_satellites.tle */,
+				F0E1A0000000000000000R01 /* JetBrainsMono-Regular.ttf */,
+				F0E1B0000000000000000R02 /* JetBrainsMono-Bold.ttf */,
 				150CE02F2F07C7D6003B3D7F /* earth_8k_clouds.png */,
 				150CE0302F07C7D6003B3D7F /* earth_8k_day.jpg */,
 				150CE0312F07C7D6003B3D7F /* earth_8k_night.jpg */,
@@ -339,6 +345,8 @@
 				150CE0482F07C800003B3D7F /* uranus_8k.jpg in Resources */,
 				150CE0492F07C800003B3D7F /* venus_8k.jpg in Resources */,
 			E01111112B5A000000000F1 /* active_satellites.tle in Resources */,
+				F0E1A0000000000000000B01 /* JetBrainsMono-Regular.ttf in Resources */,
+				F0E1B0000000000000000B02 /* JetBrainsMono-Bold.ttf in Resources */,
 		);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

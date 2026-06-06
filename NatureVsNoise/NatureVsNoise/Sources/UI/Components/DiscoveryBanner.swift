@@ -41,7 +41,7 @@ class DiscoveryBanner: SKNode {
                           transform: nil)
         
         container = SKShapeNode(path: path)
-        container.fillColor = MissionControlTheme.panelBg
+        container.fillColor = MissionControlTheme.glassFillColor
         container.strokeColor = MissionControlTheme.gold.withAlphaComponent(0.8)
         container.lineWidth = 2
         container.alpha = 0
@@ -50,7 +50,7 @@ class DiscoveryBanner: SKNode {
         addChild(container)
         
         // Icon
-        iconLabel = SKLabelNode(fontNamed: "SF Mono")
+        iconLabel = SKLabelNode(fontNamed: MissionControlTheme.hudFontName())
         iconLabel.fontSize = 28
         iconLabel.text = "🏆"
         iconLabel.horizontalAlignmentMode = .left
@@ -60,7 +60,7 @@ class DiscoveryBanner: SKNode {
         container.addChild(iconLabel)
         
         // Title
-        titleLabel = SKLabelNode(fontNamed: "SF Mono")
+        titleLabel = SKLabelNode(fontNamed: MissionControlTheme.hudFontName())
         titleLabel.fontSize = 14
         titleLabel.fontColor = MissionControlTheme.gold
         titleLabel.text = "ACHIEVEMENT UNLOCKED"
@@ -71,7 +71,7 @@ class DiscoveryBanner: SKNode {
         container.addChild(titleLabel)
         
         // Subtitle
-        subtitleLabel = SKLabelNode(fontNamed: "SF Mono")
+        subtitleLabel = SKLabelNode(fontNamed: MissionControlTheme.hudFontName())
         subtitleLabel.fontSize = 11
         subtitleLabel.fontColor = MissionControlTheme.textSecondary
         subtitleLabel.text = ""

@@ -16,6 +16,19 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     private var satelliteManager: SatelliteManager!
     private var satelliteRenderer: SatelliteRenderer!
 
+    /// Representative inclination (degrees) for the HUD contextual-focus readout.
+    /// Prefers the ISS; cached after first resolution. Stored inclinations are in radians.
+    private var _representativeInclination: Double?
+    private var representativeInclination: Double {
+        if let v = _representativeInclination { return v }
+        guard let sats = satelliteManager?.satellites, !sats.isEmpty else { return 51.6 }
+        let issRad = sats.first { NotableSatellitePatterns.isISS(name: $0.name) }?.inclination
+        let radians = issRad ?? sats.first(where: { $0.inclination > 0 })?.inclination ?? (51.6 * .pi / 180)
+        let degrees = radians * 180 / .pi
+        _representativeInclination = degrees
+        return degrees
+    }
+
     // Metal rendering (high-performance path)
     private var metalRenderer: MetalSatelliteRenderer?
     private var useMetalRendering: Bool = false
@@ -794,9 +807,13 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
             // Update HUD with current state
             hud.updateCamera(altitude: altitudeKm, velocity: max(3.0, velocity))
             hud.updateStats(satelliteCount: qualityLevel.maxSatellites, fps: 60)
-            
-            
+
+            // Feed the telemetry dashboard + classification legend (census is cached in the manager)
+            hud.updateCensus(satelliteManager.census)
+
             let targetName = findNearestPlanet(to: cameraNode.position)?.name ?? "DEEP SPACE"
+            // Contextual-focus inclination: representative tracked-object inclination (cached)
+            hud.updateFocus(name: targetName, inclination: representativeInclination)
             let coords = String(format: "%.1f, %.1f, %.1f", cameraNode.position.x, cameraNode.position.y, cameraNode.position.z)
             // Adjust HUD text for current mode
             if currentViewMode == .groundStellarium {
