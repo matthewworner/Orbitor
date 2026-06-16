@@ -1,5 +1,17 @@
 # Tasks
 
+## 🔴 2026-06-16 — render + memory bug-fix pass
+- [x] Fix invisible satellites — view-projection matrix bound to buffer(1) in hybrid path (a112746)
+- [x] Planet quality — mipmaps + 16x anisotropy, tessellation 64/96→128, gentle bloom (f10a9ec)
+- [x] **Fix 23–27 GB memory leak** — stop per-frame SceneKit geometry churn in Metal mode (5d502fa);
+      measured flat (0 MB growth) vs +13 GB before
+- [x] Mitigation: removed leaking installed `.saver` + killed `legacyScreenSaver`
+- [x] Removed stale installed experiments (Kubrick.saver, MinimalTest.saver) from `~/Library/Screen Savers/`
+- [ ] **Rebuild → Developer ID sign → reinstall the FIXED build** before using as screensaver/wallpaper again
+- [ ] On-device verify: memory stays flat over 30+ min as wallpaper; satellites visible; planets sharper
+- [ ] **SceneKit fallback path still leaks** (non-Metal hardware) — `updateTrailNode` rebuilds geometry
+      every frame; reuse a persistent geometry/buffer instead of recreating, or disable trails there
+
 ## Completed
 - [x] Metal full-screen rendering fix
 - [x] Satellite classification system

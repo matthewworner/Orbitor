@@ -1,13 +1,33 @@
 # Screensaver - Status
 
 ## Stage
-Astra HUD Redesign — Code Complete, Build Verified ✅
+Render + memory bug-fix pass (post-Astra HUD) ⚠️ — fixed in source, NOT yet reinstalled
 
 ## Last Updated
-2026-06-06
+2026-06-16
 
 ## Health
-🟢 Green (Release build SUCCEEDED)
+🟡 Amber — Release build SUCCEEDED, but the previously-installed build shipped a severe memory
+leak (see below). Source is fixed and measured-flat; a fixed build has not yet been signed/installed.
+
+## ⚠️ 2026-06-16 — critical memory leak (FIXED in source)
+The installed build leaked unbounded memory as wallpaper (`legacyScreenSaver`), reaching 23–27 GB and
+triggering macOS "out of application memory". Root cause: the Metal render path redundantly drove the
+SceneKit `SatelliteRenderer` for ~5000 satellites every tick, and `updateSatellites` rebuilt a fresh
+`SCNGeometry` per satellite per frame (`updateTrailNode`) that the wallpaper host never reclaimed.
+
+- **Fix (commit 5d502fa):** `addSatellitesMetal` now only uploads once + propagates on GPU; the Metal
+  renderer alone draws the swarm. Measured with `/tmp/leaktest.swift` (phys_footprint, 600 frames):
+  OLD +13,100 MB and climbing → NEW **0 MB, flat**. autoreleasepool alone did NOT fix it.
+- **Mitigation applied 2026-06-16:** removed the leaking `~/Library/Screen Savers/NatureVsNoise.saver`
+  and killed `legacyScreenSaver`; memory recovered (61% free).
+- **Still open:** rebuild → Developer ID sign → reinstall the FIXED build before using it again.
+- **Known remaining:** SceneKit *fallback* path (non-Metal hardware) still rebuilds trail geometry
+  per frame and would leak — needs geometry reuse. See TASKS.md.
+
+Other fixes in this pass: satellites were invisible (view-projection matrix bound to wrong buffer
+index — commit a112746); planet render quality (mipmaps + anisotropic filtering, tessellation, gentle
+bloom — commit f10a9ec).
 
 ## Summary
 Ported the Google Stitch "Astra" mission-control HUD into the native SpriteKit overlay: glass panels,

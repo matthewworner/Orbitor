@@ -2,6 +2,30 @@
 
 All notable changes to Nature vs Noise Screensaver.
 
+## [2026-06-16] - Render + memory bug-fix pass
+
+### Fixed
+- **Critical memory leak (23–27 GB OOM).** As wallpaper, the Metal render path redundantly drove the
+  SceneKit `SatelliteRenderer` for ~5000 satellites every tick, rebuilding a fresh `SCNGeometry` per
+  satellite per frame; the wallpaper host never reclaimed them. `addSatellitesMetal` now only uploads
+  once + propagates on the GPU (Metal draws the swarm). Measured flat (0 MB growth over 600 frames vs
+  +13 GB before). Also removed a duplicate per-frame Metal draw. (commit 5d502fa)
+- **Invisible satellites.** The hybrid render path bound the view-projection matrix to vertex buffer
+  index 2, but the shader reads it from buffer(1); the swarm was transformed by garbage and projected
+  off-screen. Now bound at index 1. (commit a112746)
+
+### Changed
+- **Planet render quality.** Added mipmaps + 16x anisotropic filtering to all planet/Earth/cloud/ring
+  texture slots (kills shimmer + muddy oblique angles), raised sphere tessellation (planets 96→128,
+  Earth 64→128, clouds 64→96), and re-enabled gentle bloom (intensity 0.3, threshold 0.9). The flat
+  grey `lightingEnvironment` was left as-is pending on-device verification (a large HDRI there was
+  previously documented to cause black screens). (commit f10a9ec)
+
+### Known issues
+- The SceneKit **fallback** path (non-Metal hardware) still rebuilds trail geometry every frame and
+  would leak; needs geometry reuse. Tracked in TASKS.md.
+- A fixed build has not yet been re-signed and reinstalled — do that before using it again.
+
 ## [2026-06-06] - Astra HUD Redesign
 
 Ported the Google Stitch "Astra" mission-control HUD into the native SpriteKit overlay. See
