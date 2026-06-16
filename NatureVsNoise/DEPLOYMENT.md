@@ -152,11 +152,15 @@ NatureVsNoise.saver/
 
 ## Current signing status (2026-06-06)
 
-This machine currently has **only an *Apple Development* certificate** — there is **no *Developer ID
-Application* certificate** and no stored notarization credentials. macOS 26.5 refuses to load an
-ad-hoc/Development-signed screensaver into `ScreenSaverEngine` (AMFI launch-constraint violation), so
-the `.saver` **cannot be notarized or run** until a Developer ID cert is added to the Apple Developer
-account. Until then, verification is build-only.
+A **Developer ID Application: M P Worner (PMJJD98L5C)** certificate now exists on this Mac. The
+`.saver` has been signed (hardened runtime + secure timestamp) and installed to
+`~/Library/Screen Savers/`, and it **runs in System Settings → Screen Saver preview** — Developer ID
+signing alone is enough to run it locally on macOS 26.5.
+
+`spctl -a --type install` still reports **"Unnotarized Developer ID"**. That only matters for
+**distribution**: another Mac downloading the `.saver` will be blocked by Gatekeeper until it's
+notarized + stapled. To distribute, complete the notarize → staple steps below (needs an app-specific
+password or App Store Connect API key, which is not yet configured).
 
 Check what's installed:
 

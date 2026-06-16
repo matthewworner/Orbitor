@@ -1,6 +1,16 @@
 # Nature's Calm vs. Humanity's Noise
 
-A macOS screensaver contrasting cosmic serenity with the chaotic swarm of 23,000+ satellites orbiting Earth.
+A macOS screensaver contrasting cosmic serenity with the chaotic swarm of satellites orbiting Earth.
+It live-fetches tens of thousands of satellites from CelesTrak (falling back to 14 bundled offline)
+and renders an SGP4-propagated swarm — capped at 5,000 points — over an 8K Earth.
+
+> **New here?** Read [`CLAUDE.md`](CLAUDE.md) for the repo map and [`docs/README.md`](docs/README.md)
+> for the full documentation index. Current state lives in [`STATUS.md`](STATUS.md); open work in
+> [`TASKS.md`](TASKS.md).
+>
+> **This repo holds three projects.** Only **`NatureVsNoise/`** is the canonical, shipping
+> screensaver. `NatureVsNoise-Cinematic/` ("Cosmic Kubrick") is a separate experiment and
+> `MinimalTest/` is a debug stub — don't build those unless asked.
 
 ## Features
 
@@ -102,6 +112,7 @@ objects: [docs/STITCH_PROMPTS.md](docs/STITCH_PROMPTS.md), `docs/stitch-base/`.
 
 | File | Description |
 |------|-------------|
+| [docs/README.md](docs/README.md) | **Documentation index** — map of every doc, grouped |
 | [ASTRA_HUD.md](docs/ASTRA_HUD.md) | HUD design reference (tokens, components, fonts) |
 | [STITCH_PROMPTS.md](docs/STITCH_PROMPTS.md) | Google Stitch prompts + base objects |
 | [DEPLOYMENT.md](NatureVsNoise/DEPLOYMENT.md) | Code signing & notarization |

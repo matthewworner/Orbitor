@@ -54,12 +54,17 @@
       assertions added to FeatureFlagsAndTLETests.swift, ready to run once a target exists)
 - [ ] DECAY metric not derivable from TLEs (column intentionally removed)
 
-## Deployment Blocked
-- [ ] Obtain Developer ID Application certificate (machine has only Apple Development)
-- [ ] Developer ID signing required for macOS 26.5+
-- [ ] Notarization submission to Apple
+## Deployment
+- [x] Obtain Developer ID Application certificate (M P Worner, PMJJD98L5C)
+- [x] Developer ID sign the .saver (hardened runtime + timestamp)
+- [x] Install + run in System Settings preview (works locally on macOS 26.5)
+- [x] Runtime verified — screensaver loads and renders
+- [ ] Notarization submission to Apple (only needed to distribute to other Macs)
 - [ ] Staple notarization ticket
-- [ ] Runtime visual verification against docs/stitch-base/stitch-output/ screenshots
+- [ ] Visual polish pass against docs/stitch-base/stitch-output/ screenshots
+
+## Visual Polish (post-runtime review)
+- [ ] TBD — capture issues seen in live preview
 
 ## Testing Needed
 - [ ] Preview mode in Screen Saver preferences

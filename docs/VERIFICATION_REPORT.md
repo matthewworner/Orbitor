@@ -1,5 +1,10 @@
 # Verification Report: "Nature's Calm vs. Humanity's Noise"
 
+> ⚠️ **Historical snapshot (2026-02-21) — pre-Astra-HUD. Not current.** Some figures here are
+> outdated: "23,000+ satellites" is what the app *fetches*, not what it renders (the swarm is capped
+> at 5,000); the camera and HUD have since changed. For current state see [`../STATUS.md`](../STATUS.md).
+> Kept for history.
+
 **Date:** February 21, 2026
 **Status:** ✅ Build Succeeded / Feature Complete
 
