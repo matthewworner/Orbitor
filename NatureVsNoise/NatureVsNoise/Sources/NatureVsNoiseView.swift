@@ -676,41 +676,27 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     /// Metal-accelerated satellite rendering (Apple Silicon)
     private func addSatellitesMetal(metalRenderer: MetalSatelliteRenderer) {
         guard let satelliteManager = satelliteManager else { return }
-        
-        let maxSatellites = qualityLevel.maxSatellites
-        let satellites = Array(satelliteManager.satellites.prefix(maxSatellites))
-        
-        // Build color array
-        var colors: [SIMD4<Float>] = []
-        colors.reserveCapacity(satellites.count)
-        for satellite in satellites {
-            colors.append(satelliteManager.colorForSatellite(satellite))
-        }
-        
-        // Upload to GPU (one-time or when data changes)
+
+        // Upload orbital elements + colors ONCE; the GPU then propagates every tick.
         if animationTime == 0 {
+            let maxSatellites = qualityLevel.maxSatellites
+            let satellites = Array(satelliteManager.satellites.prefix(maxSatellites))
+            var colors: [SIMD4<Float>] = []
+            colors.reserveCapacity(satellites.count)
+            for satellite in satellites {
+                colors.append(satelliteManager.colorForSatellite(satellite))
+            }
             metalRenderer.uploadSatellites(satellites, colors: colors)
         }
-        
-        // GPU propagates all positions in parallel
+
+        // GPU propagates all positions in parallel; the Metal renderer draws the swarm
+        // (render(into:) from willRenderScene). That's the whole job in Metal mode.
+        //
+        // CRITICAL: do NOT drive the SceneKit SatelliteRenderer here. It previously rebuilt up to
+        // maxSatellites (≈5000) SCNGeometry trail objects EVERY tick — thousands of GPU-backed
+        // geometries per second that the wallpaper host never reclaimed, leaking to 23GB (OOM).
+        // Metal already owns the swarm, so the SceneKit path was pure redundant allocation.
         metalRenderer.propagate(deltaTime: 0.1)
-        
-        // For hybrid rendering, get positions back from GPU and update SceneKit nodes
-        // This allows us to use SceneKit's camera and lighting while Metal handles satellites
-        let positions = metalRenderer.getInstancePositions()
-        
-        guard let satelliteRenderer = satelliteRenderer else { return }
-        
-        let earthOffset = SIMD3<Float>(0, 0, 0)
-        let velocities: [SIMD3<Float>] = Array(repeating: .zero, count: positions.count)
-        
-        satelliteRenderer.updateSatellites(
-            positions: positions,
-            colors: colors,
-            velocities: velocities,
-            names: Array(repeating: "SAT", count: positions.count),
-            earthOffset: earthOffset
-        )
     }
     
     /// SceneKit satellite rendering (fallback for older hardware)
@@ -863,19 +849,22 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
             ])
         }
         
-        // Update satellite positions and render Metal swarm
+        // Update satellite positions. The autorelease pool reclaims per-tick value temporaries;
+        // it does NOT by itself stop the SceneKit-fallback trail leak (measured: geometry is
+        // retained by the node graph, not autoreleased) — that path is fixed separately by
+        // reusing geometry instead of rebuilding it. In Metal mode this does almost no work now.
         let deltaTime = time - lastUpdateTime
         if deltaTime >= qualityLevel.updateInterval {
-            updateSatellites()
+            autoreleasepool {
+                updateSatellites()
+            }
             lastUpdateTime = time
         }
-        
-        // Render Metal swarm directly into SceneKit's render context
-        if useMetalRendering, let metalRenderer = metalRenderer, let cameraNode = cameraNode {
-            metalRenderer.render(into: renderer, camera: cameraNode)
-        }
+
+        // NOTE: the Metal swarm is drawn once per frame in willRenderScene (below) for correct
+        // layering. It used to also draw here, double-encoding every frame — removed.
     }
-    
+
     func renderer(_ renderer: SCNSceneRenderer, willRenderScene scene: SCNScene, atTime time: TimeInterval) {
         // Pre-render hook - Metal rendering happens here for proper layering
         if useMetalRendering, let metalRenderer = metalRenderer, let cameraNode = cameraNode {
