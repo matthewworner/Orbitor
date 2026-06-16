@@ -387,10 +387,12 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         cameraNode.camera?.averageGray = 0.18
         cameraNode.camera?.whitePoint = 1.0
         
-        // Bloom settings - DISABLED to preserve satellite colors
-        cameraNode.camera?.bloomIntensity = 0.0 // Was washing out colors
-        cameraNode.camera?.bloomThreshold = 1.0
-        cameraNode.camera?.bloomBlurRadius = 0.0
+        // Bloom: gentle glow on the brightest highlights only (sun, lit limb, hottest sats).
+        // Kept subtle with a high threshold so mid-tone planet/satellite colors are NOT washed
+        // out — the earlier full-off setting was overcorrecting for an over-bloomed config.
+        cameraNode.camera?.bloomIntensity = 0.3
+        cameraNode.camera?.bloomThreshold = 0.9   // only near-white highlights bloom
+        cameraNode.camera?.bloomBlurRadius = 6.0
         
         // Create a pivot node for orbital rotation
         // Camera will be offset from pivot, and rotating the pivot creates orbital motion
@@ -450,7 +452,7 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     
     private func addEarth() {
         let earthGeometry = SCNSphere(radius: 2.0)
-        earthGeometry.segmentCount = 64
+        earthGeometry.segmentCount = 128 // Hero planet — high tessellation for a round limb
         
         let earthMaterial = SCNMaterial()
         earthMaterial.diffuse.contents = NSColor.blue
@@ -472,7 +474,10 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         // Specular for ocean reflections
         earthMaterial.specular.contents = NSColor.white
         earthMaterial.shininess = 0.1
-        
+
+        // Mipmaps + anisotropic filtering so the 8K day/night/specular maps stay crisp.
+        PlanetFactory.applyHighQualityFiltering(to: earthMaterial)
+
         earthGeometry.materials = [earthMaterial]
         
         let earthNode = SCNNode(geometry: earthGeometry)
@@ -494,7 +499,7 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     
     private func addEarthClouds(parent: SCNNode, cloudTexture: NSImage?) {
         let cloudGeometry = SCNSphere(radius: 2.02) // Slightly larger than Earth
-        cloudGeometry.segmentCount = 64
+        cloudGeometry.segmentCount = 96
         
         let cloudMaterial = SCNMaterial()
         cloudMaterial.diffuse.contents = NSColor.clear
@@ -506,7 +511,8 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         if let cloudTexture = cloudTexture {
             cloudMaterial.transparent.contents = cloudTexture
         }
-        
+
+        PlanetFactory.applyHighQualityFiltering(to: cloudMaterial)
         cloudGeometry.materials = [cloudMaterial]
         
         let cloudNode = SCNNode(geometry: cloudGeometry)
