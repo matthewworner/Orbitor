@@ -426,19 +426,24 @@ class MetalSatelliteRenderer: NSObject {
         )
         memcpy(renderUniformBuffer.contents(), &renderUniforms, MemoryLayout<RenderUniforms>.stride)
         
-        // Encode render commands directly into SceneKit's render pass
+        // Encode render commands directly into SceneKit's render pass.
+        // NOTE: satelliteVertex/trailVertex read the view-projection matrix from buffer(1).
+        // RenderUniforms.modelViewProjection is the struct's first field, so binding
+        // renderUniformBuffer at index 1 hands the shader the matrix it expects. Binding it at
+        // index 2 (as before) left buffer(1) holding SceneKit's leftover buffer → garbage
+        // transform → satellites projected off-screen and never appeared.
         renderEncoder.setRenderPipelineState(renderPipeline)
         renderEncoder.setVertexBuffer(instanceBuffer, offset: 0, index: 0)
-        renderEncoder.setVertexBuffer(renderUniformBuffer, offset: 0, index: 2)
-        
+        renderEncoder.setVertexBuffer(renderUniformBuffer, offset: 0, index: 1)
+
         // Draw all satellites as point sprites in a single draw call
         renderEncoder.drawPrimitives(type: .point, vertexStart: 0, vertexCount: 1, instanceCount: satelliteCount)
-        
+
         // Render trails if enabled
         if showTrails, let trailPipeline = trailRenderPipeline {
             renderEncoder.setRenderPipelineState(trailPipeline)
             renderEncoder.setVertexBuffer(instanceBuffer, offset: 0, index: 0)
-            renderEncoder.setVertexBuffer(renderUniformBuffer, offset: 0, index: 2)
+            renderEncoder.setVertexBuffer(renderUniformBuffer, offset: 0, index: 1)
             // Draw trail lines (2 vertices per satellite, instanced)
             renderEncoder.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 2, instanceCount: min(satelliteCount, maxTrailInstances))
         }
