@@ -9,8 +9,26 @@
 - [x] Removed stale installed experiments (Kubrick.saver, MinimalTest.saver) from `~/Library/Screen Savers/`
 - [ ] **Rebuild → Developer ID sign → reinstall the FIXED build** before using as screensaver/wallpaper again
 - [ ] On-device verify: memory stays flat over 30+ min as wallpaper; satellites visible; planets sharper
-- [ ] **SceneKit fallback path still leaks** (non-Metal hardware) — `updateTrailNode` rebuilds geometry
-      every frame; reuse a persistent geometry/buffer instead of recreating, or disable trails there
+
+## ✅ 2026-07-05 — Fable 5 stability sweep fixes (audit: docs/qa/2026-07-05-fable5-stability-audit.md)
+- [x] **Settings crash (Finding 4):** `satelliteRenderer?.` in `configureQualitySettings` so disabling
+      "Hero Satellites (3D models)" no longer force-unwraps nil on next launch (5e712c7).
+- [x] **Dead-after-restart (Finding 1):** `startAnimation()` mirrors what `stopAnimation()` tears down
+      — delegate, isPlaying, HUD timer, SatManager timer (5e712c7 + 1c6ae10).
+- [x] **Hourly refetch race (Finding 3):** `parseTLEData` parses into a local array and publishes
+      `satellites` on main; `parseTLEContent` takes `inout` so both code paths route through the
+      property setter; `lastFetchStatistics` capped at 50 (1423403 + af9a74b).
+- [x] **Fallback trail churn (Finding 2):** SceneKit fallback path throttled to 2 Hz and shares
+      one static `SCNMaterial` across all trails — this was a live sibling of the 23GB bug
+      (fc23a85).
+- [x] **Per-tick SGP4 alloc (Finding 5):** cached `SGP4Propagator` keyed by `catalogNumber` —
+      the SceneKit fallback cap of 50 makes the cache naturally bounded (1423403).
+- [x] **Fetch timer not paused (Finding 6):** `SatelliteManager.pauseUpdates()` / `resumeUpdates()`
+      called from `stopAnimation()` / `startAnimation()` (1423403 + 5e712c7).
+- [x] **GPU catalog never re-uploaded (Finding 7):** `catalogGeneration` counter on `satellites.didSet`;
+      `addSatellitesMetal` re-uploads whenever it changes (1423403 + 5e712c7).
+- [x] **Log unbounded (Finding 8):** `logToFile` truncates at startup if over 500 KB (5e712c7).
+
 
 ## Completed
 - [x] Metal full-screen rendering fix

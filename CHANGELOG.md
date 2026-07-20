@@ -2,6 +2,54 @@
 
 All notable changes to Nature vs Noise Screensaver.
 
+## [2026-07-05] - Fable 5 stability sweep fixes
+
+Sweep: `docs/qa/2026-07-05-fable5-stability-audit.md` (8 findings, all fixed).
+
+### Fixed
+- **Settings-induced crash (RESILIENCE).** Unchecking "Hero Satellites (3D models)" in the
+  configure sheet and relaunching force-unwrapped a nil `satelliteRenderer` inside the
+  wallpaper host during `setupScene()`. Switched the four `configureQualitySettings` call
+  sites to optional-chaining. (5e712c7)
+- **Saver dead after preview stop/start (LIFECYCLE).** `startAnimation()` did nothing beyond
+  `super`, so after `stopAnimation()` cleared `sceneView.delegate` / `isPlaying` / HUD timer
+  / SatManager timer, the System Settings preview (which restarts on the same view instance)
+  got a frozen frame: no `renderer(_:updateAtTime:)`, no `willRenderScene` (Metal swarm not
+  drawn), no HUD updates. `startAnimation()` now mirrors the teardown. (5e712c7, 1c6ae10)
+- **Hourly CelesTrak fetch kept running after stopAnimation (LIFECYCLE).** `SatelliteManager`'s
+  hourly `Timer` was only invalidated in `deinit`. Added `pauseUpdates()` / `resumeUpdates()`,
+  called from the screensaver's stop/start. (1423403, 5e712c7)
+- **SceneKit fallback trail churn (LEAK, sibling of the 23GB bug).** The 23GB fix removed the
+  call from the Metal path, but the SceneKit fallback still rebuilt a fresh `SCNGeometrySource`
+  + `SCNGeometryElement` + `SCNGeometry` + `SCNMaterial` per visible satellite per tick —
+  ~1500 GPU-backed allocations/sec, same leak class. Throttled to 2 Hz and shared one static
+  `SCNMaterial` across all trails. (fc23a85)
+- **Per-tick SGP4 propagator alloc (RENDER).** `getPositionAndVelocity` allocated a new
+  `OrbitalElements` + `SGP4Propagator` for every satellite on every tick; init runs the full
+  SGP4 math. Cached `SGP4Propagator` keyed by `catalogNumber`. SceneKit fallback path queries
+  the first 50 entries only, so the cache is naturally bounded. Metal path is unaffected
+  (GPU propagates via the kernel). (1423403)
+- **Background parse race on hourly refetch (LEAK-/RESILIENCE).** `parseTLEData` did
+  `satellites.removeAll()` + `parseTLEContent` (which appends) from a detached `Task` while
+  the render thread read the array on every frame — undefined behaviour for a CoW array,
+  with hundreds of chances per multi-hour run. Parse into a local, publish `satellites` on
+  main; `parseTLEContent` now takes `inout` so both bundle-load and async-fetch paths route
+  through the property setter. (1423403)
+- **Unbounded `lastFetchStatistics`.** Hourly fetches appended ~7 stats per cycle forever.
+  Capped to last 50 entries. (af9a74b)
+
+### Changed
+- **GPU catalog re-upload.** The Metal swarm uploaded orbital elements only on the very first
+  tick (`animationTime == 0`). The async fetch and every hourly refresh replaced `satellites`
+  afterwards but the GPU never saw the new catalog — the swarm showed 14 bundled sats for the
+  whole session. Added a `catalogGeneration` counter on `satellites.didSet`; `addSatellitesMetal`
+  re-uploads whenever it changes. (1423403, 5e712c7)
+- **Diagnostic log rotation.** `logToFile` truncated at startup if `~/Library/Logs/NatureVsNoise.log`
+  was over 500 KB; was unbounded across months. (5e712c7)
+
+### Known issues
+- A fixed build has not yet been re-signed and reinstalled — do that before using it again.
+
 ## [2026-06-16] - Render + memory bug-fix pass
 
 ### Fixed
