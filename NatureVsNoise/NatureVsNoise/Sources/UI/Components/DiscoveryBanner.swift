@@ -124,17 +124,7 @@ class DiscoveryBanner: SKNode {
         node.addChild(glow)
         node.zPosition = -1
     }
-    
-    // MARK: - Show Achievement
-    
-    func showAchievement(_ achievement: Achievement) {
-        iconLabel.text = achievement.emoji
-        titleLabel.text = achievement.name.uppercased()
-        subtitleLabel.text = achievement.description
-        
-        showBanner(duration: 4.0)
-    }
-    
+
     // MARK: - Show Discovery
     
     func showDiscovery(name: String, description: String) {

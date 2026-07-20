@@ -34,9 +34,6 @@ class HUDOverlay: SKScene {
     // Center focus brackets
     private var focusReticle: SKNode!
 
-    // Achievement callback
-    private var achievementManager = AchievementManager.shared
-
     // Settings
     var infoDensity: InfoDensity = .moderate {
         didSet { updateVisibility() }
@@ -121,7 +118,6 @@ class HUDOverlay: SKScene {
         ambientTicker = AmbientTicker()
         addChild(ambientTicker)
 
-        setupAchievementCallbacks()
         layoutComponents()
         startUpdateTimer()
         updateVisibility()
@@ -236,12 +232,6 @@ class HUDOverlay: SKScene {
                                          color: MissionControlTheme.primarySoftColor, hAlign: .center, vAlign: .bottom)
         label.position = CGPoint(x: 0, y: box/2 + 6)
         focusReticle.addChild(label)
-    }
-
-    private func setupAchievementCallbacks() {
-        achievementManager.onAchievementUnlocked = { [weak self] achievement in
-            self?.discoveryBanner.showAchievement(achievement)
-        }
     }
 
     // MARK: - Layout
@@ -387,12 +377,6 @@ class HUDOverlay: SKScene {
     func showSatellite(_ satellite: NotableSatellite) {
         guard infoDensity != .minimal else { return }
         infoCard.showSatellite(satellite)
-        achievementManager.trackSatelliteSpotted(
-            name: satellite.name,
-            country: satellite.country,
-            type: satellite.type.rawValue,
-            altitude: currentAltitude
-        )
     }
 
     /// Show orbital zone info

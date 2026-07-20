@@ -12,7 +12,6 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     private var cameraNode: SCNNode!
     private var groundCameraNode: SCNNode!
     private var earthNode: SCNNode?
-    private var cameraController: CameraController!
     private var satelliteManager: SatelliteManager!
     private var satelliteRenderer: SatelliteRenderer!
 
@@ -46,7 +45,6 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
 
     private var animationTime: Double = 0
     private var lastUpdateTime: TimeInterval = 0
-    private var displayLink: CVDisplayLink?
     
     // MARK: - Diagnostic State
     private var isFullScreenMode: Bool = false
@@ -268,9 +266,6 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         
         // CRITICAL: Tell the SCNView to use our camera!
         sceneView.pointOfView = cameraNode
-
-        // Initialize camera controller  
-        cameraController = CameraController(scene: scene, cameraNode: cameraNode, cameraPivot: cameraPivot)
 
         // Initialize satellite manager
         satelliteManager = SatelliteManager(bundle: Bundle(for: type(of: self)))

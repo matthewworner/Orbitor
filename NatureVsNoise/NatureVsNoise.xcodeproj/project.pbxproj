@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		E01111112B5A00000000001 /* NatureVsNoiseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000002 /* NatureVsNoiseView.swift */; };
 		E01111112B5A00000000003 /* PlanetFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000004 /* PlanetFactory.swift */; };
-		E01111112B5A00000000005 /* CameraController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000006 /* CameraController.swift */; };
+
 		E01111112B5A00000000009 /* SatelliteManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000007 /* SatelliteManager.swift */; };
 		E01111112B5A00000000012 /* SatelliteRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000008 /* SatelliteRenderer.swift */; };
 		E01111112B5A00000000013 /* SGP4Propagator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000014 /* SGP4Propagator.swift */; };
@@ -30,7 +30,7 @@
 		E01111112B5A000000000D7 /* FactOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C7 /* FactOverlay.swift */; };
 		E01111112B5A000000000D8 /* InfoCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C8 /* InfoCardView.swift */; };
 		E01111112B5A000000000D9 /* StatsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C9 /* StatsPanel.swift */; };
-		E01111112B5A000000000DA /* Achievements.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000CA /* Achievements.swift */; };
+
 		E01111112B5A000000000DB /* EducationalFacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000CB /* EducationalFacts.swift */; };
 		E01111112B5A000000000DC /* SatelliteDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000CC /* SatelliteDatabase.swift */; };
 		E01111112B5A000000000DD /* MissionControlTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000CD /* MissionControlTheme.swift */; };
@@ -71,7 +71,7 @@
 		150CE03B2F07C7D6003B3D7F /* venus_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = venus_8k.jpg; sourceTree = "<group>"; };
 		E01111112B5A00000000002 /* NatureVsNoiseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NatureVsNoiseView.swift; sourceTree = "<group>"; };
 		E01111112B5A00000000004 /* PlanetFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanetFactory.swift; sourceTree = "<group>"; };
-		E01111112B5A00000000006 /* CameraController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraController.swift; sourceTree = "<group>"; };
+
 		E01111112B5A00000000007 /* SatelliteManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteManager.swift; sourceTree = "<group>"; };
 		E01111112B5A00000000008 /* SatelliteRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteRenderer.swift; sourceTree = "<group>"; };
 		E01111112B5A00000000010 /* NatureVsNoise.saver */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NatureVsNoise.saver; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -92,7 +92,7 @@
 		E01111112B5A000000000C7 /* FactOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FactOverlay.swift; sourceTree = "<group>"; };
 		E01111112B5A000000000C8 /* InfoCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoCardView.swift; sourceTree = "<group>"; };
 		E01111112B5A000000000C9 /* StatsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsPanel.swift; sourceTree = "<group>"; };
-		E01111112B5A000000000CA /* Achievements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Achievements.swift; sourceTree = "<group>"; };
+
 		E01111112B5A000000000CB /* EducationalFacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EducationalFacts.swift; sourceTree = "<group>"; };
 		E01111112B5A000000000CC /* SatelliteDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatelliteDatabase.swift; sourceTree = "<group>"; };
 		E01111112B5A000000000CD /* MissionControlTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissionControlTheme.swift; sourceTree = "<group>"; };
@@ -159,7 +159,6 @@
 				E01111112B5A00000000002 /* NatureVsNoiseView.swift */,
 				E01111112B5A0000000002F /* FeatureFlags.swift */,
 				E01111112B5A000000000E1 /* Audio */,
-				E01111112B5A00000000025 /* Camera */,
 				E01111112B5A000000000E2 /* CrossPlatform */,
 				E01111112B5A00000000024 /* Planets */,
 				E01111112B5A00000000026 /* Satellites */,
@@ -181,14 +180,6 @@
 				E01111112B5A00000000004 /* PlanetFactory.swift */,
 			);
 			path = Planets;
-			sourceTree = "<group>";
-		};
-		E01111112B5A00000000025 /* Camera */ = {
-			isa = PBXGroup;
-			children = (
-				E01111112B5A00000000006 /* CameraController.swift */,
-			);
-			path = Camera;
 			sourceTree = "<group>";
 		};
 		E01111112B5A00000000026 /* Satellites */ = {
@@ -258,7 +249,6 @@
 		E01111112B5A000000000E5 /* Data */ = {
 			isa = PBXGroup;
 			children = (
-				E01111112B5A000000000CA /* Achievements.swift */,
 				E01111112B5A000000000CB /* EducationalFacts.swift */,
 				E01111112B5A000000000CC /* SatelliteDatabase.swift */,
 			);
@@ -359,7 +349,6 @@
 			files = (
 				E01111112B5A00000000001 /* NatureVsNoiseView.swift in Sources */,
 				E01111112B5A00000000003 /* PlanetFactory.swift in Sources */,
-				E01111112B5A00000000005 /* CameraController.swift in Sources */,
 				E01111112B5A00000000009 /* SatelliteManager.swift in Sources */,
 				E01111112B5A00000000012 /* SatelliteRenderer.swift in Sources */,
 				BDCA39D714B59410A8E879CD0 /* SatelliteClassification.swift in Sources */,
@@ -379,7 +368,6 @@
 				E01111112B5A000000000D7 /* FactOverlay.swift in Sources */,
 				E01111112B5A000000000D8 /* InfoCardView.swift in Sources */,
 				E01111112B5A000000000D9 /* StatsPanel.swift in Sources */,
-				E01111112B5A000000000DA /* Achievements.swift in Sources */,
 				E01111112B5A000000000DB /* EducationalFacts.swift in Sources */,
 				E01111112B5A000000000DC /* SatelliteDatabase.swift in Sources */,
 				E01111112B5A000000000DD /* MissionControlTheme.swift in Sources */,
