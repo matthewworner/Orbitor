@@ -18,7 +18,6 @@ class HUDOverlay: SKScene {
     private var focusPanel: ContextualFocusPanel!     // bottom-left
     private var legendPanel: ClassificationLegend!     // bottom-right
     private var infoCard: InfoCardView!               // contextual dossier
-    private var discoveryBanner: DiscoveryBanner!
     private var factOverlay: FactOverlay!
     private var gridOverlay: SKShapeNode!
     private var scanline: SKShapeNode!
@@ -99,10 +98,6 @@ class HUDOverlay: SKScene {
         // Contextual dossier card (right, appears on focus)
         infoCard = InfoCardView()
         addChild(infoCard)
-
-        // Discovery banner (center)
-        discoveryBanner = DiscoveryBanner()
-        addChild(discoveryBanner)
 
         // Fact overlay (bottom center)
         factOverlay = FactOverlay()
@@ -250,7 +245,6 @@ class HUDOverlay: SKScene {
         legendPanel.position = CGPoint(x: size.width - m - ClassificationLegend.panelWidth, y: m)
 
         infoCard.position = CGPoint(x: size.width - m - 240, y: size.height / 2 + 20)
-        discoveryBanner.position = CGPoint(x: size.width / 2 - 140, y: size.height / 2 + 80)
         factOverlay.position = CGPoint(x: size.width / 2 - 160, y: 96)
         footerStrip.position = CGPoint(x: size.width / 2, y: 6)
 

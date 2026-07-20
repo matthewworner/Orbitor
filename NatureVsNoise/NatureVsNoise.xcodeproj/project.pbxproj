@@ -26,7 +26,7 @@
 		E01111112B5A00000000OM01 /* OrbitalModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000OM02 /* OrbitalModels.swift */; };
 		E01111112B5A000000000D4 /* HUDOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C4 /* HUDOverlay.swift */; };
 		E01111112B5A000000000D5 /* SettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C5 /* SettingsController.swift */; };
-		E01111112B5A000000000D6 /* DiscoveryBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C6 /* DiscoveryBanner.swift */; };
+
 		E01111112B5A000000000D7 /* FactOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C7 /* FactOverlay.swift */; };
 		E01111112B5A000000000D8 /* InfoCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C8 /* InfoCardView.swift */; };
 		E01111112B5A000000000D9 /* StatsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000C9 /* StatsPanel.swift */; };
@@ -92,7 +92,7 @@
 		E01111112B5A00000000OM02 /* OrbitalModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitalModels.swift; sourceTree = "<group>"; };
 		E01111112B5A000000000C4 /* HUDOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDOverlay.swift; sourceTree = "<group>"; };
 		E01111112B5A000000000C5 /* SettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsController.swift; sourceTree = "<group>"; };
-		E01111112B5A000000000C6 /* DiscoveryBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryBanner.swift; sourceTree = "<group>"; };
+
 		E01111112B5A000000000C7 /* FactOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FactOverlay.swift; sourceTree = "<group>"; };
 		E01111112B5A000000000C8 /* InfoCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoCardView.swift; sourceTree = "<group>"; };
 		E01111112B5A000000000C9 /* StatsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsPanel.swift; sourceTree = "<group>"; };
@@ -244,7 +244,6 @@
 		E01111112B5A000000000E4 /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				E01111112B5A000000000C6 /* DiscoveryBanner.swift */,
 				E01111112B5A000000000C7 /* FactOverlay.swift */,
 				E01111112B5A000000000C8 /* InfoCardView.swift */,
 				E01111112B5A000000000C9 /* StatsPanel.swift */,
@@ -372,7 +371,6 @@
 				E01111112B5A00000000OM01 /* OrbitalModels.swift in Sources */,
 				E01111112B5A000000000D4 /* HUDOverlay.swift in Sources */,
 				E01111112B5A000000000D5 /* SettingsController.swift in Sources */,
-				E01111112B5A000000000D6 /* DiscoveryBanner.swift in Sources */,
 				E01111112B5A000000000D7 /* FactOverlay.swift in Sources */,
 				E01111112B5A000000000D8 /* InfoCardView.swift in Sources */,
 				E01111112B5A000000000D9 /* StatsPanel.swift in Sources */,
