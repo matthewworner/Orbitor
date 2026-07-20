@@ -39,10 +39,24 @@
       1.2.0 (3e34d2b + fe79142).
 - [x] **Dead code removed:** CameraController (259 lines, never called), Achievements
       (295 lines, trigger path impossible), displayLink (declared never used), Discovery Mode
-      configure toggle (backed by removed feature) (e4c5a79).
+      configure toggle (backed by removed feature), DiscoveryBanner (222 lines, orphaned
+      after the previous deletes) (e4c5a79 + c406ae8 + ae32abe).
 - [x] **Test target wired:** SwiftPM Package.swift at NatureVsNoise/. `swift test` runs the
-      existing XCTest files. 15/17 pass. 2 failures point to a pre-existing SGP4 velocity
-      units bug (out of scope) (a9fb932).
+      existing XCTest files (a9fb932).
+
+## ✅ 2026-07-20 — Bug fixes (SGP4 velocity + audio bundling)
+- [x] **SGP4 velocity was 13x too high.** The propagation formula divided by 60.0 to convert
+      min→sec but was missing the `/ tumin` factor (13.4468). Result was in earth-radii/TU/min
+      instead of km/s — LEO velocity computed as ~103 km/s vs real ~7.66. Fixed by adding
+      `/ SGP4Constants.tumin` to the velocity scaling. Tests now 17/17 pass (d8d53b7).
+- [x] **Ambient and Saturn audio never played.** Files existed on disk but weren't in the
+      Xcode build phase; layer names didn't match filenames; lookup didn't search
+      `Audio/Ambient/`. Fixed by renaming files to match layer names (ambient_solar_wind.mp3,
+      planet_saturn.wav), removing the empty subdirs, adding both to project.pbxproj (file
+      ref + build file + Resources group + Resources build phase), and simplifying the
+      audio-init gate in NatureVsNoiseView. "Ambient Audio" toggle now plays audio;
+      approaching Saturn plays Saturn's radio. The 8 other planet voices + 5 mission clips
+      remain silent placeholders (no source files) (a13b053).
 
 
 ## Completed

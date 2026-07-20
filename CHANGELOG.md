@@ -2,6 +2,36 @@
 
 All notable changes to Nature vs Noise Screensaver.
 
+## [2026-07-20] - Bug fixes (SGP4 velocity, audio bundling)
+
+### Fixed
+- **SGP4 velocity was 13x too high.** The propagation formula divided by 60.0 to convert
+  min→sec but was missing the `/ tumin` factor (13.4468). Result was in earth-radii/TU/min
+  instead of km/s — LEO velocity computed as ~103 km/s vs real ~7.66; GEO ~41 vs ~3.07.
+  Both ratios identical to the missing constant, which is how the test failure pinpointed
+  it. Fixed by adding `/ SGP4Constants.tumin` to the velocity scaling. Position magnitude
+  was already correct (multiplied by radiusEarthKm without the /60 divisor -- position is
+  in km, not km/s). Surfaced by `testVelocityMagnitudeForLEO`/`ForGEO` once the test
+  harness was wired; without those tests this would have shipped forever. (d8d53b7)
+- **Ambient and Saturn audio never played.** Files existed on disk in
+  `Resources/Audio/Ambient/` and `Resources/Audio/Planetary/` but weren't in the Xcode
+  build phase (verified — no .mp3/.wav in the built .saver), so Bundle.path lookup always
+  returned nil, AudioController was never instantiated, the "Ambient Audio" toggle in the
+  configure sheet toggled a no-op. Even if they'd been bundled, the filenames didn't match
+  the AudioLayer names (`solar_wind_preview.mp3` vs layer `ambient_solar_wind`,
+  `saturn_radio.wav` vs layer `planet_saturn`) and bundleURL() doesn't search the
+  `Audio/Ambient/` subdir. Fixed by renaming files to match layer names, removing the
+  empty subdirs, adding both to project.pbxproj (PBXFileReference, PBXBuildFile,
+  Resources group children, Resources build phase), and simplifying the audio-init gate
+  in NatureVsNoiseView. The other 8 planet voices + 5 mission clips remain silent
+  placeholders (no source files). (a13b053)
+- **DiscoveryBanner fully orphaned.** Held a node in the scene graph and an init/positioning
+  call but no method was called after `showDiscovery` was deleted in commit c406ae8.
+  Removed the file (222 lines) plus all references in HUDOverlay and project.pbxproj.
+  (ae32abe)
+- **Unused achievementSilver/Bronze colors** in MissionControlTheme. Removed; `achievementGold`
+  kept (consumed by `gold: SKColor` shortcut). (72fc57b, followup to c406ae8)
+
 ## [2026-07-20] - Tier 1 cleanup (config persistence, dead code, tests)
 
 ### Fixed
