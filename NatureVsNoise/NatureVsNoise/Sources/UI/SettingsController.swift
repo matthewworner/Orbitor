@@ -9,7 +9,10 @@ class SettingsController: NSObject {
     // MARK: - Properties
     
     static let shared = SettingsController()
-    private let bundleId = "com.antigravity.NatureVsNoise"
+    // Read the bundle ID at runtime so the configure sheet always agrees with Info.plist's
+    // PRODUCT_BUNDLE_IDENTIFIER. Hardcoding a different string here was silently writing the
+    // user's settings to a phantom defaults namespace the running screensaver never read.
+    private var bundleId: String { Bundle.main.bundleIdentifier ?? "com.naturevsnoise.screensaver" }
     
     // Settings Keys
     struct Keys {
@@ -126,7 +129,6 @@ class SettingsController: NSObject {
         addToggle("Starfield", FeatureFlags.enableStarfield, #selector(toggleStarfield(_:)))
         addToggle("Hero Satellites (3D models)", FeatureFlags.enableToySats, #selector(toggleToySats(_:)))
         addToggle("Educational Facts", defaults?.bool(forKey: Keys.educationalFacts) ?? true, #selector(toggleFacts(_:)))
-        addToggle("Discovery Mode (Achievements)", defaults?.bool(forKey: Keys.discoveryMode) ?? true, #selector(toggleDiscovery(_:)))
 
         let hudLabel = createLabel(text: "HUD Density", fontSize: 11, bold: false)
         hudLabel.textColor = .secondaryLabelColor
@@ -158,7 +160,7 @@ class SettingsController: NSObject {
         doneButton.frame = NSRect(x: width - 24 - 100, y: 20, width: 100, height: 32)
         container.addSubview(doneButton)
 
-        let versionLabel = createLabel(text: "v1.1.0 · Astra HUD", fontSize: 10, bold: false)
+        let versionLabel = createLabel(text: "v\(appVersion) · Astra HUD", fontSize: 10, bold: false)
         versionLabel.textColor = .secondaryLabelColor
         versionLabel.frame = NSRect(x: 24, y: 28, width: 240, height: 18)
         container.addSubview(versionLabel)
@@ -236,17 +238,16 @@ class SettingsController: NSObject {
         defaults?.synchronize()
     }
     
-    @objc private func toggleDiscovery(_ sender: NSButton) {
-        defaults?.set(sender.state == .on, forKey: Keys.discoveryMode)
-        defaults?.synchronize()
-    }
-    
     @objc private func closeSheet(_ sender: NSButton) {
         sender.window?.sheetParent?.endSheet(sender.window!)
     }
     
     // MARK: - Helpers
-    
+
+    private var appVersion: String {
+        (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "1.0"
+    }
+
     private func bool(for key: String) -> Bool {
         return defaults?.bool(forKey: key) ?? true
     }
