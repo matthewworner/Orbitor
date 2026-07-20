@@ -391,11 +391,6 @@ class HUDOverlay: SKScene {
         infoCard.hide()
     }
 
-    /// Show a discovery notification
-    func showDiscovery(name: String, description: String) {
-        discoveryBanner.showDiscovery(name: name, description: description)
-    }
-
     /// Show a fact
     func showFact(_ fact: EducationalFact) {
         guard infoDensity == .educational else { return }

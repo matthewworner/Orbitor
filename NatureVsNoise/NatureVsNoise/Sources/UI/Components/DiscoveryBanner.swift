@@ -125,16 +125,6 @@ class DiscoveryBanner: SKNode {
         node.zPosition = -1
     }
 
-    // MARK: - Show Discovery
-    
-    func showDiscovery(name: String, description: String) {
-        iconLabel.text = "🔍"
-        titleLabel.text = "SATELLITE FOUND"
-        subtitleLabel.text = "\(name): \(description)"
-        
-        showBanner(duration: 3.0)
-    }
-    
     // MARK: - Show Fact
     
     func showFact(_ fact: EducationalFact) {
