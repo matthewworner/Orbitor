@@ -303,7 +303,10 @@ class HUDOverlay: SKScene {
 
     // MARK: - Update Timer
 
-    private func startUpdateTimer() {
+    /// Start (or restart) the HUD update timer. Idempotent — safe to call from
+    /// `startAnimation()` after a prior `stopAnimation()`.
+    func startUpdateTimer() {
+        updateTimer?.invalidate()
         updateTimer = Timer.scheduledTimer(withTimeInterval: updateInterval, repeats: true) { [weak self] _ in
             self?.updateDisplay()
         }
