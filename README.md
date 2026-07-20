@@ -39,6 +39,19 @@ cp -R ~/Library/Developer/Xcode/DerivedData/NatureVsNoise-*/Build/Products/Relea
 
 Select **"Nature vs Noise"** in System Settings → Screen Saver → Preview.
 
+## Running the tests
+
+```bash
+cd NatureVsNoise
+swift test
+```
+
+The Foundation-only testable surface (SGP4 propagation, TLE parsing, satellite classification,
+FeatureFlags) is exposed as a SwiftPM library. 17 / 17 pass; the test suite catches unit-level
+regressions in the orbital math and catalog handling — the same suite that surfaced the 13x SGP4
+velocity bug. The SwiftPM package can't compile the AppKit / ScreenSaver surface (the .saver
+bundle), so runtime / SceneKit / Metal paths are tested only by hand.
+
 ## Requirements
 
 - **macOS 13.0+** (Ventura or later)
@@ -59,6 +72,7 @@ See [DEPLOYMENT.md](NatureVsNoise/DEPLOYMENT.md) for:
 ```
 NatureVsNoise/
 ├── NatureVsNoise.xcodeproj
+├── Package.swift                 # SwiftPM manifest for `swift test`
 ├── 8K/                           # Textures + TLE data
 │   ├── earth_8k_day.jpg          # Planet textures
 │   ├── jupiter_8k.jpg
@@ -67,28 +81,29 @@ NatureVsNoise/
 ├── NatureVsNoise/
 │   ├── Info.plist                # Bundle config (NSPrincipalClass)
 │   ├── Resources/
-│   │   ├── Audio/                # Ambient sounds
-│   │   ├── Models/                # 3D satellite models (.scn)
-│   │   ├── Textures/8K/          # Additional textures
-│   │   └── thumbnail.png          # Preview image
+│   │   ├── Audio/                # Ambient + Saturn audio (ambient_solar_wind.mp3, planet_saturn.wav)
+│   │   ├── Data/                 # Educational facts, satellite database
+│   │   ├── Models/               # 3D satellite models (.scn)
+│   │   └── thumbnail.png         # Preview image
 │   └── Sources/
 │       ├── NatureVsNoiseView.swift    # Main ScreenSaverView
 │       ├── FeatureFlags.swift         # User settings
 │       ├── Planets/PlanetFactory.swift
 │       ├── Satellites/
-│       │   ├── SGP4Propagator.swift   # Orbital mechanics
-│       │   ├── SatelliteManager.swift  # TLE data management
-│       │   ├── MetalSatelliteRenderer.swift
-│       │   ├── SatelliteRenderer.swift
-│       │   ├── SatelliteClassification.swift
-│       │   └── TLEFetcher.swift
-│       ├── Camera/CameraController.swift
+│       │   ├── SGP4Propagator.swift   # Orbital mechanics (incl. propagation, TLE struct)
+│       │   ├── SatelliteManager.swift  # TLE data + satellite metadata
+│       │   ├── MetalSatelliteRenderer.swift   # GPU swarm (5,000 points, Apple Silicon)
+│       │   ├── SatelliteRenderer.swift         # SceneKit fallback (Intel / old hardware)
+│       │   ├── SatelliteClassification.swift  # ISS / Starlink / notable / debris
+│       │   └── TLEFetcher.swift                # CelesTrak fetch + cache
 │       ├── Audio/AudioController.swift
 │       └── UI/
 │           ├── HUDOverlay.swift      # Mission Control overlay
 │           ├── SettingsController.swift
-│           └── Components/            # StatsPanel, InfoCard, etc.
-├── NatureVsNoiseTests/
+│           ├── Components/          # StatsPanel, InfoCardView, FactOverlay
+│           ├── Data/                # EducationalFacts, SatelliteDatabase
+│           └── Themes/              # MissionControlTheme
+├── NatureVsNoiseTests/           # XCTest files consumed by SwiftPM (not by Xcode)
 │   ├── SGP4PropagatorTests.swift
 │   └── FeatureFlagsAndTLETests.swift
 └── DEPLOYMENT.md                 # Code signing instructions
@@ -115,19 +130,25 @@ objects: [docs/STITCH_PROMPTS.md](docs/STITCH_PROMPTS.md), `docs/stitch-base/`.
 | [docs/README.md](docs/README.md) | **Documentation index** — map of every doc, grouped |
 | [ASTRA_HUD.md](docs/ASTRA_HUD.md) | HUD design reference (tokens, components, fonts) |
 | [STITCH_PROMPTS.md](docs/STITCH_PROMPTS.md) | Google Stitch prompts + base objects |
+| [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common build/runtime/signing problems and fixes |
 | [DEPLOYMENT.md](NatureVsNoise/DEPLOYMENT.md) | Code signing & notarization |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
 | [STATUS.md](STATUS.md) | Current project status |
-| [prd.md](prd.md) | Product requirements |
+| [TASKS.md](TASKS.md) | Open work |
+| [prd.md](prd.md) | Product requirements (original vision) |
+| [docs/qa/2026-07-05-fable5-stability-audit.md](docs/qa/2026-07-05-fable5-stability-audit.md) | Fable 5 stability sweep — 8 findings, all fixed in this branch |
 
 ## Build Status
 
 | Metric | Status |
 |--------|--------|
-| Build | ✅ SUCCEEDED |
-| Code Signing | ⏸️ Requires Developer ID |
+| Version | 1.2.0 (MARKETING_VERSION in `NatureVsNoise.xcodeproj`) |
+| Build | ✅ SUCCEEDED (Release, arm64) |
+| Tests | 17 / 17 pass (`swift test` from `NatureVsNoise/`) |
+| Code Signing | ⏸️ Requires Developer ID before reinstall |
 | Textures | 14 files, 69MB |
-| TLE Data | 14 satellites bundled |
+| TLE Data | 14 satellites bundled (offline fallback) |
+| Audio | Ambient + Saturn bundled (8 other planet voices still silent placeholders) |
 
 ## License
 

@@ -60,7 +60,6 @@ file explicitly, so co-locating avoids `.pbxproj` edits.
 | `InfoCardView` (dossier) | `Components/InfoCardView.swift` | iss/starlink-dossier | type-colored accent border |
 | `FactOverlay` | `Components/FactOverlay.swift` | fact-* | glass card, cyan category tag |
 | `AmbientTicker` | `HUDOverlay.swift` | ambient-ticker | slim rotating census stat / fact one-liner |
-| `DiscoveryBanner` | `Components/DiscoveryBanner.swift` | — | achievement banner (glow + progress) |
 | `BootSequenceOverlay` | `HUDOverlay.swift` | boot-sequence | typed boot log, ~4s, fades into scene |
 | Configure sheet | `SettingsController.swift` | config-sheet | AppKit, sections PERFORMANCE/VISUALS/AUDIO/PRESETS |
 

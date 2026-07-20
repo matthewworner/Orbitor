@@ -69,5 +69,6 @@ These predate the current build. Kept for history; **do not treat numbers/status
 
 ---
 
-*Index reconciled with the codebase 2026-06-16. When you add a doc, add a row here and put it in the
-right group.*
+*Index reconciled with the codebase 2026-07-20 (after Fable 5 stability sweep, Tier 1 cleanup,
+SGP4 velocity fix, audio bundling fix, DiscoveryBanner removal, SwiftPM test wiring). When you
+add a doc, add a row here and put it in the right group.*
