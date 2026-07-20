@@ -503,9 +503,9 @@ class SGP4Propagator {
         )
         
         let v = SIMD3<Double>(
-            (mvt * ux + rvdot * vx) * SGP4Constants.radiusEarthKm / 60.0,
-            (mvt * uy + rvdot * vy) * SGP4Constants.radiusEarthKm / 60.0,
-            (mvt * uz + rvdot * vz) * SGP4Constants.radiusEarthKm / 60.0
+            (mvt * ux + rvdot * vx) * SGP4Constants.radiusEarthKm / SGP4Constants.tumin / 60.0,
+            (mvt * uy + rvdot * vy) * SGP4Constants.radiusEarthKm / SGP4Constants.tumin / 60.0,
+            (mvt * uz + rvdot * vz) * SGP4Constants.radiusEarthKm / SGP4Constants.tumin / 60.0
         )
         
         // Check for decay
