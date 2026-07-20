@@ -33,6 +33,11 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     private var metalRenderer: MetalSatelliteRenderer?
     private var useMetalRendering: Bool = false
 
+    /// Catalog version last uploaded to the GPU. Compared to `satelliteManager.catalogGeneration`
+    /// on each tick so the Metal swarm re-uploads when the catalog changes (initial load +
+    /// every hourly fetch), not only on the very first tick.
+    private var lastUploadedCatalogGeneration: UInt64 = .max
+
     // Feature flags
     private var featureFlags = FeatureFlags()
 
@@ -137,16 +142,28 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     
     override func startAnimation() {
         super.startAnimation()
+        // Mirror what stopAnimation() tears down so the System Settings preview (and wallpaper
+        // host) can stop/start the saver on the same view instance without leaving it as a
+        // frozen frame: delegate gone → no per-tick updates; isPlaying=false → SceneKit pauses;
+        // HUD timer/SatManager timer gone → no overlay or network. Restore all four.
+        sceneView?.delegate = self
+        sceneView?.isPlaying = true
+        hudOverlay?.startUpdateTimer()
+        satelliteManager?.resumeUpdates()
     }
-    
+
     override func stopAnimation() {
         // Clean up resources when screensaver is disabled
         sceneView?.isPlaying = false
         sceneView?.delegate = nil
-        
+
         // Stop HUD update timer
         hudOverlay?.stopUpdateTimer()
-        
+
+        // Pause the hourly TLE fetch — keeps the saver from doing background network + parse
+        // work the user believes is off, and avoids racing the (idle) render loop.
+        satelliteManager?.pauseUpdates()
+
         super.stopAnimation()
     }
     
@@ -155,9 +172,22 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     // Diagnostic log file for debugging screensaver issues
     private func logToFile(_ message: String) {
         let logPath = NSHomeDirectory() + "/Library/Logs/NatureVsNoise.log"
+
+        // ponytail: rotate at startup if the log is over 500 KB — was unbounded across months.
+        // True ring buffer is overkill; screensaver log is debug-only and a launch-time cap
+        // keeps the latest session.
+        if !logInitialized {
+            logInitialized = true
+            let maxBytes = 500_000
+            if let attrs = try? FileManager.default.attributesOfItem(atPath: logPath),
+               let size = attrs[.size] as? Int, size > maxBytes {
+                try? "".write(toFile: logPath, atomically: true, encoding: .utf8)
+            }
+        }
+
         let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
         let logMessage = "[\(timestamp)] \(message)\n"
-        
+
         if let handle = FileHandle(forWritingAtPath: logPath) {
             handle.seekToEndOfFile()
             handle.write(logMessage.data(using: .utf8)!)
@@ -166,6 +196,9 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
             try? logMessage.write(toFile: logPath, atomically: true, encoding: .utf8)
         }
     }
+
+    /// True after the first `logToFile` call has run the startup rotation check.
+    private var logInitialized = false
     
     // Enhanced logging with context
     private func logDiagnostics(_ context: String, details: [String: Any] = [:]) {
@@ -350,21 +383,23 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         configureQualitySettings()
     }
     
-    /// Configure quality settings based on detected hardware
+    /// Configure quality settings based on detected hardware.
+    /// `satelliteRenderer` is only created when `enableToySats` is true, so it may be nil —
+    /// optional-chaining prevents a hard crash when the user disables "Hero Satellites".
     private func configureQualitySettings() {
         switch hardwareCapabilities.tier {
         case .ultra:
             qualityLevel = .ultra
-            satelliteRenderer.setQualityLevel(.high) // SatelliteRenderer max is .high
+            satelliteRenderer?.setQualityLevel(.high) // SatelliteRenderer max is .high
         case .high:
             qualityLevel = .high
-            satelliteRenderer.setQualityLevel(.high)
+            satelliteRenderer?.setQualityLevel(.high)
         case .medium:
             qualityLevel = .medium
-            satelliteRenderer.setQualityLevel(.medium)
+            satelliteRenderer?.setQualityLevel(.medium)
         case .low:
             qualityLevel = .low
-            satelliteRenderer.setQualityLevel(.low)
+            satelliteRenderer?.setQualityLevel(.low)
         }
     }
     
@@ -677,8 +712,11 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     private func addSatellitesMetal(metalRenderer: MetalSatelliteRenderer) {
         guard let satelliteManager = satelliteManager else { return }
 
-        // Upload orbital elements + colors ONCE; the GPU then propagates every tick.
-        if animationTime == 0 {
+        // Upload orbital elements + colors whenever the catalog version changes (initial load +
+        // every hourly fetch). The original `animationTime == 0` guard meant the GPU only ever
+        // saw the launch-time data — the swarm showed 14 satellites for the whole session.
+        let currentGeneration = satelliteManager.catalogGeneration
+        if animationTime == 0 || lastUploadedCatalogGeneration != currentGeneration {
             let maxSatellites = qualityLevel.maxSatellites
             let satellites = Array(satelliteManager.satellites.prefix(maxSatellites))
             var colors: [SIMD4<Float>] = []
@@ -687,6 +725,7 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
                 colors.append(satelliteManager.colorForSatellite(satellite))
             }
             metalRenderer.uploadSatellites(satellites, colors: colors)
+            lastUploadedCatalogGeneration = currentGeneration
         }
 
         // GPU propagates all positions in parallel; the Metal renderer draws the swarm
