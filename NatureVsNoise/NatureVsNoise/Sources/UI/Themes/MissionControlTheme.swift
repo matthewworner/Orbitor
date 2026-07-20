@@ -61,12 +61,10 @@ struct MissionControlTheme {
     /// Hairline divider between telemetry rows
     static let hairline = NSColor(white: 1.0, alpha: 0.15)
     
-    // MARK: - Achievement Colors
-    
+    // MARK: - Accent Colors
+
     static let achievementGold = NSColor(red: 255/255, green: 215/255, blue: 0/255, alpha: 1.0)
-    static let achievementSilver = NSColor(red: 192/255, green: 192/255, blue: 192/255, alpha: 1.0)
-    static let achievementBronze = NSColor(red: 205/255, green: 127/255, blue: 50/255, alpha: 1.0)
-    
+
     // MARK: - Fonts
     
     static let headerFont = NSFont.monospacedSystemFont(ofSize: 14, weight: .bold)
