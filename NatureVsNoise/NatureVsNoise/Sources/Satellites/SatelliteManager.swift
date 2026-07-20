@@ -77,8 +77,16 @@ class SatelliteManager {
     // MARK: - Properties
 
     var satellites: [Satellite] = [] {
-        didSet { cachedCensus = nil }  // invalidate census when the catalog changes
+        didSet {
+            cachedCensus = nil  // invalidate census when the catalog changes
+            catalogGeneration &+= 1  // monotonic; the Metal renderer re-uploads when this changes
+        }
     }
+    /// Monotonically increasing on every `satellites` assignment. Read by `NatureVsNoiseView`
+    /// to know when the GPU upload is stale (the original code only uploaded on the first tick,
+    /// so the swarm showed launch-time data forever even after the async fetch refreshed it).
+    private(set) var catalogGeneration: UInt64 = 0
+
     private weak var bundle: Bundle?
     private let tleFetcher = TLEFetcher()
     private var updateTimer: Timer?
@@ -162,11 +170,13 @@ class SatelliteManager {
             "debris"
         ]
 
+        var loaded: [Satellite] = []
         for fileName in tleFiles {
             if let content = loadTLEContent(named: fileName) {
-                parseTLEContent(content)
+                parseTLEContent(content, into: &loaded)
             }
         }
+        satellites = loaded
 
         #if DEBUG
         print("✅ SatelliteManager: Loaded \(satellites.count) satellites from bundle")
@@ -190,13 +200,17 @@ class SatelliteManager {
     }
 
     private func parseTLEData(_ data: [String: String]) {
-        satellites.removeAll()
-
-        for (category, content) in data {
-            #if DEBUG
-            print("📡 Parsing \(category) TLE data...")
-            #endif
-            parseTLEContent(content)
+        // ponytail: original called satellites.removeAll() + parseTLEContent (which appends)
+        // from a detached Task. Both wrote to `satellites` while the render thread was reading
+        // it on every frame — undefined behaviour for a CoW array, with hundreds of chances per
+        // multi-hour run (the fetch re-fires hourly). Parse into a local first, publish on
+        // main so the only thread that ever touches the stored property is main.
+        var parsed: [Satellite] = []
+        for (_, content) in data {
+            parseTLEContent(content, into: &parsed)
+        }
+        DispatchQueue.main.async { [weak self] in
+            self?.satellites = parsed
         }
     }
 
@@ -238,7 +252,7 @@ class SatelliteManager {
         return nil
     }
 
-    private func parseTLEContent(_ content: String) {
+    private func parseTLEContent(_ content: String, into target: inout [Satellite]) {
         let lines = content.components(separatedBy: .newlines).filter { !$0.isEmpty }
 
         var i = 0
@@ -248,7 +262,7 @@ class SatelliteManager {
             let line2 = lines[i+2]
 
             if let satellite = parseTLE(name: name, line1: line1, line2: line2) {
-                satellites.append(satellite)
+                target.append(satellite)
             }
 
             i += 3
@@ -360,18 +374,39 @@ class SatelliteManager {
     }
 
     // MARK: - Update Scheduler
-    
+
     private func startUpdateScheduler() {
         // Schedule hourly TLE data updates
         updateTimer = Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { [weak self] _ in
             self?.fetchFreshTLEData()
         }
     }
+
+    /// Pause the hourly refresh timer. Called from `ScreenSaverView.stopAnimation()` so the
+    /// saver doesn't keep doing background network + parse work while the user thinks it's off.
+    func pauseUpdates() {
+        updateTimer?.invalidate()
+        updateTimer = nil
+    }
+
+    /// Resume (or start) the hourly refresh timer. Idempotent.
+    func resumeUpdates() {
+        guard updateTimer == nil else { return }
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { [weak self] _ in
+            self?.fetchFreshTLEData()
+        }
+    }
     
     // MARK: - SGP4 Propagation
-    
+
     /// Time acceleration factor (PRD specifies 50-500× real-time, default 100×)
     var timeAcceleration: Double = 100.0
+
+    /// Cached SGP4 propagators, keyed by catalog number. The SceneKit fallback path only ever
+    /// queries the first `maxSatellites` (≤ 50), so this cache is naturally bounded. The heavy
+    /// work (`SGP4Propagator.init` runs full SGP4 initialization) used to happen every tick for
+    /// every visible satellite; now it happens at most once per catalog entry.
+    private var propagatorCache: [Int: SGP4Propagator] = [:]
 
     /// Calculate satellite position and velocity using complete SGP4 algorithm
     /// - Parameters:
@@ -379,25 +414,31 @@ class SatelliteManager {
     ///   - animationTime: Animation time in seconds since app start
     /// - Returns: Position (km) and velocity (km/s) in ECI frame
     func getPositionAndVelocity(for satellite: Satellite, at animationTime: Double) -> (position: SIMD3<Double>, velocity: SIMD3<Double>) {
-        let elements = OrbitalElements(
-            epoch: satellite.epoch,
-            inclination: satellite.inclination,
-            raan: satellite.raan,
-            eccentricity: satellite.eccentricity,
-            argumentOfPerigee: satellite.argumentOfPerigee,
-            meanAnomaly: satellite.meanAnomaly,
-            meanMotion: satellite.meanMotion,
-            bStar: satellite.bStar,
-            revolutionNumber: satellite.revolutionNumber
-        )
+        let propagator: SGP4Propagator
+        if let cached = propagatorCache[satellite.catalogNumber] {
+            propagator = cached
+        } else {
+            let elements = OrbitalElements(
+                epoch: satellite.epoch,
+                inclination: satellite.inclination,
+                raan: satellite.raan,
+                eccentricity: satellite.eccentricity,
+                argumentOfPerigee: satellite.argumentOfPerigee,
+                meanAnomaly: satellite.meanAnomaly,
+                meanMotion: satellite.meanMotion,
+                bStar: satellite.bStar,
+                revolutionNumber: satellite.revolutionNumber
+            )
+            let p = SGP4Propagator(elements: elements)
+            propagatorCache[satellite.catalogNumber] = p
+            propagator = p
+        }
 
-        let propagator = SGP4Propagator(elements: elements)
-        
         // Convert animation time (seconds) to simulated minutes since TLE epoch
         // Apply time acceleration factor (default 100× real-time per PRD)
         let realSecondsElapsed = animationTime
         let simulatedMinutes = (realSecondsElapsed * timeAcceleration) / 60.0
-        
+
         let result = propagator.propagate(minutesSinceEpoch: simulatedMinutes)
         return (position: result.position, velocity: result.velocity)
     }
