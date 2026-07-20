@@ -309,9 +309,10 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         
         // Initialize audio if enabled
         if FeatureFlags.enableAudio {
-            // Check if audio files exist in bundle before initializing
-            if let _ = Bundle(for: type(of: self)).path(forResource: "ambient_solar_wind", ofType: "wav", inDirectory: "Audio/Ambient") ??
-                         Bundle(for: type(of: self)).path(forResource: "solar_wind_preview", ofType: "mp3", inDirectory: "Audio/Ambient") {
+            // Check if audio files exist in bundle before initializing. Layer names in
+            // AudioController and the filenames in the bundle agree (ambient_solar_wind.mp3,
+            // planet_saturn.wav), so a single check for the ambient file gates init.
+            if let _ = Bundle(for: type(of: self)).path(forResource: "ambient_solar_wind", ofType: "mp3", inDirectory: "Audio") {
                 audioController = AudioController()
                 logToFile("🔊 Audio enabled and initialized")
             } else {

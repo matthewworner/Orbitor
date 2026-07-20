@@ -47,6 +47,8 @@
 		150CE0472F07C800003B3D7F /* sun_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE0392F07C7D6003B3D7F /* sun_8k.jpg */; };
 		150CE0482F07C800003B3D7F /* uranus_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE03A2F07C7D6003B3D7F /* uranus_8k.jpg */; };
 		150CE0492F07C800003B3D7F /* venus_8k.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 150CE03B2F07C7D6003B3D7F /* venus_8k.jpg */; };
+		E01111112B5A00000000A002 /* ambient_solar_wind.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000A001 /* ambient_solar_wind.mp3 */; };
+		E01111112B5A00000000B002 /* planet_saturn.wav in Resources */ = {isa = PBXBuildFile; fileRef = E01111112B5A00000000B001 /* planet_saturn.wav */; };
 		E01111112B5A000000000F1 /* active_satellites.tle in Resources */ = {isa = PBXBuildFile; fileRef = E01111112B5A000000000F0 /* active_satellites.tle */; };
 		F0E1A0000000000000000B01 /* JetBrainsMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F0E1A0000000000000000R01 /* JetBrainsMono-Regular.ttf */; };
 		F0E1B0000000000000000B02 /* JetBrainsMono-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F0E1B0000000000000000R02 /* JetBrainsMono-Bold.ttf */; };
@@ -69,6 +71,8 @@
 		150CE0392F07C7D6003B3D7F /* sun_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = sun_8k.jpg; sourceTree = "<group>"; };
 		150CE03A2F07C7D6003B3D7F /* uranus_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = uranus_8k.jpg; sourceTree = "<group>"; };
 		150CE03B2F07C7D6003B3D7F /* venus_8k.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = venus_8k.jpg; sourceTree = "<group>"; };
+		E01111112B5A00000000A001 /* ambient_solar_wind.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = Audio/ambient_solar_wind.mp3; sourceTree = "<group>"; };
+		E01111112B5A00000000B001 /* planet_saturn.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Audio/planet_saturn.wav; sourceTree = "<group>"; };
 		E01111112B5A00000000002 /* NatureVsNoiseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NatureVsNoiseView.swift; sourceTree = "<group>"; };
 		E01111112B5A00000000004 /* PlanetFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanetFactory.swift; sourceTree = "<group>"; };
 
@@ -170,6 +174,8 @@
 		E01111112B5A00000000023 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				E01111112B5A00000000A001 /* ambient_solar_wind.mp3 */,
+				E01111112B5A00000000B001 /* planet_saturn.wav */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -334,6 +340,8 @@
 				150CE0472F07C800003B3D7F /* sun_8k.jpg in Resources */,
 				150CE0482F07C800003B3D7F /* uranus_8k.jpg in Resources */,
 				150CE0492F07C800003B3D7F /* venus_8k.jpg in Resources */,
+				E01111112B5A00000000A002 /* ambient_solar_wind.mp3 in Resources */,
+				E01111112B5A00000000B002 /* planet_saturn.wav in Resources */,
 			E01111112B5A000000000F1 /* active_satellites.tle in Resources */,
 				F0E1A0000000000000000B01 /* JetBrainsMono-Regular.ttf in Resources */,
 				F0E1B0000000000000000B02 /* JetBrainsMono-Bold.ttf in Resources */,
