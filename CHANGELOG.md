@@ -2,6 +2,21 @@
 
 All notable changes to Nature vs Noise Screensaver.
 
+## [2026-07-21] - Rebuild + Developer ID sign + reinstall
+
+Rebuilt NatureVsNoise.saver (Release, 38 MB) with the full 1.2.0 fix set
+(8 audit findings + Tier 1 cleanup + SGP4 velocity units + audio bundling +
+DiscoveryBanner removal). Signed with `Developer ID Application:
+M P Worner (PMJJD98L5C)` + hardened runtime + secure timestamp. Installed to
+`~/Library/Screen Savers/NatureVsNoise.saver`. `defaults read com.apple.screensaver`
+confirms the system has picked up the new bundle; `codesign -dv` confirms the
+Developer ID signature. `spctl` "rejected — Unnotarized Developer ID" is
+expected per DEPLOYMENT.md (local execution works, notarization only needed
+for distribution to other Macs).
+
+Runtime verification (30-min wallpaper + Instruments memory/CPU profile) is
+manual — must be done with the user present.
+
 ## [2026-07-20] - Bug fixes (SGP4 velocity, audio bundling)
 
 ### Fixed

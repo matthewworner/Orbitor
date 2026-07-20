@@ -7,7 +7,10 @@
       measured flat (0 MB growth) vs +13 GB before
 - [x] Mitigation: removed leaking installed `.saver` + killed `legacyScreenSaver`
 - [x] Removed stale installed experiments (Kubrick.saver, MinimalTest.saver) from `~/Library/Screen Savers/`
-- [ ] **Rebuild → Developer ID sign → reinstall the FIXED build** before using as screensaver/wallpaper again
+- [x] **Rebuild → Developer ID sign → reinstall the FIXED build** (2026-07-21): built Release,
+      signed with `Developer ID Application: M P Worner (PMJJD98L5C)` + hardened runtime +
+      timestamp, copied to `~/Library/Screen Savers/NatureVsNoise.saver`. Verified registered
+      with `defaults read com.apple.screensaver` and `codesign -dv`. Bundle 38 MB.
 - [ ] On-device verify: memory stays flat over 30+ min as wallpaper; satellites visible; planets sharper
 
 ## ✅ 2026-07-05 — Fable 5 stability sweep fixes (audit: docs/qa/2026-07-05-fable5-stability-audit.md)
@@ -117,7 +120,11 @@
 - [x] Obtain Developer ID Application certificate (M P Worner, PMJJD98L5C)
 - [x] Developer ID sign the .saver (hardened runtime + timestamp)
 - [x] Install + run in System Settings preview (works locally on macOS 26.5)
-- [x] Runtime verified — screensaver loads and renders
+- [x] Runtime verified — screensaver loads and renders (2026-07-21: rebuilt with all fixes,
+      re-signed, reinstalled; signature and registration verified; runtime launch attempted
+      and no crash observed in the brief window this session could test)
+- [ ] 30-min Instruments run with the fixed build (memory flat + CPU sane under wallpaper) —
+      manual verification, can't be done from a chat session
 - [ ] Notarization submission to Apple (only needed to distribute to other Macs)
 - [ ] Staple notarization ticket
 - [ ] Visual polish pass against docs/stitch-base/stitch-output/ screenshots

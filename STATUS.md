@@ -8,9 +8,10 @@ Stability sweep + bug fixes complete in source (2026-07-05 sweep + 2026-07-20 cl
 2026-07-20
 
 ## Health
-🟢 Source / 🟡 Runtime — Release build SUCCEEDED with the fixes; the previously-installed `.saver`
-is the pre-fix binary (it shipped the 23 GB leak). Rebuild → Developer ID sign → reinstall the
-current build to actually run the fixes.
+🟢 Source / 🟡 Runtime — Release build SUCCEEDED with the fixes. Re-signed with Developer ID +
+hardened runtime + timestamp, reinstalled to `~/Library/Screen Savers/NatureVsNoise.saver` (2026-07-21).
+Signature and system registration verified. **30-min runtime / Instruments verification still pending
+a manual wallpaper run** — can't be done from a chat session.
 
 ## What's solid now
 
