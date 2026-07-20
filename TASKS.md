@@ -29,6 +29,21 @@
       `addSatellitesMetal` re-uploads whenever it changes (1423403 + 5e712c7).
 - [x] **Log unbounded (Finding 8):** `logToFile` truncates at startup if over 500 KB (5e712c7).
 
+## ✅ 2026-07-20 — Tier 1 cleanup (bundle ID bug + dead code + tests)
+- [x] **Configure sheet settings not reaching the saver:** SettingsController used a hardcoded
+      bundle ID that didn't match Info.plist, so the running screensaver read from a different
+      defaults namespace than the configure sheet wrote to. Now reads `Bundle.main.bundleIdentifier`
+      so they agree (3e34d2b).
+- [x] **Version label drift:** hardcoded "v1.1.0 · Astra HUD" replaced with
+      `Bundle.main.infoDictionary["CFBundleShortVersionString"]`; MARKETING_VERSION bumped to
+      1.2.0 (3e34d2b + fe79142).
+- [x] **Dead code removed:** CameraController (259 lines, never called), Achievements
+      (295 lines, trigger path impossible), displayLink (declared never used), Discovery Mode
+      configure toggle (backed by removed feature) (e4c5a79).
+- [x] **Test target wired:** SwiftPM Package.swift at NatureVsNoise/. `swift test` runs the
+      existing XCTest files. 15/17 pass. 2 failures point to a pre-existing SGP4 velocity
+      units bug (out of scope) (a9fb932).
+
 
 ## Completed
 - [x] Metal full-screen rendering fix

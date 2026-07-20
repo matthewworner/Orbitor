@@ -2,6 +2,53 @@
 
 All notable changes to Nature vs Noise Screensaver.
 
+## [2026-07-20] - Tier 1 cleanup (config persistence, dead code, tests)
+
+### Fixed
+- **Configure sheet settings silently lost.** `SettingsController.bundleId` was hardcoded to
+  `com.antigravity.NatureVsNoise`, but the screensaver's actual bundle ID (Info.plist) is
+  `com.naturevsnoise.screensaver`. `ScreenSaverDefaults(forModuleWithName:)` uses the string as
+  the defaults namespace, so every toggle in the configure sheet was writing to a phantom
+  defaults namespace the running screensaver never read. Now reads `Bundle.main.bundleIdentifier`.
+  (3e34d2b)
+- **Version label drift.** The configure sheet hardcoded "v1.1.0 · Astra HUD" while
+  `MARKETING_VERSION = 1.0` in project.pbxproj. Label now reads from
+  `CFBundleShortVersionString`; MARKETING_VERSION bumped to 1.2.0 for the Fable 5 stability +
+  cleanup pass. (3e34d2b, fe79142)
+
+### Removed
+- **CameraController (259 lines):** instantiated and never called. The 12-15 min cinematic tour
+  documented in TASKS.md never played; the camera is driven by an SCNAction sequence in
+  `setupScene()`. If the tour is wanted back, design from scratch and remove the SCNAction
+  hack at the same time.
+- **Achievements (295 lines):** the `AchievementManager.trackSatelliteSpotted` trigger was
+  unreachable — the only caller (`HUDOverlay.updateTarget`) passes planet names that never
+  match `NotableSatellites.find`. Fixing it properly requires adding satellite-detection to
+  the HUD (a new feature, not a bug fix).
+- **`displayLink: CVDisplayLink?`:** declared, never used.
+- **"Discovery Mode (Achievements)" configure toggle:** surface area for a removed feature.
+- **DiscoveryBanner.showAchievement(_:):** orphan after Achievements deletion.
+  (e4c5a79)
+
+### Added
+- **SwiftPM test harness** at `NatureVsNoise/Package.swift`. Exposes the testable Foundation-only
+  surface (SGP4Propagator, SatelliteManager, SatelliteClassification, TLEFetcher, FeatureFlags)
+  as a library named `NatureVsNoise` so the existing test files' `@testable import NatureVsNoise`
+  works unchanged. `cd NatureVsNoise && swift test` runs the suite.
+- Fixed existing test-file bugs uncovered by getting them to compile:
+  - Missing `import simd` in SGP4PropagatorTests.
+  - `tle?.x` returning `Double?` wouldn't bind to accuracy-typed `XCTAssertEqual` -- forced after
+    `assertNotNil`.
+  - `testSatelliteClassification` expected `.activeSatellite` for "GPS IIF-10" but the classifier
+    intentionally treats "GPS"-containing names as `.notable("GPS Satellite")`. Replaced fixture
+    with a plain active satellite.
+  - Deleted `testLegendMappingIsComplete` (asserted non-existent `SatelliteClass.legendOrder` /
+    `legendCode` properties; nothing in the runtime uses them).
+- **Result: 15/17 tests pass.** The 2 failures (`testVelocityMagnitudeForLEO/GEO`) surface a
+  pre-existing SGP4Propagator bug -- velocity magnitude is ~13x too high (constant factor
+  across LEO and GEO, so it's a units issue in the velocity formula, not the propagation).
+  Position magnitude is correct in both cases. (a9fb932)
+
 ## [2026-07-05] - Fable 5 stability sweep fixes
 
 Sweep: `docs/qa/2026-07-05-fable5-stability-audit.md` (8 findings, all fixed).
