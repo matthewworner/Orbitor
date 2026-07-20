@@ -369,39 +369,56 @@ class SatelliteRenderer {
     }
     
     private func updateTrailNode(_ node: SCNNode, positions: [SIMD3<Float>]) {
+        // ponytail: original rebuilt SCNGeometry + SCNMaterial every tick — that was the 23GB
+        // leak class. Lazy fix: throttle geometry rebuilds to ~2 Hz (trail motion looks smooth at
+        // that cadence) and share one static material across all trails.
+        let now = CACurrentMediaTime()
+        guard now - lastTrailRebuild >= trailRebuildInterval else { return }
+        lastTrailRebuild = now
+
         // Clear old geometry by replacing with empty
         node.geometry = nil
-        
+
         guard positions.count >= 2 else { return }
-        
+
         // Create line geometry with fading colors
         var vertices: [SCNVector3] = []
-        
+
         for pos in positions {
             vertices.append(SCNVector3(pos.x, pos.y, pos.z))
         }
-        
+
         let source = SCNGeometrySource(vertices: vertices)
-        
+
         var indices: [Int32] = []
         for i in 0..<(vertices.count - 1) {
             indices.append(Int32(i))
             indices.append(Int32(i + 1))
         }
-        
+
         let element = SCNGeometryElement(indices: indices, primitiveType: .line)
         let geometry = SCNGeometry(sources: [source], elements: [element])
-        
+        geometry.materials = [SatelliteRenderer.trailMaterial]
+        node.geometry = geometry
+    }
+
+    /// Shared trail material — created once, reused across every trail node.
+    /// `updateTrailNode` used to allocate a new SCNMaterial per tick per visible satellite
+    /// (~50 × updateHz per second). Hoisted here so all trails share one instance.
+    private static let trailMaterial: SCNMaterial = {
         let material = SCNMaterial()
         material.diffuse.contents = NSColor(white: 1.0, alpha: 0.5)
         material.emission.contents = NSColor.white
         material.emission.intensity = 0.3
         material.lightingModel = .constant
         material.transparencyMode = .default
-        geometry.materials = [material]
-        
-        node.geometry = geometry
-    }
+        return material
+    }()
+
+    /// Minimum interval between full trail geometry rebuilds. The trail position list still
+    /// grows every tick; only the SCNGeometry reconstruction is throttled.
+    private let trailRebuildInterval: CFTimeInterval = 0.5
+    private var lastTrailRebuild: CFTimeInterval = 0
 
     // MARK: - Material Effects
     
