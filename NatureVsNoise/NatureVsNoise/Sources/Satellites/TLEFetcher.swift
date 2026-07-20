@@ -189,6 +189,10 @@ class TLEFetcher {
                         timestamp: Date()
                     )
                     lastFetchStatistics.append(stats)
+                    // ponytail: cap to last 50 entries (7 endpoints × hourly × multi-hour = unbounded).
+                    if lastFetchStatistics.count > 50 {
+                        lastFetchStatistics.removeFirst(lastFetchStatistics.count - 50)
+                    }
                     
                     #if DEBUG
                     print("✅ TLEFetcher: \(endpoint.category) - \(validationResult.validCount) satellites (\(String(format: "%.2f", duration))s)")
