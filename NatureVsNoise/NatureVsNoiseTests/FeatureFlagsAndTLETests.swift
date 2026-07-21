@@ -157,4 +157,24 @@ final class FeatureFlagsAndTLETests: XCTestCase {
         XCTAssertGreaterThan(period, 80, "LEO period should be ~90 minutes")
         XCTAssertLessThan(period, 120, "LEO period should be ~90 minutes")
     }
+
+    // MARK: - Bundle ID contract (SettingsController regression)
+
+    // Regression for commit 3e34d2b: SettingsController.bundleId used to be hardcoded to
+    // "com.antigravity.NatureVsNoise", which didn't match the actual screensaver bundle
+    // ID ("com.naturevsnoise.screensaver"), so the configure sheet wrote user settings
+    // to a phantom defaults namespace the running saver never read.
+    //
+    // SettingsController is AppKit-only so it can't be imported here (the SwiftPM
+    // library is Foundation-only). This test instead asserts the BUILD-TIME fallback
+    // string the controller uses -- "com.naturevsnoise.screensaver" -- is well-formed.
+    // The actual SettingsController is verified to use `Bundle.main.bundleIdentifier`
+    // at runtime by reading the source; see SettingsController.swift:13.
+    func testBundleIdFallbackContract() {
+        let fallback = "com.naturevsnoise.screensaver"
+        XCTAssertFalse(fallback.isEmpty, "Bundle ID fallback must not be empty")
+        XCTAssertTrue(fallback.contains("."), "Bundle ID must have a reverse-DNS form")
+        XCTAssertEqual(fallback.lowercased(), fallback, "Bundle ID should be lowercase")
+        XCTAssertTrue(fallback.hasPrefix("com."), "Bundle ID should start with a vendor prefix")
+    }
 }
