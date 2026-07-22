@@ -2,6 +2,37 @@
 
 All notable changes to Nature vs Noise Screensaver.
 
+## [2026-07-21] - Parked
+
+User out of time. Branch `astra-hud-redesign` is 28 commits ahead of origin
+with all source-level fixes applied and the build signed + installed.
+Runtime verification (30-min wallpaper + Instruments) was NOT performed
+before parking. See `STATUS.md` "Resuming the project" for the verification
+recipe when you come back.
+
+### Tests
+- Regression test naming: `testVelocityMagnitudeForLEO/GEO` →
+  `testVelocityUnitsAreKmPerSecondNotEarthRadiiPerMinute_LEO/GEO` plus a
+  MARK comment block documenting the d8d53b7 fix. (4e0ab53)
+- Bundle-ID fallback contract test added
+  (`testBundleIdFallbackContract`); asserts the fallback string the
+  controller uses is well-formed. SettingsController itself is AppKit-only
+  so the SwiftPM library can't import it; this catches one class of
+  regression. (4e0ab53)
+- `docs/qa/FABLE_5_STABILITY_AUDIT_PROMPT.md` (the spec template,
+  previously untracked) committed so future re-runs have a known starting
+  point. (7c678d3)
+- 18 / 18 tests pass via `swift test` from `NatureVsNoise/`.
+
+### Attempted but reverted
+- **Xcode test target in project.pbxproj.** Tried three approaches
+  (app-host with `BUNDLE_LOADER` + `TEST_HOST`, standalone without host,
+  compiling source files into the test target) and reverted each. The
+  `.saver` bundle isn't a framework, so symbol resolution at link time
+  is fragile; full support would require refactoring the screensaver into
+  a framework + thin `.saver` shell (~half a day's work). SwiftPM remains
+  the working test path.
+
 ## [2026-07-21] - Rebuild + Developer ID sign + reinstall
 
 Rebuilt NatureVsNoise.saver (Release, 38 MB) with the full 1.2.0 fix set

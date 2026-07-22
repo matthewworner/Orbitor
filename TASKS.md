@@ -61,6 +61,37 @@
       approaching Saturn plays Saturn's radio. The 8 other planet voices + 5 mission clips
       remain silent placeholders (no source files) (a13b053).
 
+## ✅ 2026-07-21 — Test improvements + commit audit prompt (final commits before parking)
+- [x] **Regression test naming:** renamed `testVelocityMagnitudeForLEO/GEO` to
+      `testVelocityUnitsAreKmPerSecondNotEarthRadiiPerMinute_LEO/GEO` and added a MARK comment
+      block documenting the d8d53b7 fix (13x unit bug). Future grep for "km/s" or "units"
+      lands on the regression test (4e0ab53).
+- [x] **Bundle-ID fallback contract test:** added `testBundleIdFallbackContract` in
+      FeatureFlagsAndTLETests.swift. Asserts the fallback string `"com.naturevsnoise.screensaver"`
+      is well-formed. SettingsController is AppKit-only so it can't be imported in the SwiftPM
+      library directly; this is a fallback-string contract test rather than a direct
+      SettingsController test. MARK comment points at SettingsController.swift:13 as the
+      source of truth (4e0ab53).
+- [x] **Committed audit prompt template:** `docs/qa/FABLE_5_STABILITY_AUDIT_PROMPT.md` (the
+      spec template, previously untracked) is now tracked so future re-runs have a known
+      starting point (7c678d3).
+- [x] **Test count:** 18 / 18 pass via `swift test` from `NatureVsNoise/`.
+
+## 🚗 2026-07-21 — PARKED (user out of time)
+- [ ] **30-min wallpaper + Instruments verification** — the single critical-path item when
+      you come back. Source-level correctness is verified; runtime is not. Set the screensaver
+      as active, let it run 30 min, watch `~/Library/Logs/NatureVsNoise.log` and Activity Monitor.
+      Memory should stay flat at ~150-300 MB; CPU should idle 5-15% on Apple Silicon. If anything
+      grows, the most likely suspects are: SGP4 velocity calculation (d8d53b7), SceneKit fallback
+      trail rebuild throttle (fc23a85), AudioController init path (a13b053).
+- [ ] **Audio playback confirmation** — `tail -f ~/Library/Logs/NatureVsNoise.log` after a 5-min
+      run should show `🔊 Audio enabled and initialized`. If absent, audio init is silently
+      failing despite the bundle fix.
+- [ ] **Visual regression check** — does the throttled 2 Hz trail rebuild look noticeably
+      choppier? Do configure-sheet toggles actually persist on the running saver? Does SGP4
+      thermal glow look noticeably different now that velocity is in km/s instead of
+      earth-radii/TU/min?
+
 
 ## Completed
 - [x] Metal full-screen rendering fix
@@ -112,19 +143,26 @@
 - [ ] Add more TLE satellites to bundle
 
 ## Known Gaps
-- [ ] No runnable unit-test target (test files exist but aren't wired; census/legend
-      assertions added to FeatureFlagsAndTLETests.swift, ready to run once a target exists)
+- [ ] **No Xcode test target in project.pbxproj.** SwiftPM (`swift test` from `NatureVsNoise/`)
+      is the only path. Attempted three ways to add a proper PBXNativeTarget (app-host pattern,
+      standalone without BUNDLE_LOADER, compiling source files into the test target) and reverted
+      each — the .saver bundle isn't a framework, so symbols don't resolve cleanly without
+      refactoring the screensaver into a framework + thin `.saver` shell (~half a day of work,
+      not blocking).
+- [ ] **No actual runtime verification.** Source-level correctness is verified; runtime
+      correctness under wallpaper has NOT been measured. This is the biggest remaining risk
+      (see "PARKED" section above).
 - [ ] DECAY metric not derivable from TLEs (column intentionally removed)
 
 ## Deployment
 - [x] Obtain Developer ID Application certificate (M P Worner, PMJJD98L5C)
 - [x] Developer ID sign the .saver (hardened runtime + timestamp)
 - [x] Install + run in System Settings preview (works locally on macOS 26.5)
-- [x] Runtime verified — screensaver loads and renders (2026-07-21: rebuilt with all fixes,
-      re-signed, reinstalled; signature and registration verified; runtime launch attempted
-      and no crash observed in the brief window this session could test)
-- [ ] 30-min Instruments run with the fixed build (memory flat + CPU sane under wallpaper) —
-      manual verification, can't be done from a chat session
+- [x] Build signed and installed (2026-07-21): rebuilt with all fixes, re-signed with Developer
+      ID + hardened runtime + timestamp, installed to `~/Library/Screen Savers/NatureVsNoise.saver`.
+      Signature verified (`codesign -dv`), system registration verified (`defaults read
+      com.apple.screensaver`), bundle resources verified (`ls Contents/Resources/`).
+- [ ] **Runtime verification under wallpaper** (single critical-path item — see "PARKED" section)
 - [ ] Notarization submission to Apple (only needed to distribute to other Macs)
 - [ ] Staple notarization ticket
 - [ ] Visual polish pass against docs/stitch-base/stitch-output/ screenshots
@@ -132,8 +170,25 @@
 ## Visual Polish (post-runtime review)
 - [ ] TBD — capture issues seen in live preview
 
-## Testing Needed
+## Testing Needed (post-resume)
 - [ ] Preview mode in Screen Saver preferences
 - [ ] Full-screen mode in System Settings
 - [ ] Different screen resolutions
 - [ ] Multiple monitor configurations
+- [ ] Audio playback verification (log file check for init line)
+- [ ] 30-min wallpaper memory profile (Instruments)
+
+## Resuming the project
+The branch `astra-hud-redesign` is in a self-consistent state. To resume:
+
+```bash
+cd /Users/pro/Projects/Screensaver
+git checkout astra-hud-redesign
+
+# verify health
+cd NatureVsNoise && swift test
+cd .. && xcodebuild -project NatureVsNoise/NatureVsNoise.xcodeproj -target NatureVsNoise -configuration Release build
+```
+
+Then the runtime verification (single critical-path item) is described in the "PARKED"
+section above.
