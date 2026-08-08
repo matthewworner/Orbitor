@@ -12,13 +12,30 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     private var cameraNode: SCNNode!
     private var groundCameraNode: SCNNode!
     private var earthNode: SCNNode?
-    private var cameraController: CameraController!
     private var satelliteManager: SatelliteManager!
     private var satelliteRenderer: SatelliteRenderer!
+
+    /// Representative inclination (degrees) for the HUD contextual-focus readout.
+    /// Prefers the ISS; cached after first resolution. Stored inclinations are in radians.
+    private var _representativeInclination: Double?
+    private var representativeInclination: Double {
+        if let v = _representativeInclination { return v }
+        guard let sats = satelliteManager?.satellites, !sats.isEmpty else { return 51.6 }
+        let issRad = sats.first { NotableSatellitePatterns.isISS(name: $0.name) }?.inclination
+        let radians = issRad ?? sats.first(where: { $0.inclination > 0 })?.inclination ?? (51.6 * .pi / 180)
+        let degrees = radians * 180 / .pi
+        _representativeInclination = degrees
+        return degrees
+    }
 
     // Metal rendering (high-performance path)
     private var metalRenderer: MetalSatelliteRenderer?
     private var useMetalRendering: Bool = false
+
+    /// Catalog version last uploaded to the GPU. Compared to `satelliteManager.catalogGeneration`
+    /// on each tick so the Metal swarm re-uploads when the catalog changes (initial load +
+    /// every hourly fetch), not only on the very first tick.
+    private var lastUploadedCatalogGeneration: UInt64 = .max
 
     // Feature flags
     private var featureFlags = FeatureFlags()
@@ -28,7 +45,6 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
 
     private var animationTime: Double = 0
     private var lastUpdateTime: TimeInterval = 0
-    private var displayLink: CVDisplayLink?
     
     // MARK: - Diagnostic State
     private var isFullScreenMode: Bool = false
@@ -124,16 +140,28 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     
     override func startAnimation() {
         super.startAnimation()
+        // Mirror what stopAnimation() tears down so the System Settings preview (and wallpaper
+        // host) can stop/start the saver on the same view instance without leaving it as a
+        // frozen frame: delegate gone → no per-tick updates; isPlaying=false → SceneKit pauses;
+        // HUD timer/SatManager timer gone → no overlay or network. Restore all four.
+        sceneView?.delegate = self
+        sceneView?.isPlaying = true
+        hudOverlay?.startUpdateTimer()
+        satelliteManager?.resumeUpdates()
     }
-    
+
     override func stopAnimation() {
         // Clean up resources when screensaver is disabled
         sceneView?.isPlaying = false
         sceneView?.delegate = nil
-        
+
         // Stop HUD update timer
         hudOverlay?.stopUpdateTimer()
-        
+
+        // Pause the hourly TLE fetch — keeps the saver from doing background network + parse
+        // work the user believes is off, and avoids racing the (idle) render loop.
+        satelliteManager?.pauseUpdates()
+
         super.stopAnimation()
     }
     
@@ -141,10 +169,28 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     
     // Diagnostic log file for debugging screensaver issues
     private func logToFile(_ message: String) {
-        let logPath = NSHomeDirectory() + "/Library/Logs/NatureVsNoise.log"
+        let logDir = NSHomeDirectory() + "/Library/Logs"
+        let logPath = logDir + "/NatureVsNoise.log"
+        // ponytail: sandboxed containers don't ship a Library/Logs dir, so every write here was
+        // silently failing via `try?` — the log file has never actually been written since the
+        // app sandbox took effect. Create the dir once; cheap no-op once it exists.
+        try? FileManager.default.createDirectory(atPath: logDir, withIntermediateDirectories: true)
+
+        // ponytail: rotate at startup if the log is over 500 KB — was unbounded across months.
+        // True ring buffer is overkill; screensaver log is debug-only and a launch-time cap
+        // keeps the latest session.
+        if !logInitialized {
+            logInitialized = true
+            let maxBytes = 500_000
+            if let attrs = try? FileManager.default.attributesOfItem(atPath: logPath),
+               let size = attrs[.size] as? Int, size > maxBytes {
+                try? "".write(toFile: logPath, atomically: true, encoding: .utf8)
+            }
+        }
+
         let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
         let logMessage = "[\(timestamp)] \(message)\n"
-        
+
         if let handle = FileHandle(forWritingAtPath: logPath) {
             handle.seekToEndOfFile()
             handle.write(logMessage.data(using: .utf8)!)
@@ -153,6 +199,9 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
             try? logMessage.write(toFile: logPath, atomically: true, encoding: .utf8)
         }
     }
+
+    /// True after the first `logToFile` call has run the startup rotation check.
+    private var logInitialized = false
     
     // Enhanced logging with context
     private func logDiagnostics(_ context: String, details: [String: Any] = [:]) {
@@ -223,9 +272,6 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         // CRITICAL: Tell the SCNView to use our camera!
         sceneView.pointOfView = cameraNode
 
-        // Initialize camera controller  
-        cameraController = CameraController(scene: scene, cameraNode: cameraNode, cameraPivot: cameraPivot)
-
         // Initialize satellite manager
         satelliteManager = SatelliteManager(bundle: Bundle(for: type(of: self)))
         logToFile("Satellite Count: \(satelliteManager.satellites.count)")
@@ -255,11 +301,17 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         flyPast.timingMode = .easeIn
         
         // Phase 3: Swing around and reset - FARTHER to see the shell
-        let swingAround = SCNAction.move(to: SCNVector3(x: 0, y: 5, z: 15), duration: 15)
+        let swingAround = SCNAction.move(to: SCNVector3(x: 0, y: 10, z: 25), duration: 15) // ponytail: was y:5 z:15, wider reveal
         swingAround.timingMode = .easeOut
         
         let cinematicSequence = SCNAction.sequence([approach, flyPast, swingAround])
         cameraNode.runAction(SCNAction.repeatForever(cinematicSequence))
+
+        // ponytail: cameraPivot existed for orbital rotation but nothing ever rotated it, so the
+        // fly-through only ever translated near Earth and never swept round to the Sun/planets.
+        // Slow continuous orbit reveals the rest of the solar system as it turns.
+        let orbitSweep = SCNAction.rotateBy(x: 0, y: .pi * 2, z: 0, duration: 90)
+        cameraPivot.runAction(SCNAction.repeatForever(orbitSweep))
         
         setupGroundCamera()
         lastViewModeSwitchTime = Date().timeIntervalSince1970
@@ -268,9 +320,10 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         
         // Initialize audio if enabled
         if FeatureFlags.enableAudio {
-            // Check if audio files exist in bundle before initializing
-            if let _ = Bundle(for: type(of: self)).path(forResource: "ambient_solar_wind", ofType: "wav", inDirectory: "Audio/Ambient") ??
-                         Bundle(for: type(of: self)).path(forResource: "solar_wind_preview", ofType: "mp3", inDirectory: "Audio/Ambient") {
+            // Check if audio files exist in bundle before initializing. Layer names in
+            // AudioController and the filenames in the bundle agree (ambient_solar_wind.mp3,
+            // planet_saturn.wav), so a single check for the ambient file gates init.
+            if let _ = Bundle(for: type(of: self)).path(forResource: "ambient_solar_wind", ofType: "mp3", inDirectory: "Audio") {
                 audioController = AudioController()
                 logToFile("🔊 Audio enabled and initialized")
             } else {
@@ -299,8 +352,12 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     
     /// Setup renderers based on feature flags
     private func setupRenderers() {
-        // Hybrid rendering: Use Metal for swarm (via SceneKit delegate), SceneKit for hero satellites
-        let effectiveUseMetal = FeatureFlags.enableSwarm
+        // ponytail: the Metal swarm path hooks in via SCNSceneRenderer.currentRenderCommandEncoder,
+        // which Apple lists as deprecated on every OS version and returns nil here on this SDK —
+        // render(into:) silently no-ops every frame, so the swarm can never actually draw. Forced
+        // off rather than chasing a dead API; SceneKit satellite rendering (native, not deprecated)
+        // is the real fix. Re-enable if/when Apple ships a supported custom-Metal-draw hook.
+        let effectiveUseMetal = false
         let effectiveToySats = FeatureFlags.enableToySats
         
         logDiagnostics("RENDERER_SETUP", details: [
@@ -337,21 +394,23 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         configureQualitySettings()
     }
     
-    /// Configure quality settings based on detected hardware
+    /// Configure quality settings based on detected hardware.
+    /// `satelliteRenderer` is only created when `enableToySats` is true, so it may be nil —
+    /// optional-chaining prevents a hard crash when the user disables "Hero Satellites".
     private func configureQualitySettings() {
         switch hardwareCapabilities.tier {
         case .ultra:
             qualityLevel = .ultra
-            satelliteRenderer.setQualityLevel(.high) // SatelliteRenderer max is .high
+            satelliteRenderer?.setQualityLevel(.high) // SatelliteRenderer max is .high
         case .high:
             qualityLevel = .high
-            satelliteRenderer.setQualityLevel(.high)
+            satelliteRenderer?.setQualityLevel(.high)
         case .medium:
             qualityLevel = .medium
-            satelliteRenderer.setQualityLevel(.medium)
+            satelliteRenderer?.setQualityLevel(.medium)
         case .low:
             qualityLevel = .low
-            satelliteRenderer.setQualityLevel(.low)
+            satelliteRenderer?.setQualityLevel(.low)
         }
     }
     
@@ -370,14 +429,12 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         // HIGH QUALITY VISUALS (Phase 3)
         // Enable HDR and Bloom for cinematic look
         cameraNode.camera?.wantsHDR = true
-        cameraNode.camera?.exposureOffset = -0.3 // Slightly darker space
+        cameraNode.camera?.exposureOffset = -0.6
         cameraNode.camera?.averageGray = 0.18
         cameraNode.camera?.whitePoint = 1.0
         
-        // Bloom settings - DISABLED to preserve satellite colors
-        cameraNode.camera?.bloomIntensity = 0.0 // Was washing out colors
-        cameraNode.camera?.bloomThreshold = 1.0
-        cameraNode.camera?.bloomBlurRadius = 0.0
+        // ponytail: bloom got halved twice and was still too bright — stop tuning it, turn it off.
+        cameraNode.camera?.bloomIntensity = 0
         
         // Create a pivot node for orbital rotation
         // Camera will be offset from pivot, and rotating the pivot creates orbital motion
@@ -437,7 +494,7 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     
     private func addEarth() {
         let earthGeometry = SCNSphere(radius: 2.0)
-        earthGeometry.segmentCount = 64
+        earthGeometry.segmentCount = 128 // Hero planet — high tessellation for a round limb
         
         let earthMaterial = SCNMaterial()
         earthMaterial.diffuse.contents = NSColor.blue
@@ -459,7 +516,10 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         // Specular for ocean reflections
         earthMaterial.specular.contents = NSColor.white
         earthMaterial.shininess = 0.1
-        
+
+        // Mipmaps + anisotropic filtering so the 8K day/night/specular maps stay crisp.
+        PlanetFactory.applyHighQualityFiltering(to: earthMaterial)
+
         earthGeometry.materials = [earthMaterial]
         
         let earthNode = SCNNode(geometry: earthGeometry)
@@ -481,7 +541,7 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     
     private func addEarthClouds(parent: SCNNode, cloudTexture: NSImage?) {
         let cloudGeometry = SCNSphere(radius: 2.02) // Slightly larger than Earth
-        cloudGeometry.segmentCount = 64
+        cloudGeometry.segmentCount = 96
         
         let cloudMaterial = SCNMaterial()
         cloudMaterial.diffuse.contents = NSColor.clear
@@ -493,7 +553,8 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         if let cloudTexture = cloudTexture {
             cloudMaterial.transparent.contents = cloudTexture
         }
-        
+
+        PlanetFactory.applyHighQualityFiltering(to: cloudMaterial)
         cloudGeometry.materials = [cloudMaterial]
         
         let cloudNode = SCNNode(geometry: cloudGeometry)
@@ -519,7 +580,7 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         let sunLight = SCNNode()
         sunLight.light = SCNLight()
         sunLight.light?.type = .omni
-        sunLight.light?.intensity = 5000 // Boosted
+        sunLight.light?.intensity = 600 // ponytail: was 5000→2500→1200→600
         sunLight.light?.temperature = 6500
         sunLight.light?.color = NSColor(red: 1.0, green: 0.9, blue: 0.8, alpha: 1.0)
         sunLight.light?.attenuationStartDistance = 0
@@ -535,12 +596,12 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         glowMat.diffuse.contents = NSColor.clear
         glowMat.emission.contents = NSColor(red: 1.0, green: 0.6, blue: 0.1, alpha: 1.0)
         glowMat.transparencyMode = .aOne
-        glowMat.transparent.contents = NSColor(white: 1.0, alpha: 0.4)
+        glowMat.transparent.contents = NSColor(white: 1.0, alpha: 0.1)
         glowMat.isDoubleSided = false
         glowMat.cullMode = .back
         sunGlowGeo.materials = [glowMat]
         let glowNode = SCNNode(geometry: sunGlowGeo)
-        glowNode.opacity = 0.5
+        glowNode.opacity = 0.12
         glowNode.position = sunNode.position
         scene.rootNode.addChildNode(glowNode)
         
@@ -551,11 +612,11 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         coronaMat.diffuse.contents = NSColor.clear
         coronaMat.emission.contents = NSColor(red: 1.0, green: 0.4, blue: 0.0, alpha: 1.0)
         coronaMat.transparencyMode = .aOne
-        coronaMat.transparent.contents = NSColor(white: 1.0, alpha: 0.15)
+        coronaMat.transparent.contents = NSColor(white: 1.0, alpha: 0.04)
         coronaMat.isDoubleSided = false
         coronaGeo.materials = [coronaMat]
         let coronaNode = SCNNode(geometry: coronaGeo)
-        coronaNode.opacity = 0.3
+        coronaNode.opacity = 0.08
         coronaNode.position = sunNode.position
         scene.rootNode.addChildNode(coronaNode)
         
@@ -657,41 +718,34 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     /// Metal-accelerated satellite rendering (Apple Silicon)
     private func addSatellitesMetal(metalRenderer: MetalSatelliteRenderer) {
         guard let satelliteManager = satelliteManager else { return }
-        
-        let maxSatellites = qualityLevel.maxSatellites
-        let satellites = Array(satelliteManager.satellites.prefix(maxSatellites))
-        
-        // Build color array
-        var colors: [SIMD4<Float>] = []
-        colors.reserveCapacity(satellites.count)
-        for satellite in satellites {
-            colors.append(satelliteManager.colorForSatellite(satellite))
+
+        // Upload orbital elements + colors whenever the catalog version changes (initial load +
+        // every hourly fetch). The original `animationTime == 0` guard meant the GPU only ever
+        // saw the launch-time data — the swarm showed 14 satellites for the whole session.
+        let currentGeneration = satelliteManager.catalogGeneration
+        if animationTime == 0 || lastUploadedCatalogGeneration != currentGeneration {
+            let maxSatellites = qualityLevel.maxSatellites
+            let satellites = Array(satelliteManager.satellites.prefix(maxSatellites))
+            var colors: [SIMD4<Float>] = []
+            var sizesAndBrightness: [(size: Float, brightness: Float)] = []
+            colors.reserveCapacity(satellites.count)
+            sizesAndBrightness.reserveCapacity(satellites.count)
+            for satellite in satellites {
+                colors.append(satelliteManager.colorForSatellite(satellite))
+                sizesAndBrightness.append(satelliteManager.renderSizeAndBrightness(for: satellite))
+            }
+            metalRenderer.uploadSatellites(satellites, colors: colors, sizesAndBrightness: sizesAndBrightness)
+            lastUploadedCatalogGeneration = currentGeneration
         }
-        
-        // Upload to GPU (one-time or when data changes)
-        if animationTime == 0 {
-            metalRenderer.uploadSatellites(satellites, colors: colors)
-        }
-        
-        // GPU propagates all positions in parallel
+
+        // GPU propagates all positions in parallel; the Metal renderer draws the swarm
+        // (render(into:) from willRenderScene). That's the whole job in Metal mode.
+        //
+        // CRITICAL: do NOT drive the SceneKit SatelliteRenderer here. It previously rebuilt up to
+        // maxSatellites (≈5000) SCNGeometry trail objects EVERY tick — thousands of GPU-backed
+        // geometries per second that the wallpaper host never reclaimed, leaking to 23GB (OOM).
+        // Metal already owns the swarm, so the SceneKit path was pure redundant allocation.
         metalRenderer.propagate(deltaTime: 0.1)
-        
-        // For hybrid rendering, get positions back from GPU and update SceneKit nodes
-        // This allows us to use SceneKit's camera and lighting while Metal handles satellites
-        let positions = metalRenderer.getInstancePositions()
-        
-        guard let satelliteRenderer = satelliteRenderer else { return }
-        
-        let earthOffset = SIMD3<Float>(0, 0, 0)
-        let velocities: [SIMD3<Float>] = Array(repeating: .zero, count: positions.count)
-        
-        satelliteRenderer.updateSatellites(
-            positions: positions,
-            colors: colors,
-            velocities: velocities,
-            names: Array(repeating: "SAT", count: positions.count),
-            earthOffset: earthOffset
-        )
     }
     
     /// SceneKit satellite rendering (fallback for older hardware)
@@ -711,7 +765,19 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         
         let scale: Float = 2.0 / 6371.0
 
-        let satellites = Array(satelliteManager.satellites.prefix(safeMaxSatellites))
+        // ponytail: raw prefix(50) landed entirely inside one contiguous source block (TLE
+        // files list Starlink as one huge run) — every visible satellite was Starlink. Stride
+        // across the whole catalog instead so the sample actually spans categories.
+        let allSatellites = satelliteManager.satellites
+        let satellites: [SatelliteManager.Satellite]
+        if allSatellites.count <= safeMaxSatellites {
+            satellites = allSatellites
+        } else {
+            let step = max(1, allSatellites.count / safeMaxSatellites)
+            satellites = Swift.stride(from: 0, to: allSatellites.count, by: step)
+                .prefix(safeMaxSatellites)
+                .map { allSatellites[$0] }
+        }
         
         for satellite in satellites {
             let (position, velocity) = satelliteManager.getPositionAndVelocity(for: satellite, at: animationTime)
@@ -794,9 +860,13 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
             // Update HUD with current state
             hud.updateCamera(altitude: altitudeKm, velocity: max(3.0, velocity))
             hud.updateStats(satelliteCount: qualityLevel.maxSatellites, fps: 60)
-            
-            
+
+            // Feed the telemetry dashboard + classification legend (census is cached in the manager)
+            hud.updateCensus(satelliteManager.census)
+
             let targetName = findNearestPlanet(to: cameraNode.position)?.name ?? "DEEP SPACE"
+            // Contextual-focus inclination: representative tracked-object inclination (cached)
+            hud.updateFocus(name: targetName, inclination: representativeInclination)
             let coords = String(format: "%.1f, %.1f, %.1f", cameraNode.position.x, cameraNode.position.y, cameraNode.position.z)
             // Adjust HUD text for current mode
             if currentViewMode == .groundStellarium {
@@ -840,19 +910,22 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
             ])
         }
         
-        // Update satellite positions and render Metal swarm
+        // Update satellite positions. The autorelease pool reclaims per-tick value temporaries;
+        // it does NOT by itself stop the SceneKit-fallback trail leak (measured: geometry is
+        // retained by the node graph, not autoreleased) — that path is fixed separately by
+        // reusing geometry instead of rebuilding it. In Metal mode this does almost no work now.
         let deltaTime = time - lastUpdateTime
         if deltaTime >= qualityLevel.updateInterval {
-            updateSatellites()
+            autoreleasepool {
+                updateSatellites()
+            }
             lastUpdateTime = time
         }
-        
-        // Render Metal swarm directly into SceneKit's render context
-        if useMetalRendering, let metalRenderer = metalRenderer, let cameraNode = cameraNode {
-            metalRenderer.render(into: renderer, camera: cameraNode)
-        }
+
+        // NOTE: the Metal swarm is drawn once per frame in willRenderScene (below) for correct
+        // layering. It used to also draw here, double-encoding every frame — removed.
     }
-    
+
     func renderer(_ renderer: SCNSceneRenderer, willRenderScene scene: SCNScene, atTime time: TimeInterval) {
         // Pre-render hook - Metal rendering happens here for proper layering
         if useMetalRendering, let metalRenderer = metalRenderer, let cameraNode = cameraNode {

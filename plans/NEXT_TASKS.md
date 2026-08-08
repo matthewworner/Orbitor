@@ -1,5 +1,8 @@
 # Next Tasks: Polish & Release Preparation
 
+> ⚠️ **Historical snapshot (2026-02-21). Superseded by [`../TASKS.md`](../TASKS.md)** — use that for
+> current open work. Kept for history.
+
 **Date:** 2026-02-21
 **Status:** Feature Complete - Ready for Testing
 

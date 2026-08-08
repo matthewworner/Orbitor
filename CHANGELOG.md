@@ -2,6 +2,300 @@
 
 All notable changes to Nature vs Noise Screensaver.
 
+## [2026-08-08] - Satellite swarm rendering: root cause + full pipeline pass
+
+The satellite swarm never rendered, full stop. The `satelliteVertex`/
+`trailVertex` `instance_id` fix (see superseded note below) was a real bug
+but not *the* bug: the Metal swarm hooked into SceneKit through
+`SCNSceneRenderer.currentRenderCommandEncoder`, which Apple has marked
+deprecated on every OS version and which returns `nil` from `willRenderScene`
+on this SDK (macOS 27) — the draw call silently never ran, no shader fix
+could ever have shown up.
+
+Disabled the Metal path entirely (`effectiveUseMetal = false`) and promoted
+the native SceneKit `SatelliteRenderer` from a 50-object "hero satellites
+only" fallback to the primary renderer. Then found and fixed, in order as the
+user tested each change live:
+
+- Sandbox container has no `Library/Logs` dir — `logToFile` had been silently
+  failing via `try?` since the app sandbox took effect; runtime logs were
+  empty this entire session until fixed. Explains why 2026-07-21's planned
+  "tail the log" verification could never have worked.
+- `applyThermalGlow` overwrote every satellite's material color with a
+  red-dominant tint whenever emission intensity > 0.3 (nearly always) —
+  deleted.
+- Satellite color wired to `SatelliteClass.hudColor`, the same source of
+  truth the HUD legend already used — swarm now matches the on-screen key.
+- `heroModels` (ISS/Hubble/TESS/TDRS) was populated but never read; every
+  satellite rendered as the generic gold template. Wired in via TLE-name
+  lookup, geometry-swap guarded by a marker so pooled nodes don't churn.
+- `satellites.prefix(50)` landed entirely inside one contiguous Starlink
+  block in the TLE source data — every visible satellite was Starlink.
+  Replaced with a stride sample across the whole catalog.
+- `SatelliteRenderer.maxSatellites` hardcoded to 50 (stale "Metal owns the
+  swarm" assumption) — raised to 500 (`QualityLevel`'s own "SceneKit
+  acceptable" tier). Template scales halved twice over the session per
+  user feedback (0.15/0.1/0.08 → 0.035/0.025/0.02).
+- Sun was blowing out the scene: `bloomIntensity` off entirely (tuned down
+  twice first — wrong lever), `sunLight.intensity` 5000→600, sun material
+  `emission.intensity` 2.0→0.3, glow/corona shells cut repeatedly,
+  `exposureOffset` -0.3→-0.6.
+- `cameraPivot` was built for orbital rotation and never actually rotated —
+  the cinematic fly-through only translated near Earth, never swept toward
+  the Sun/planets. Added continuous 90s pivot rotation + widened the
+  fly-through's farthest point.
+
+Rebuilt, Developer ID-signed, reinstalled to `~/Library/Screen Savers/`
+after every change above; 18/18 tests pass throughout (none of this is in
+test coverage — rendering/lighting only). Verified live via System Settings
+→ Screen Saver → Preview with the user in the loop each round, not scripted
+(this environment still has no Screen Recording permission for automated
+screenshots).
+
+Metal swarm code (`MetalSatelliteRenderer.swift`, `Shaders.metal`) left in
+place as dead code rather than deleted, in case Apple ships a supported
+custom-Metal-into-SceneKit hook later.
+
+### Superseded same-day: Metal swarm render fix (never actually fixed it)
+
+Root cause of the "weird" satellite swarm visuals: `satelliteVertex` and
+`trailVertex` in `Shaders.metal` indexed the per-satellite GPU buffer by
+`vertex_id` instead of `instance_id`. Since each satellite point is drawn as
+a 1-vertex, N-instance `drawPrimitives` call, `vertex_id` was always 0 — every
+instance in the swarm rendered satellite #0's position and color, collapsing
+thousands of satellites onto a single point. The trail shader had the same
+bug plus a buffer type mismatch (`TrailVertexData` layout read against a
+`SatelliteInstanceData` buffer), producing a garbled streak. This fix was
+correct but insufficient — see the entry above for the actual root cause
+(deprecated `currentRenderCommandEncoder`) that made this unobservable.
+
+## [2026-07-21] - Parked
+
+User out of time. Branch `astra-hud-redesign` is 28 commits ahead of origin
+with all source-level fixes applied and the build signed + installed.
+Runtime verification (30-min wallpaper + Instruments) was NOT performed
+before parking. See `STATUS.md` "Resuming the project" for the verification
+recipe when you come back.
+
+### Tests
+- Regression test naming: `testVelocityMagnitudeForLEO/GEO` →
+  `testVelocityUnitsAreKmPerSecondNotEarthRadiiPerMinute_LEO/GEO` plus a
+  MARK comment block documenting the d8d53b7 fix. (4e0ab53)
+- Bundle-ID fallback contract test added
+  (`testBundleIdFallbackContract`); asserts the fallback string the
+  controller uses is well-formed. SettingsController itself is AppKit-only
+  so the SwiftPM library can't import it; this catches one class of
+  regression. (4e0ab53)
+- `docs/qa/FABLE_5_STABILITY_AUDIT_PROMPT.md` (the spec template,
+  previously untracked) committed so future re-runs have a known starting
+  point. (7c678d3)
+- 18 / 18 tests pass via `swift test` from `NatureVsNoise/`.
+
+### Attempted but reverted
+- **Xcode test target in project.pbxproj.** Tried three approaches
+  (app-host with `BUNDLE_LOADER` + `TEST_HOST`, standalone without host,
+  compiling source files into the test target) and reverted each. The
+  `.saver` bundle isn't a framework, so symbol resolution at link time
+  is fragile; full support would require refactoring the screensaver into
+  a framework + thin `.saver` shell (~half a day's work). SwiftPM remains
+  the working test path.
+
+## [2026-07-21] - Rebuild + Developer ID sign + reinstall
+
+Rebuilt NatureVsNoise.saver (Release, 38 MB) with the full 1.2.0 fix set
+(8 audit findings + Tier 1 cleanup + SGP4 velocity units + audio bundling +
+DiscoveryBanner removal). Signed with `Developer ID Application:
+M P Worner (PMJJD98L5C)` + hardened runtime + secure timestamp. Installed to
+`~/Library/Screen Savers/NatureVsNoise.saver`. `defaults read com.apple.screensaver`
+confirms the system has picked up the new bundle; `codesign -dv` confirms the
+Developer ID signature. `spctl` "rejected — Unnotarized Developer ID" is
+expected per DEPLOYMENT.md (local execution works, notarization only needed
+for distribution to other Macs).
+
+Runtime verification (30-min wallpaper + Instruments memory/CPU profile) is
+manual — must be done with the user present.
+
+## [2026-07-20] - Bug fixes (SGP4 velocity, audio bundling)
+
+### Fixed
+- **SGP4 velocity was 13x too high.** The propagation formula divided by 60.0 to convert
+  min→sec but was missing the `/ tumin` factor (13.4468). Result was in earth-radii/TU/min
+  instead of km/s — LEO velocity computed as ~103 km/s vs real ~7.66; GEO ~41 vs ~3.07.
+  Both ratios identical to the missing constant, which is how the test failure pinpointed
+  it. Fixed by adding `/ SGP4Constants.tumin` to the velocity scaling. Position magnitude
+  was already correct (multiplied by radiusEarthKm without the /60 divisor -- position is
+  in km, not km/s). Surfaced by `testVelocityMagnitudeForLEO`/`ForGEO` once the test
+  harness was wired; without those tests this would have shipped forever. (d8d53b7)
+- **Ambient and Saturn audio never played.** Files existed on disk in
+  `Resources/Audio/Ambient/` and `Resources/Audio/Planetary/` but weren't in the Xcode
+  build phase (verified — no .mp3/.wav in the built .saver), so Bundle.path lookup always
+  returned nil, AudioController was never instantiated, the "Ambient Audio" toggle in the
+  configure sheet toggled a no-op. Even if they'd been bundled, the filenames didn't match
+  the AudioLayer names (`solar_wind_preview.mp3` vs layer `ambient_solar_wind`,
+  `saturn_radio.wav` vs layer `planet_saturn`) and bundleURL() doesn't search the
+  `Audio/Ambient/` subdir. Fixed by renaming files to match layer names, removing the
+  empty subdirs, adding both to project.pbxproj (PBXFileReference, PBXBuildFile,
+  Resources group children, Resources build phase), and simplifying the audio-init gate
+  in NatureVsNoiseView. The other 8 planet voices + 5 mission clips remain silent
+  placeholders (no source files). (a13b053)
+- **DiscoveryBanner fully orphaned.** Held a node in the scene graph and an init/positioning
+  call but no method was called after `showDiscovery` was deleted in commit c406ae8.
+  Removed the file (222 lines) plus all references in HUDOverlay and project.pbxproj.
+  (ae32abe)
+- **Unused achievementSilver/Bronze colors** in MissionControlTheme. Removed; `achievementGold`
+  kept (consumed by `gold: SKColor` shortcut). (72fc57b, followup to c406ae8)
+
+## [2026-07-20] - Tier 1 cleanup (config persistence, dead code, tests)
+
+### Fixed
+- **Configure sheet settings silently lost.** `SettingsController.bundleId` was hardcoded to
+  `com.antigravity.NatureVsNoise`, but the screensaver's actual bundle ID (Info.plist) is
+  `com.naturevsnoise.screensaver`. `ScreenSaverDefaults(forModuleWithName:)` uses the string as
+  the defaults namespace, so every toggle in the configure sheet was writing to a phantom
+  defaults namespace the running screensaver never read. Now reads `Bundle.main.bundleIdentifier`.
+  (3e34d2b)
+- **Version label drift.** The configure sheet hardcoded "v1.1.0 · Astra HUD" while
+  `MARKETING_VERSION = 1.0` in project.pbxproj. Label now reads from
+  `CFBundleShortVersionString`; MARKETING_VERSION bumped to 1.2.0 for the Fable 5 stability +
+  cleanup pass. (3e34d2b, fe79142)
+
+### Removed
+- **CameraController (259 lines):** instantiated and never called. The 12-15 min cinematic tour
+  documented in TASKS.md never played; the camera is driven by an SCNAction sequence in
+  `setupScene()`. If the tour is wanted back, design from scratch and remove the SCNAction
+  hack at the same time.
+- **Achievements (295 lines):** the `AchievementManager.trackSatelliteSpotted` trigger was
+  unreachable — the only caller (`HUDOverlay.updateTarget`) passes planet names that never
+  match `NotableSatellites.find`. Fixing it properly requires adding satellite-detection to
+  the HUD (a new feature, not a bug fix).
+- **`displayLink: CVDisplayLink?`:** declared, never used.
+- **"Discovery Mode (Achievements)" configure toggle:** surface area for a removed feature.
+- **DiscoveryBanner.showAchievement(_:):** orphan after Achievements deletion.
+  (e4c5a79)
+
+### Added
+- **SwiftPM test harness** at `NatureVsNoise/Package.swift`. Exposes the testable Foundation-only
+  surface (SGP4Propagator, SatelliteManager, SatelliteClassification, TLEFetcher, FeatureFlags)
+  as a library named `NatureVsNoise` so the existing test files' `@testable import NatureVsNoise`
+  works unchanged. `cd NatureVsNoise && swift test` runs the suite.
+- Fixed existing test-file bugs uncovered by getting them to compile:
+  - Missing `import simd` in SGP4PropagatorTests.
+  - `tle?.x` returning `Double?` wouldn't bind to accuracy-typed `XCTAssertEqual` -- forced after
+    `assertNotNil`.
+  - `testSatelliteClassification` expected `.activeSatellite` for "GPS IIF-10" but the classifier
+    intentionally treats "GPS"-containing names as `.notable("GPS Satellite")`. Replaced fixture
+    with a plain active satellite.
+  - Deleted `testLegendMappingIsComplete` (asserted non-existent `SatelliteClass.legendOrder` /
+    `legendCode` properties; nothing in the runtime uses them).
+- **Result: 15/17 tests pass.** The 2 failures (`testVelocityMagnitudeForLEO/GEO`) surface a
+  pre-existing SGP4Propagator bug -- velocity magnitude is ~13x too high (constant factor
+  across LEO and GEO, so it's a units issue in the velocity formula, not the propagation).
+  Position magnitude is correct in both cases. (a9fb932)
+
+## [2026-07-05] - Fable 5 stability sweep fixes
+
+Sweep: `docs/qa/2026-07-05-fable5-stability-audit.md` (8 findings, all fixed).
+
+### Fixed
+- **Settings-induced crash (RESILIENCE).** Unchecking "Hero Satellites (3D models)" in the
+  configure sheet and relaunching force-unwrapped a nil `satelliteRenderer` inside the
+  wallpaper host during `setupScene()`. Switched the four `configureQualitySettings` call
+  sites to optional-chaining. (5e712c7)
+- **Saver dead after preview stop/start (LIFECYCLE).** `startAnimation()` did nothing beyond
+  `super`, so after `stopAnimation()` cleared `sceneView.delegate` / `isPlaying` / HUD timer
+  / SatManager timer, the System Settings preview (which restarts on the same view instance)
+  got a frozen frame: no `renderer(_:updateAtTime:)`, no `willRenderScene` (Metal swarm not
+  drawn), no HUD updates. `startAnimation()` now mirrors the teardown. (5e712c7, 1c6ae10)
+- **Hourly CelesTrak fetch kept running after stopAnimation (LIFECYCLE).** `SatelliteManager`'s
+  hourly `Timer` was only invalidated in `deinit`. Added `pauseUpdates()` / `resumeUpdates()`,
+  called from the screensaver's stop/start. (1423403, 5e712c7)
+- **SceneKit fallback trail churn (LEAK, sibling of the 23GB bug).** The 23GB fix removed the
+  call from the Metal path, but the SceneKit fallback still rebuilt a fresh `SCNGeometrySource`
+  + `SCNGeometryElement` + `SCNGeometry` + `SCNMaterial` per visible satellite per tick —
+  ~1500 GPU-backed allocations/sec, same leak class. Throttled to 2 Hz and shared one static
+  `SCNMaterial` across all trails. (fc23a85)
+- **Per-tick SGP4 propagator alloc (RENDER).** `getPositionAndVelocity` allocated a new
+  `OrbitalElements` + `SGP4Propagator` for every satellite on every tick; init runs the full
+  SGP4 math. Cached `SGP4Propagator` keyed by `catalogNumber`. SceneKit fallback path queries
+  the first 50 entries only, so the cache is naturally bounded. Metal path is unaffected
+  (GPU propagates via the kernel). (1423403)
+- **Background parse race on hourly refetch (LEAK-/RESILIENCE).** `parseTLEData` did
+  `satellites.removeAll()` + `parseTLEContent` (which appends) from a detached `Task` while
+  the render thread read the array on every frame — undefined behaviour for a CoW array,
+  with hundreds of chances per multi-hour run. Parse into a local, publish `satellites` on
+  main; `parseTLEContent` now takes `inout` so both bundle-load and async-fetch paths route
+  through the property setter. (1423403)
+- **Unbounded `lastFetchStatistics`.** Hourly fetches appended ~7 stats per cycle forever.
+  Capped to last 50 entries. (af9a74b)
+
+### Changed
+- **GPU catalog re-upload.** The Metal swarm uploaded orbital elements only on the very first
+  tick (`animationTime == 0`). The async fetch and every hourly refresh replaced `satellites`
+  afterwards but the GPU never saw the new catalog — the swarm showed 14 bundled sats for the
+  whole session. Added a `catalogGeneration` counter on `satellites.didSet`; `addSatellitesMetal`
+  re-uploads whenever it changes. (1423403, 5e712c7)
+- **Diagnostic log rotation.** `logToFile` truncated at startup if `~/Library/Logs/NatureVsNoise.log`
+  was over 500 KB; was unbounded across months. (5e712c7)
+
+### Known issues
+- A fixed build has not yet been re-signed and reinstalled — do that before using it again.
+
+## [2026-06-16] - Render + memory bug-fix pass
+
+### Fixed
+- **Critical memory leak (23–27 GB OOM).** As wallpaper, the Metal render path redundantly drove the
+  SceneKit `SatelliteRenderer` for ~5000 satellites every tick, rebuilding a fresh `SCNGeometry` per
+  satellite per frame; the wallpaper host never reclaimed them. `addSatellitesMetal` now only uploads
+  once + propagates on the GPU (Metal draws the swarm). Measured flat (0 MB growth over 600 frames vs
+  +13 GB before). Also removed a duplicate per-frame Metal draw. (commit 5d502fa)
+- **Invisible satellites.** The hybrid render path bound the view-projection matrix to vertex buffer
+  index 2, but the shader reads it from buffer(1); the swarm was transformed by garbage and projected
+  off-screen. Now bound at index 1. (commit a112746)
+
+### Changed
+- **Planet render quality.** Added mipmaps + 16x anisotropic filtering to all planet/Earth/cloud/ring
+  texture slots (kills shimmer + muddy oblique angles), raised sphere tessellation (planets 96→128,
+  Earth 64→128, clouds 64→96), and re-enabled gentle bloom (intensity 0.3, threshold 0.9). The flat
+  grey `lightingEnvironment` was left as-is pending on-device verification (a large HDRI there was
+  previously documented to cause black screens). (commit f10a9ec)
+
+### Known issues
+- The SceneKit **fallback** path (non-Metal hardware) still rebuilds trail geometry every frame and
+  would leak; needs geometry reuse. Tracked in TASKS.md.
+- A fixed build has not yet been re-signed and reinstalled — do that before using it again.
+
+## [2026-06-06] - Astra HUD Redesign
+
+Ported the Google Stitch "Astra" mission-control HUD into the native SpriteKit overlay. See
+`docs/ASTRA_HUD.md` for the full design reference and `docs/STITCH_PROMPTS.md` for the Stitch source.
+
+### Added
+- **Design system** (`MissionControlTheme.swift`): Astra tokens (soft-cyan, nature-blue, glass
+  fill/border, corner brackets, hairline), a reusable `GlassPanel` node, and a `SatelliteClass →
+  color/legend-code` map as the single source of truth for the legend + dossiers.
+- **Bundled JetBrains Mono** (`8K/JetBrainsMono-Regular.ttf`, `-Bold.ttf`): registered via CoreText
+  at HUD init (`registerFonts`), with `hudFont`/`hudFontName` helpers and a system-mono fallback.
+- **Orbital census** (`SatelliteManager.OrbitalCensus`): cached counts per classification, fed to
+  the HUD via `updateCensus` / `updateFocus`.
+- **HUD components** (in `HUDOverlay.swift`): mission cluster with live UTC clock + TRACKING pill,
+  telemetry dashboard, `ContextualFocusPanel` (NAME/ALT/VEL/INCL), `ClassificationLegend` with live
+  counts, focus reticle, sweeping scanline, `AmbientTicker`, and a `BootSequenceOverlay`.
+
+### Changed
+- **`StatsPanel`** reworked into the top-right telemetry dashboard (hero total + ACTIVE/DEBRIS).
+- **`InfoCardView`** restyled into a type-colored dossier card; **`FactOverlay`** and
+  **`DiscoveryBanner`** moved to the glass treatment + bundled font.
+- **Configure sheet** (`SettingsController.makeConfigureSheet`): fixed overlapping-frame layout bug;
+  reorganized into PERFORMANCE / VISUALS / AUDIO / PRESETS with a clean top-down layout.
+
+### Removed
+- **DECAY column** from the telemetry dashboard — "decaying this week" isn't derivable from TLE data,
+  so the dashboard shows ACTIVE/DEBRIS only rather than a placeholder.
+
+### Notes
+- Verification is build-only (Release `xcodebuild` green; fonts confirmed in the bundle). Runtime
+  remains blocked by macOS 26.5 signing; no Developer ID cert is available locally yet.
+
 ## [2026-05-17] - Apple-Tier Audit Complete
 
 ### Fixed (Critical Bugs)

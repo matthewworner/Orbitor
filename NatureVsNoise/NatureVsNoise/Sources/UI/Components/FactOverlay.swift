@@ -52,15 +52,15 @@ class FactOverlay: SKNode {
                           transform: nil)
         
         container = SKShapeNode(path: path)
-        container.fillColor = MissionControlTheme.deepSpaceColor
-        container.strokeColor = MissionControlTheme.primaryCyan.withAlphaComponent(0.2)
+        container.fillColor = MissionControlTheme.glassFillColor
+        container.strokeColor = MissionControlTheme.primaryCyan.withAlphaComponent(0.4)
         container.lineWidth = 1
         container.alpha = 0
         container.position = CGPoint(x: 0, y: 0)
         addChild(container)
         
         // Icon
-        iconLabel = SKLabelNode(fontNamed: "SF Mono")
+        iconLabel = SKLabelNode(fontNamed: MissionControlTheme.hudFontName())
         iconLabel.fontSize = 20
         iconLabel.text = "💡"
         iconLabel.horizontalAlignmentMode = .left
@@ -70,7 +70,7 @@ class FactOverlay: SKNode {
         container.addChild(iconLabel)
         
         // Fact text (multiline)
-        factLabel = SKLabelNode(fontNamed: "SF Mono")
+        factLabel = SKLabelNode(fontNamed: MissionControlTheme.hudFontName())
         factLabel.fontSize = 12
         factLabel.fontColor = MissionControlTheme.white
         factLabel.text = ""
@@ -82,9 +82,9 @@ class FactOverlay: SKNode {
         container.addChild(factLabel)
         
         // Category
-        categoryLabel = SKLabelNode(fontNamed: "SF Mono")
-        categoryLabel.fontSize = 8
-        categoryLabel.fontColor = MissionControlTheme.textMuted
+        categoryLabel = SKLabelNode(fontNamed: MissionControlTheme.hudFontName())
+        categoryLabel.fontSize = 9
+        categoryLabel.fontColor = MissionControlTheme.cyan
         categoryLabel.text = ""
         categoryLabel.horizontalAlignmentMode = .left
         categoryLabel.verticalAlignmentMode = .center

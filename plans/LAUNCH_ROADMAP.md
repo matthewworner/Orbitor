@@ -1,5 +1,8 @@
 # Launch Roadmap
 
+> ⚠️ **Historical snapshot (2026-02-21). Not current** — see [`../STATUS.md`](../STATUS.md) for
+> current state and [`../TASKS.md`](../TASKS.md) for open work. Kept for history.
+
 ## Status: ✅ Feature Complete
 
 **Last Updated:** 2026-02-21

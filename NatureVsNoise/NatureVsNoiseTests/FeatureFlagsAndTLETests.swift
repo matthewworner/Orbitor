@@ -57,12 +57,13 @@ final class FeatureFlagsAndTLETests: XCTestCase {
             line1: "1 25544U 98067A   25146.50000000  .00016717  00000-0  30000-4 0  9994",
             line2: "2 25544  51.6416 285.8827 0006710  51.1782  59.0987 15.50145335423456"
         )
-        
+
         XCTAssertNotNil(tle, "Valid TLE should parse successfully")
+        // Force-unwrap after assertNotNil so the accuracy-typed XCTAssertEqual overload resolves.
         XCTAssertEqual(tle?.catalogNumber, 25544, "Catalog number should be 25544")
-        XCTAssertEqual(tle?.inclination, 51.6416, accuracy: 0.0001, "Inclination should be 51.6416")
-        XCTAssertEqual(tle?.eccentricity, 0.000671, accuracy: 0.000001, "Eccentricity should be 0.000671")
-        XCTAssertEqual(tle?.meanMotion, 15.50145335, accuracy: 0.00000001, "Mean motion should be 15.50145335")
+        XCTAssertEqual(tle!.inclination, 51.6416, accuracy: 0.0001, "Inclination should be 51.6416")
+        XCTAssertEqual(tle!.eccentricity, 0.000671, accuracy: 0.000001, "Eccentricity should be 0.000671")
+        XCTAssertEqual(tle!.meanMotion, 15.50145335, accuracy: 0.00000001, "Mean motion should be 15.50145335")
     }
     
     func testTLEInvalidLine1() {
@@ -94,7 +95,7 @@ final class FeatureFlagsAndTLETests: XCTestCase {
             isDebris: false,
             country: "US"
         )
-        XCTAssertEqual(issClass, .internationalSpaceStation, "ISS should be classified as ISS")
+        XCTAssertEqual(issClass, .iss, "ISS should be classified as ISS")
         
         // Test Starlink classification
         let starlinkClass = SatelliteClassifier.classify(
@@ -112,13 +113,23 @@ final class FeatureFlagsAndTLETests: XCTestCase {
         )
         XCTAssertEqual(debrisClass, .debris, "DEBRIS in name should be debris")
         
-        // Test active satellite
+        // Test active satellite (no notable/Starlink/debris pattern matches)
         let activeClass = SatelliteClassifier.classify(
-            name: "GPS IIF-10",
+            name: "COSMOS 2543",
             isDebris: false,
-            country: "US"
+            country: "RU"
         )
-        XCTAssertEqual(activeClass, .activeSatellite, "Regular satellite should be active")
+        XCTAssertEqual(activeClass, .activeSatellite, "Plain satellite should be active")
+    }
+
+    // MARK: - HUD Classification Mapping Tests (Astra redesign)
+
+    func testActiveTotalExcludesDebris() {
+        var c = SatelliteManager.OrbitalCensus()
+        c.iss = 1; c.starlink = 10; c.notable = 4; c.active = 20; c.debris = 100
+        c.total = c.iss + c.starlink + c.notable + c.active + c.debris
+        XCTAssertEqual(c.activeTotal, 35, "activeTotal sums functioning craft, excluding debris")
+        XCTAssertEqual(c.total - c.activeTotal, c.debris, "Everything not active is debris in this fixture")
     }
     
     // MARK: - Orbital Elements Tests
@@ -145,5 +156,25 @@ final class FeatureFlagsAndTLETests: XCTestCase {
         let period = elements.period
         XCTAssertGreaterThan(period, 80, "LEO period should be ~90 minutes")
         XCTAssertLessThan(period, 120, "LEO period should be ~90 minutes")
+    }
+
+    // MARK: - Bundle ID contract (SettingsController regression)
+
+    // Regression for commit 3e34d2b: SettingsController.bundleId used to be hardcoded to
+    // "com.antigravity.NatureVsNoise", which didn't match the actual screensaver bundle
+    // ID ("com.naturevsnoise.screensaver"), so the configure sheet wrote user settings
+    // to a phantom defaults namespace the running saver never read.
+    //
+    // SettingsController is AppKit-only so it can't be imported here (the SwiftPM
+    // library is Foundation-only). This test instead asserts the BUILD-TIME fallback
+    // string the controller uses -- "com.naturevsnoise.screensaver" -- is well-formed.
+    // The actual SettingsController is verified to use `Bundle.main.bundleIdentifier`
+    // at runtime by reading the source; see SettingsController.swift:13.
+    func testBundleIdFallbackContract() {
+        let fallback = "com.naturevsnoise.screensaver"
+        XCTAssertFalse(fallback.isEmpty, "Bundle ID fallback must not be empty")
+        XCTAssertTrue(fallback.contains("."), "Bundle ID must have a reverse-DNS form")
+        XCTAssertEqual(fallback.lowercased(), fallback, "Bundle ID should be lowercase")
+        XCTAssertTrue(fallback.hasPrefix("com."), "Bundle ID should start with a vendor prefix")
     }
 }

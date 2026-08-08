@@ -83,13 +83,36 @@ class PlanetFactory {
         ]
     }
     
+    // MARK: - Texture Quality
+
+    /// Apply mipmapping + anisotropic filtering to every texture slot on a material.
+    ///
+    /// Without this, the 8K planet maps shimmer when rotating and turn muddy at grazing
+    /// angles (the texture is minified without mip chains and sampled isotropically). Linear
+    /// mip filtering + 16x anisotropy is the single biggest quality win for the planets and
+    /// costs almost nothing on Apple Silicon.
+    static func applyHighQualityFiltering(to material: SCNMaterial) {
+        let slots: [SCNMaterialProperty] = [
+            material.diffuse, material.normal, material.roughness, material.metalness,
+            material.emission, material.specular, material.transparent, material.ambientOcclusion
+        ]
+        for slot in slots {
+            slot.mipFilter = .linear
+            slot.magnificationFilter = .linear
+            slot.minificationFilter = .linear
+            slot.maxAnisotropy = 16
+            slot.wrapS = .repeat
+            slot.wrapT = .repeat
+        }
+    }
+
     // MARK: - Planet Creation
-    
+
     /// Creates a planet node with texture and rotation
     static func createPlanet(_ data: PlanetData) -> SCNNode {
         
         let geometry = SCNSphere(radius: CGFloat(data.radius * 2))
-        geometry.segmentCount = 96 // Increased smoothness for PBR
+        geometry.segmentCount = 128 // High tessellation so close-up planet silhouettes stay round
         
         let material = SCNMaterial()
         material.lightingModel = .physicallyBased
@@ -104,7 +127,7 @@ class PlanetFactory {
             // Emissive for sun
             if data.name == "Sun" {
                 material.emission.contents = texture
-                material.emission.intensity = 2.0 // High intensity for bloom
+                material.emission.intensity = 0.3 // ponytail: was 2.0→0.6→0.3
                 material.lightingModel = .constant // Sun emits light, doesn't receive
             }
         }
@@ -146,6 +169,9 @@ class PlanetFactory {
             }
         }
         
+        // Mipmaps + anisotropic filtering on all texture slots (applied after every map is set).
+        applyHighQualityFiltering(to: material)
+
         let node = SCNNode(geometry: geometry)
         node.name = data.name
         node.position = SCNVector3(x: CGFloat(data.distance), y: 0, z: 0)
@@ -184,8 +210,9 @@ class PlanetFactory {
             ringMaterial.transparencyMode = .dualLayer
         }
         
+        applyHighQualityFiltering(to: ringMaterial)
         ringGeometry.materials = [ringMaterial, ringMaterial, ringMaterial]
-        
+
         let ringNode = SCNNode(geometry: ringGeometry)
         ringNode.name = "\(node.name ?? "Planet")_Rings"
         ringNode.eulerAngles.x = .pi / 2 // Rotate to horizontal

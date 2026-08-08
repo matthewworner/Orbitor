@@ -9,7 +9,10 @@ class SettingsController: NSObject {
     // MARK: - Properties
     
     static let shared = SettingsController()
-    private let bundleId = "com.antigravity.NatureVsNoise"
+    // Read the bundle ID at runtime so the configure sheet always agrees with Info.plist's
+    // PRODUCT_BUNDLE_IDENTIFIER. Hardcoding a different string here was silently writing the
+    // user's settings to a phantom defaults namespace the running screensaver never read.
+    private var bundleId: String { Bundle.main.bundleIdentifier ?? "com.naturevsnoise.screensaver" }
     
     // Settings Keys
     struct Keys {
@@ -55,147 +58,113 @@ class SettingsController: NSObject {
     // MARK: - UI Construction
     
     func makeConfigureSheet() -> NSWindow {
+        let width: CGFloat = 460
+        let height: CGFloat = 600
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 450, height: 450),
+            contentRect: NSRect(x: 0, y: 0, width: width, height: height),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
         )
         window.title = "Nature vs Noise Settings"
-        
-        let container = NSView(frame: window.contentLayoutRect)
+
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: width, height: height))
         window.contentView = container
-        
-        // Logo / Title
-        let titleLabel = createLabel(text: "NATURE vs NOISE", fontSize: 24, bold: true)
-        titleLabel.frame = NSRect(x: 20, y: 350, width: 410, height: 30)
-        container.addSubview(titleLabel)
-        
-        // Subtitle
-        let subtitleLabel = createLabel(text: "Screensaver Options", fontSize: 12, bold: false)
+
+        // Top-down layout cursor (AppKit origin is bottom-left, so we descend from the top).
+        let left: CGFloat = 24
+        let contentW = width - left * 2
+        var y = height - 36
+
+        func addRow(_ view: NSView, height h: CGFloat, gap: CGFloat = 10, x: CGFloat? = nil, w: CGFloat? = nil) {
+            view.frame = NSRect(x: x ?? left, y: y - h, width: w ?? contentW, height: h)
+            container.addSubview(view)
+            y -= (h + gap)
+        }
+        func addSectionHeader(_ text: String) {
+            let l = createLabel(text: "▮ " + text, fontSize: 11, bold: true)
+            l.textColor = .secondaryLabelColor
+            addRow(l, height: 16, gap: 8)
+        }
+
+        // === Title ===
+        let titleLabel = createLabel(text: "ASTRA · NATURE vs NOISE", fontSize: 20, bold: true)
+        addRow(titleLabel, height: 26, gap: 2)
+        let subtitleLabel = createLabel(text: "Mission Control Configuration", fontSize: 12, bold: false)
         subtitleLabel.textColor = .secondaryLabelColor
-        subtitleLabel.frame = NSRect(x: 20, y: 330, width: 410, height: 20)
-        container.addSubview(subtitleLabel)
-        
-        // === VISUALS SECTION ===
-        let visualsLabel = createLabel(text: "VISUALS", fontSize: 11, bold: true)
-        visualsLabel.textColor = .secondaryLabelColor
-        visualsLabel.frame = NSRect(x: 20, y: 290, width: 100, height: 16)
-        container.addSubview(visualsLabel)
-        
-        // Starfield Toggle
-        let starfieldToggle = createCheckbox(title: "Show Starfield", state: FeatureFlags.enableStarfield)
-        starfieldToggle.frame = NSRect(x: 20, y: 260, width: 200, height: 24)
-        starfieldToggle.target = self
-        starfieldToggle.action = #selector(toggleStarfield(_:))
-        container.addSubview(starfieldToggle)
-        
-        // Toy Satellites Toggle
-        let toySatToggle = createCheckbox(title: "Show Toy Satellites", state: FeatureFlags.enableToySats)
-        toySatToggle.frame = NSRect(x: 20, y: 230, width: 200, height: 24)
-        toySatToggle.target = self
-        toySatToggle.action = #selector(toggleToySats(_:))
-        container.addSubview(toySatToggle)
-        
-        // Metal Swarm Toggle
-        let metalToggle = createCheckbox(title: "Metal Rendering (Experimental)", state: FeatureFlags.enableSwarm)
-        metalToggle.frame = NSRect(x: 20, y: 200, width: 250, height: 24)
-        metalToggle.target = self
-        metalToggle.action = #selector(toggleMetal(_:))
-        container.addSubview(metalToggle)
-        
-        // Motion Trails Toggle
-        let trailsToggle = createCheckbox(title: "Motion Trails", state: FeatureFlags.showTrails)
-        trailsToggle.frame = NSRect(x: 20, y: 170, width: 200, height: 24)
-        trailsToggle.target = self
-        trailsToggle.action = #selector(toggleTrails(_:))
-        container.addSubview(trailsToggle)
-        
-        // === AUDIO SECTION ===
-        let audioLabel = createLabel(text: "AUDIO", fontSize: 11, bold: true)
-        audioLabel.textColor = .secondaryLabelColor
-        audioLabel.frame = NSRect(x: 240, y: 290, width: 100, height: 16)
-        container.addSubview(audioLabel)
-        
-        // Audio Toggle
-        let audioToggle = createCheckbox(title: "Enable Audio", state: FeatureFlags.enableAudio)
-        audioToggle.frame = NSRect(x: 240, y: 260, width: 200, height: 24)
-        audioToggle.target = self
-        audioToggle.action = #selector(toggleAudio(_:))
-        container.addSubview(audioToggle)
-        
-        // Info label
-        let audioInfoLabel = createLabel(text: "Requires real audio files in bundle", fontSize: 10, bold: false)
-        audioInfoLabel.textColor = .tertiaryLabelColor
-        audioInfoLabel.frame = NSRect(x: 240, y: 240, width: 200, height: 16)
-        container.addSubview(audioInfoLabel)
-        
-        // === QUALITY SECTION ===
-        let qualityLabel = createLabel(text: "QUALITY", fontSize: 11, bold: true)
-        qualityLabel.textColor = .secondaryLabelColor
-        qualityLabel.frame = NSRect(x: 20, y: 130, width: 100, height: 16)
-        container.addSubview(qualityLabel)
-        
-        // Quality Segmented Control
-        let qualitySeg = NSSegmentedControl(labels: ["Low", "Med", "High", "Ultra"], trackingMode: .selectOne, target: self, action: #selector(changeQuality(_:)))
-        qualitySeg.frame = NSRect(x: 20, y: 95, width: 250, height: 24)
-        qualitySeg.selectedSegment = 1  // Medium by default
-        container.addSubview(qualitySeg)
-        
-        // Quality description
-        let qualityDescLabel = createLabel(text: "Low: 200 sats | Med: 500 | High: 1000 | Ultra: 5000", fontSize: 10, bold: false)
-        qualityDescLabel.textColor = .tertiaryLabelColor
-        qualityDescLabel.frame = NSRect(x: 20, y: 75, width: 300, height: 16)
-        container.addSubview(qualityDescLabel)
-        
-        // === EDUCATIONAL SECTION ===
-        let eduLabel = createLabel(text: "EDUCATIONAL", fontSize: 11, bold: true)
-        eduLabel.textColor = .secondaryLabelColor
-        eduLabel.frame = NSRect(x: 20, y: 280, width: 100, height: 16)
-        container.addSubview(eduLabel)
-        
-        // Info Density
-        let densityLabel = createLabel(text: "Info Density:", fontSize: 11, bold: false)
-        densityLabel.frame = NSRect(x: 20, y: 250, width: 80, height: 20)
-        container.addSubview(densityLabel)
-        
-        let densitySeg = NSSegmentedControl(labels: ["Min", "Med", "Edu"], trackingMode: .selectOne, target: self, action: #selector(changeInfoDensity(_:)))
-        densitySeg.frame = NSRect(x: 100, y: 248, width: 150, height: 24)
+        addRow(subtitleLabel, height: 18, gap: 18)
+
+        // === PERFORMANCE ===
+        addSectionHeader("PERFORMANCE")
+        let qLabel = createLabel(text: "Render Quality", fontSize: 11, bold: false)
+        qLabel.textColor = .secondaryLabelColor
+        addRow(qLabel, height: 16, gap: 6)
+
+        let qualitySeg = NSSegmentedControl(labels: ["Safe", "Medium", "High", "Ultra"],
+                                            trackingMode: .selectOne, target: self,
+                                            action: #selector(changeQuality(_:)))
+        qualitySeg.selectedSegment = defaults?.integer(forKey: Keys.qualityLevel) ?? 2
+        addRow(qualitySeg, height: 26, gap: 14)
+
+        let densLabel = createLabel(text: "Satellite Count", fontSize: 11, bold: false)
+        densLabel.textColor = .secondaryLabelColor
+        addRow(densLabel, height: 16, gap: 4)
+        let densitySlider = NSSlider(value: defaults?.double(forKey: Keys.satelliteDensity) ?? 1.0,
+                                     minValue: 0.0, maxValue: 1.0,
+                                     target: self, action: #selector(changeDensity(_:)))
+        addRow(densitySlider, height: 22, gap: 4)
+        let recLabel = createLabel(text: "Recommended: High for Apple Silicon", fontSize: 10, bold: false)
+        recLabel.textColor = .tertiaryLabelColor
+        addRow(recLabel, height: 14, gap: 18)
+
+        // === VISUALS ===
+        addSectionHeader("VISUALS")
+        func addToggle(_ title: String, _ state: Bool, _ action: Selector) {
+            let cb = createCheckbox(title: title, state: state)
+            cb.target = self; cb.action = action
+            addRow(cb, height: 22, gap: 6)
+        }
+        addToggle("Satellite Swarm (Metal)", FeatureFlags.enableSwarm, #selector(toggleMetal(_:)))
+        addToggle("Motion Trails", FeatureFlags.showTrails, #selector(toggleTrails(_:)))
+        addToggle("Starfield", FeatureFlags.enableStarfield, #selector(toggleStarfield(_:)))
+        addToggle("Hero Satellites (3D models)", FeatureFlags.enableToySats, #selector(toggleToySats(_:)))
+        addToggle("Educational Facts", defaults?.bool(forKey: Keys.educationalFacts) ?? true, #selector(toggleFacts(_:)))
+
+        let hudLabel = createLabel(text: "HUD Density", fontSize: 11, bold: false)
+        hudLabel.textColor = .secondaryLabelColor
+        addRow(hudLabel, height: 16, gap: 4)
+        let densitySeg = NSSegmentedControl(labels: ["Minimal", "Moderate", "Educational"],
+                                            trackingMode: .selectOne, target: self,
+                                            action: #selector(changeInfoDensity(_:)))
         densitySeg.selectedSegment = defaults?.integer(forKey: Keys.infoDensity) ?? 1
-        container.addSubview(densitySeg)
-        
-        // Educational Facts Toggle
-        let factsToggle = createCheckbox(title: "Show Educational Facts", state: defaults?.bool(forKey: Keys.educationalFacts) ?? true)
-        factsToggle.frame = NSRect(x: 20, y: 220, width: 200, height: 24)
-        factsToggle.target = self
-        factsToggle.action = #selector(toggleFacts(_:))
-        container.addSubview(factsToggle)
-        
-        // Discovery Mode Toggle
-        let discoveryToggle = createCheckbox(title: "Discovery Mode (Achievements)", state: defaults?.bool(forKey: Keys.discoveryMode) ?? true)
-        discoveryToggle.frame = NSRect(x: 20, y: 195, width: 230, height: 24)
-        discoveryToggle.target = self
-        discoveryToggle.action = #selector(toggleDiscovery(_:))
-        container.addSubview(discoveryToggle)
-        
-        // Reset Button
-        let resetButton = NSButton(title: "Reset to Safe", target: self, action: #selector(resetToSafe(_:)))
-        resetButton.bezelStyle = .rounded
-        resetButton.frame = NSRect(x: 240, y: 90, width: 120, height: 28)
-        container.addSubview(resetButton)
-        
-        // Done Button
+        addRow(densitySeg, height: 26, gap: 18)
+
+        // === AUDIO ===
+        addSectionHeader("AUDIO")
+        addToggle("Ambient Audio", FeatureFlags.enableAudio, #selector(toggleAudio(_:)))
+        let audioInfo = createLabel(text: "Requires audio files bundled in the saver", fontSize: 10, bold: false)
+        audioInfo.textColor = .tertiaryLabelColor
+        addRow(audioInfo, height: 14, gap: 18)
+
+        // === PRESETS / FOOTER ===
+        addSectionHeader("PRESETS")
+        let presetSeg = NSSegmentedControl(labels: ["Safe", "Balanced", "Cinematic"],
+                                           trackingMode: .momentary, target: self,
+                                           action: #selector(applyPreset(_:)))
+        addRow(presetSeg, height: 26, gap: 16)
+
+        // Done + version pinned near the bottom
         let doneButton = NSButton(title: "Done", target: self, action: #selector(closeSheet(_:)))
         doneButton.bezelStyle = .rounded
-        doneButton.frame = NSRect(x: 330, y: 20, width: 100, height: 32)
+        doneButton.keyEquivalent = "\r"
+        doneButton.frame = NSRect(x: width - 24 - 100, y: 20, width: 100, height: 32)
         container.addSubview(doneButton)
-        
-        // Version Info
-        let versionLabel = createLabel(text: "v1.0.4", fontSize: 10, bold: false)
+
+        let versionLabel = createLabel(text: "v\(appVersion) · Astra HUD", fontSize: 10, bold: false)
         versionLabel.textColor = .secondaryLabelColor
-        versionLabel.frame = NSRect(x: 20, y: 28, width: 200, height: 20)
+        versionLabel.frame = NSRect(x: 24, y: 28, width: 240, height: 18)
         container.addSubview(versionLabel)
-        
+
         return window
     }
     
@@ -234,6 +203,30 @@ class SettingsController: NSObject {
         defaults?.set(sender.selectedSegment, forKey: Keys.qualityLevel)
         defaults?.synchronize()
     }
+
+    @objc private func changeDensity(_ sender: NSSlider) {
+        defaults?.set(sender.doubleValue, forKey: Keys.satelliteDensity)
+        defaults?.synchronize()
+    }
+
+    @objc private func applyPreset(_ sender: NSSegmentedControl) {
+        switch sender.selectedSegment {
+        case 0: // Safe
+            FeatureFlags.resetToSafePreset()
+        case 2: // Cinematic — everything on
+            FeatureFlags.applyFullPreset()
+        default: // Balanced
+            FeatureFlags.enableSwarm = true
+            FeatureFlags.showTrails = true
+            FeatureFlags.enableStarfield = true
+            FeatureFlags.enableToySats = true
+            FeatureFlags.enableAudio = false
+        }
+        // Reload the sheet so toggles reflect the applied preset.
+        if let window = sender.window {
+            window.contentView = makeConfigureSheet().contentView
+        }
+    }
     
     @objc private func changeInfoDensity(_ sender: NSSegmentedControl) {
         defaults?.set(sender.selectedSegment, forKey: Keys.infoDensity)
@@ -245,17 +238,16 @@ class SettingsController: NSObject {
         defaults?.synchronize()
     }
     
-    @objc private func toggleDiscovery(_ sender: NSButton) {
-        defaults?.set(sender.state == .on, forKey: Keys.discoveryMode)
-        defaults?.synchronize()
-    }
-    
     @objc private func closeSheet(_ sender: NSButton) {
         sender.window?.sheetParent?.endSheet(sender.window!)
     }
     
     // MARK: - Helpers
-    
+
+    private var appVersion: String {
+        (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "1.0"
+    }
+
     private func bool(for key: String) -> Bool {
         return defaults?.bool(forKey: key) ?? true
     }

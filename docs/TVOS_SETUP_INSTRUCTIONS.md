@@ -36,7 +36,6 @@ We need to add the shared logic (Planets, Satellites, etc.) to the tvOS target.
 3.  Click **+** and add the following files from the `Sources` folder:
     *   `NatureVsNoise/Sources/Planets/PlanetFactory.swift`
     *   `NatureVsNoise/Sources/Satellites/*.swift` (All files: `SGP4Propagator`, `TLEFetcher`, `SatelliteManager`, `SatelliteRenderer`, `MetalSatelliteRenderer`)
-    *   `NatureVsNoise/Sources/Camera/CameraController.swift`
     *   `NatureVsNoise/Sources/Audio/AudioController.swift`
     *   `NatureVsNoise/Sources/UI/HUDOverlay.swift`
     *   `NatureVsNoise/Sources/CrossPlatform/ImageLoader.swift`

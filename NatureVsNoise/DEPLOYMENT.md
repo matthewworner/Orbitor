@@ -150,8 +150,61 @@ NatureVsNoise.saver/
 │   └── _CodeSignature/       # Code signing (notarization)
 ```
 
+## Current signing status (2026-06-06)
+
+A **Developer ID Application: M P Worner (PMJJD98L5C)** certificate now exists on this Mac. The
+`.saver` has been signed (hardened runtime + secure timestamp) and installed to
+`~/Library/Screen Savers/`, and it **runs in System Settings → Screen Saver preview** — Developer ID
+signing alone is enough to run it locally on macOS 26.5.
+
+`spctl -a --type install` still reports **"Unnotarized Developer ID"**. That only matters for
+**distribution**: another Mac downloading the `.saver` will be blocked by Gatekeeper until it's
+notarized + stapled. To distribute, complete the notarize → staple steps below (needs an app-specific
+password or App Store Connect API key, which is not yet configured).
+
+Check what's installed:
+
+```bash
+security find-identity -v -p codesigning   # look for "Developer ID Application: ..."
+```
+
+## Quick command reference — sign → notarize → staple
+
+Run once a *Developer ID Application* certificate exists. Replace the identity and credentials.
+
+```bash
+# 0. Build Release
+cd NatureVsNoise
+xcodebuild -project NatureVsNoise.xcodeproj -target NatureVsNoise -configuration Release build
+SAVER="build/Release/NatureVsNoise.saver"
+
+# 1. Deep-sign with the hardened runtime (bundled .ttf fonts are signed as part of the bundle)
+codesign --force --deep --options runtime --timestamp \
+  --sign "Developer ID Application: YOUR NAME (TEAMID)" "$SAVER"
+codesign --verify --deep --strict --verbose=2 "$SAVER"
+
+# 2. Notarize (one-time: store creds in a keychain profile)
+xcrun notarytool store-credentials "AC_NOTARY" \
+  --apple-id "matthew.worner@me.com" --team-id "TEAMID" --password "APP_SPECIFIC_PASSWORD"
+ditto -c -k --keepParent "$SAVER" "NatureVsNoise.saver.zip"
+xcrun notarytool submit "NatureVsNoise.saver.zip" --keychain-profile "AC_NOTARY" --wait
+
+# 3. Staple the ticket and verify Gatekeeper acceptance
+xcrun stapler staple "$SAVER"
+spctl -a -vvv --type install "$SAVER"
+
+# 4. Install
+cp -R "$SAVER" ~/Library/Screen\ Savers/
+```
+
+Then verify visually in System Settings → Screen Saver, comparing against the Stitch reference
+screenshots in `docs/stitch-base/stitch-output/`.
+
 ## Version History
 
+- **1.1.0** (2026-06-06): Astra HUD redesign — native SpriteKit port of the Stitch mockups; bundled
+  JetBrains Mono; telemetry dashboard, classification legend, ambient ticker, boot sequence;
+  reworked configure sheet. See `docs/ASTRA_HUD.md`.
 - **1.0.0**: Initial release
   - Earth-centered satellite visualization
   - SGP4 orbital propagation

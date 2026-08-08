@@ -1,4 +1,5 @@
 import XCTest
+import simd
 @testable import NatureVsNoise
 
 /// Unit tests for SGP4 orbital propagator
@@ -68,23 +69,30 @@ final class SGP4PropagatorTests: XCTestCase {
     }
     
     // MARK: - Velocity Tests
-    
-    func testVelocityMagnitudeForLEO() {
+
+    // Regression for commit d8d53b7: SGP4 velocity was 13x too high because the formula
+    // divided by 60.0 to convert min->sec but was missing the / tumin factor (13.4468),
+    // so velocity came out in earth-radii/TU/min instead of km/s. LEO computed as 103
+    // km/s vs real ~7.66; GEO ~41 vs ~3.07. Both ratios identical to the missing constant,
+    // which is what surfaced the bug. If a future change re-introduces the unit bug,
+    // these tests will fail with v well outside the 7-9 / 2.5-4 km/s window.
+
+    func testVelocityUnitsAreKmPerSecondNotEarthRadiiPerMinute_LEO() {
         let propagator = SGP4Propagator(elements: issTLE)
-        
+
         let result = propagator.propagate(minutesSinceEpoch: 1.0)
-        
+
         let v = simd_length(result.velocity)
         // LEO velocity ~7.8 km/s
         XCTAssertGreaterThan(v, 7.0, "LEO velocity should be around 7-8 km/s")
         XCTAssertLessThan(v, 9.0, "LEO velocity should not be too high")
     }
-    
-    func testVelocityMagnitudeForGEO() {
+
+    func testVelocityUnitsAreKmPerSecondNotEarthRadiiPerMinute_GEO() {
         let propagator = SGP4Propagator(elements: geoTLE)
-        
+
         let result = propagator.propagate(minutesSinceEpoch: 1.0)
-        
+
         let v = simd_length(result.velocity)
         // GEO velocity ~3.07 km/s
         XCTAssertGreaterThan(v, 2.5, "GEO velocity should be around 3 km/s")

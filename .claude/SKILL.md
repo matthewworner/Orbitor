@@ -1,249 +1,107 @@
 ---
 name: "NatureVsNoise"
-description: macOS screensaver visualizing 23,000+ satellites orbiting Earth with real orbital data. SceneKit + Metal hybrid rendering. Use for 3D graphics, orbital mechanics, satellite visualization, and screensaver development.
+description: macOS screensaver visualizing Earth's satellite swarm with real CelesTrak TLE data and SGP4 propagation. Hybrid SceneKit + Metal rendering, SpriteKit "Astra" HUD. Use for 3D graphics, orbital mechanics, satellite visualization, and screensaver development.
 ---
 
-# NatureVsNoise Skill
+# NatureVsNoise — AI Quick Start
 
-macOS screensaver contrasting cosmic serenity with the chaotic swarm of 23,000+ satellites orbiting Earth.
+macOS screensaver contrasting cosmic serenity with the chaotic swarm of satellites orbiting Earth.
+
+> **Single source of truth for current state:** [`STATUS.md`](../../STATUS.md) (project state) and
+> [`TASKS.md`](../../TASKS.md) (open work). This skill is a stable orientation map — when it disagrees
+> with the codebase, the codebase wins. Verify specifics before relying on them.
 
 ---
 
-## PROJECT OVERVIEW
+## ⚠️ Read this first: the repo holds THREE projects
+
+| Directory | What it is | Build it? |
+|:---|:---|:---|
+| **`NatureVsNoise/`** | ✅ **THE canonical macOS screensaver.** All active work happens here. | **Yes** |
+| `NatureVsNoise-Cinematic/` | Separate *experimental* concept ("Cosmic Kubrick" — satellites as light events). Own Xcode project. Not the shipping product. | No (unless asked) |
+| `MinimalTest/` | A ~15-line `ScreenSaverView` debug stub for isolating load/signing issues. | No |
+
+Unless told otherwise, **"the screensaver" = `NatureVsNoise/`.**
+
+---
+
+## Project facts (verified against code, 2026-06)
 
 | Attribute | Details |
 |:---|:---|
-| **Type** | macOS Screensaver |
-| **Platform** | macOS 13.0+ |
-| **Language** | Swift, SceneKit, Metal |
-| **Status** | Feature Complete - v1.0.0 |
-| **Repository** | github.com/matthewworner/Orbitor |
+| **Type** | macOS Screensaver (`.saver` bundle) |
+| **Min OS** | macOS 13.0 (`MACOSX_DEPLOYMENT_TARGET = 13.0`) |
+| **Language / frameworks** | Swift 5.9, `ScreenSaver.framework`, SceneKit, Metal, **SpriteKit** (HUD), AppKit |
+| **Repository** | github.com/matthewworner/Orbitor — current branch `astra-hud-redesign` |
+| **Status** | Code complete, Release build green, runtime-verified on this Mac (see STATUS.md) |
 
-### Key Features
-- Solar System: Sun + 8 planets with 8K NASA textures
-- 23,000+ satellites rendered from real orbital data (CelesTrak TLE)
-- SGP4 propagation for accurate satellite positions
-- NASA 3D Models: Hubble, TESS, TDRS, Juno
-- Hybrid Rendering: SceneKit for planets/hero satellites, Metal for 5000+ swarm points
-- Satellite Classification: ISS, Starlink, notable satellites, debris each render differently
-- Visual Effects: Motion trails, material aging, thermal glow
-- Cinematic Camera: 12-15 minute grand tour cycle
+### Rendering architecture (hybrid)
+- **SceneKit** — Sun, 8 planets (8K NASA textures), hero satellites, NASA 3D models (Hubble, TESS, TDRS, Juno).
+- **Metal** — the satellite swarm, drawn as instanced points via a SceneKit render-pass delegate.
+- **SpriteKit** — the "Astra" mission-control HUD overlay (glass panels, JetBrains Mono, telemetry).
 
----
-
-## TECH STACK
-
-| Layer | Technology |
-|:---|:---|
-| **UI** | SwiftUI, ScreenSaver framework |
-| **3D** | SceneKit, Metal |
-| **Data** | CelesTrak TLE files, SGP4 propagation |
-| **Assets** | NASA 8K textures, NASA 3D models |
-| **Platform** | macOS Screen Saver framework |
+### Satellite data — get the numbers right
+- **Live fetch:** `TLEFetcher` pulls multiple CelesTrak GROUP endpoints (active, starlink, stations,
+  and several debris fields) — tens of thousands of objects when online.
+- **Offline fallback:** `NatureVsNoise/8K/active_satellites.tle` bundles **14** satellites.
+- **Render cap:** the Metal swarm is capped at **5,000** points (`maxSatellites`, reduced from 50,000
+  for stability; default also in `FeatureFlags`). Do not claim "23,000 rendered" — they're *fetched*, then capped.
+- **Propagation:** `SGP4Propagator` (WGS-72 constants), with guards for circular/parabolic orbits.
 
 ---
 
-## PROJECT STRUCTURE
+## Source map (`NatureVsNoise/NatureVsNoise/Sources/`)
 
-```
-Screensaver/
-├── NatureVsNoise/
-│   ├── NatureVsNoise.xcodeproj/      # Xcode project
-│   ├── NatureVsNoise/
-│   │   ├── Info.plist                # Screensaver config
-│   │   ├── Resources/                # Assets, textures
-│   │   └── Sources/
-│   │       ├── NatureVsNoiseView.swift  # Main screensaver view
-│   │       ├── FeatureFlags.swift       # User settings
-│   │       ├── Planets/                 # Planet rendering
-│   │       ├── Satellites/              # Satellite systems
-│   │       ├── Audio/                   # Audio controller
-│   │       ├── Camera/                  # Camera movements
-│   │       ├── UI/                      # HUD overlay
-│   │       └── CrossPlatform/           # Platform abstraction
-│   ├── 8K/                            # 8K texture files
-│   ├── tvOS/                          # tvOS variant
-│   └── build/                         # Build outputs
-├── docs/
-│   ├── TROUBLESHOOTING.md
-│   ├── TVOS_SETUP_INSTRUCTIONS.md
-│   └── VERIFICATION_REPORT.md
-├── plans/                             # Planning documents
-├── archive/                           # Archived files
-├── scripts/                           # Build scripts
-├── prd.md                             # Full product requirements
-├── CHANGELOG.md                       # Version history
-├── STATUS.md                          # Current status
-└── LAUNCH.md                          # Launch assets (HN, PH, etc.)
-```
+| Area | Path | Purpose |
+|:---|:---|:---|
+| Entry point | `NatureVsNoiseView.swift` | Main `ScreenSaverView`; wires scene, swarm, HUD, camera |
+| Settings | `FeatureFlags.swift` | User toggles / quality / counts (UserDefaults-backed) |
+| Planets | `Planets/PlanetFactory.swift` | Planet + Sun nodes, textures, rings |
+| Satellites | `Satellites/` | `SGP4Propagator`, `SatelliteManager`, `TLEFetcher`, `MetalSatelliteRenderer`, `SatelliteRenderer`, `SatelliteClassification` |
+| Camera | `Camera/CameraController.swift` | Cinematic camera moves |
+| Audio | `Audio/AudioController.swift` | Ambient audio (wiring present) |
+| HUD | `UI/HUDOverlay.swift`, `UI/Themes/MissionControlTheme.swift`, `UI/Components/` | Astra SpriteKit overlay, panels, banners, fact/info cards |
+| HUD data | `UI/Data/` | `EducationalFacts`, `SatelliteDatabase`, `Achievements` |
+| Cross-platform | `CrossPlatform/` | `TextureManager`, `MaterialFactory`, `OrbitalModels`, `ImageLoader` |
+| Tests | `../NatureVsNoiseTests/` | `SGP4PropagatorTests`, `FeatureFlagsAndTLETests` (no runnable target yet — see TASKS.md) |
 
 ---
 
-## KEY FILES
+## Commands
 
-| File | Purpose |
-|:---|:---|
-| `NatureVsNoise/Sources/NatureVsNoiseView.swift` | Main screensaver view (36KB) |
-| `NatureVsNoise/Sources/FeatureFlags.swift` | User settings/feature toggles |
-| `NatureVsNoise/Sources/Planets/` | Planet rendering system |
-| `NatureVsNoise/Sources/Satellites/` | Satellite classification & rendering |
-| `NatureVsNoise/Sources/Audio/` | Ambient audio controller |
-| `NatureVsNoise/Sources/Camera/` | Cinematic camera movements |
-| `NatureVsNoise/Sources/UI/` | HUD overlay elements |
-| `prd.md` | Full product requirements (1339 lines) |
-
----
-
-## COMMANDS
-
-### Build
 ```bash
+# Build (Release) — run from the canonical project dir
 cd NatureVsNoise
-xcodebuild -scheme NatureVsNoise -configuration Release build
+xcodebuild -project NatureVsNoise.xcodeproj -target NatureVsNoise -configuration Release build
+
+# Install
+cp -R ~/Library/Developer/Xcode/DerivedData/NatureVsNoise-*/Build/Products/Release/NatureVsNoise.saver \
+  ~/Library/Screen\ Savers/
 ```
+Then select **"Nature vs Noise"** in System Settings → Screen Saver → Preview.
 
-### Install
-```bash
-# Copy to Screen Savers folder
-cp -R ~/Library/Developer/Xcode/DerivedData/NatureVsNoise-*/Build/Products/Release/NatureVsNoise.saver ~/Library/Screen\ Savers/
-```
-
-### Run
-Select **NatureVsNoise** in System Settings → Screen Saver
+**Deployment gotcha:** macOS 26.5+ refuses ad-hoc-signed screensavers (AMFI launch-constraint). A
+Developer ID Application signature is required to load locally; notarization is required to distribute
+to other Macs. Full steps: [`NatureVsNoise/DEPLOYMENT.md`](../../NatureVsNoise/DEPLOYMENT.md).
 
 ---
 
-## RENDERING ARCHITECTURE
+## Where the docs live
 
-### Hybrid Rendering
-- **SceneKit**: Planets, hero satellites (ISS, Hubble, etc.)
-- **Metal**: 5000+ swarm points for satellite debris field
-- Integration: SceneKit delegate for Metal full-screen rendering
-
-### Performance
-- Target: 60fps
-- Metal for high-volume point rendering
-- Frame-synchronized updates (not Timer-based)
+Start at the documentation index: [`docs/README.md`](../../docs/README.md). Highlights:
+`README.md` (overview) · `STATUS.md` (state) · `TASKS.md` (work) · `CHANGELOG.md` (history) ·
+`docs/ASTRA_HUD.md` (HUD design) · `docs/TROUBLESHOOTING.md` · `prd.md` (full product spec).
 
 ---
 
-## SATELLITE SYSTEM
+## Common tasks
 
-### Data Source
-- CelesTrak TLE (Two-Line Element) files
-- Updated regularly for current orbital positions
-
-### SGP4 Propagation
-- Accurate orbital position calculation
-- Handles orbital mechanics (drag, perturbations)
-
-### Classification
-| Category | Rendering |
-|:---|:---|
-| ISS | Larger, detailed model |
-| Starlink | Distinct visual style |
-| Notable satellites | NASA 3D models |
-| Debris | Small points, motion trails |
+- **Change satellite visuals** → `Satellites/SatelliteClassification.swift` + `MetalSatelliteRenderer.swift`.
+- **Change the HUD** → `UI/` (SpriteKit), design tokens in `UI/Themes/MissionControlTheme.swift`; reference `docs/ASTRA_HUD.md`.
+- **Add/refresh satellites** → CelesTrak endpoints in `Satellites/TLEFetcher.swift`; offline list in `8K/active_satellites.tle`.
+- **Tune the camera** → `Camera/CameraController.swift`.
+- **Ship a build** → build Release, sign (Developer ID), bump Info.plist version, update `CHANGELOG.md`, zip into `dist/`.
 
 ---
 
-## VISUAL EFFECTS
-
-- **Motion Trails**: Orbital path visualization
-- **Material Aging**: Weathered satellite appearance
-- **Thermal Glow**: Heat-based coloring
-- **Country Colors**: Origin-based satellite coloring (optional)
-
----
-
-## CAMERA SEQUENCE
-
-### 12-15 Minute Cycle
-1. **Act I: Grand Tour (8-10 min)** - Outer planets → Saturn rings → Jupiter → Mars → Earth approach
-2. **Act II: The Reveal (4-6 min)** - Earth zoom-in, satellite swarm emergence, orbital dance
-3. **Act III: Return (30-60 sec)** - Pull back to deep space, loop
-
----
-
-## CODING CONVENTIONS
-
-### Swift/SceneKit/Metal
-- SwiftUI for configuration UI
-- SceneKit for structured 3D objects
-- Metal for high-performance point rendering
-- Frame-synchronized updates
-
-### Architecture
-- Feature flags for user settings
-- Modular systems (Planets, Satellites, Audio, Camera)
-- Cross-platform abstraction layer
-
----
-
-## COMMON TASKS
-
-### Adding a New Planet Feature
-1. Edit files in `Sources/Planets/`
-2. Update textures in `Resources/` or `8K/`
-3. Adjust camera sequence if needed
-
-### Modifying Satellite Rendering
-1. Edit files in `Sources/Satellites/`
-2. Update classification logic
-3. Adjust Metal shaders for visual effects
-
-### Updating TLE Data
-1. Download latest from CelesTrak
-2. Update data files in Resources
-3. SGP4 will use new orbital elements
-
-### Building for Distribution
-1. Build Release configuration
-2. Create zip of .saver file
-3. Update version in Info.plist
-4. Update CHANGELOG.md
-
----
-
-## REQUIREMENTS
-
-- macOS 13.0+
-- Apple Silicon recommended (Intel supported)
-- GPU capable of Metal rendering
-
----
-
-## DOCUMENTATION
-
-| Document | Purpose |
-|:---|:---|
-| `prd.md` | Full product requirements |
-| `CHANGELOG.md` | Version history |
-| `docs/TROUBLESHOOTING.md` | Common issues |
-| `plans/LAUNCH_ROADMAP.md` | Development status |
-| `LAUNCH.md` | Launch assets (HN, Product Hunt, social) |
-
----
-
-## PENDING TASKS
-
-1. User testing on different hardware configurations
-2. Performance profiling
-3. Expand cinematic camera sequence (PRD 12-15 min tour)
-
----
-
-## QUICK REFERENCE
-
-| Need | File/Command |
-|:---|:---|
-| Build | `xcodebuild -scheme NatureVsNoise -configuration Release build` |
-| Install | Copy `.saver` to `~/Library/Screen Savers/` |
-| Main view | `NatureVsNoise/Sources/NatureVsNoiseView.swift` |
-| Settings | `NatureVsNoise/Sources/FeatureFlags.swift` |
-| Status | `STATUS.md` |
-| PRD | `prd.md` |
-
----
-
-*Last updated: 28 February 2026*
+*Orientation map — keep stable. For live state, read `STATUS.md`. Last reconciled with code: 2026-06-16.*
