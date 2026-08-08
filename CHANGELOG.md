@@ -2,6 +2,73 @@
 
 All notable changes to Nature vs Noise Screensaver.
 
+## [2026-08-08] - Satellite swarm rendering: root cause + full pipeline pass
+
+The satellite swarm never rendered, full stop. The `satelliteVertex`/
+`trailVertex` `instance_id` fix (see superseded note below) was a real bug
+but not *the* bug: the Metal swarm hooked into SceneKit through
+`SCNSceneRenderer.currentRenderCommandEncoder`, which Apple has marked
+deprecated on every OS version and which returns `nil` from `willRenderScene`
+on this SDK (macOS 27) — the draw call silently never ran, no shader fix
+could ever have shown up.
+
+Disabled the Metal path entirely (`effectiveUseMetal = false`) and promoted
+the native SceneKit `SatelliteRenderer` from a 50-object "hero satellites
+only" fallback to the primary renderer. Then found and fixed, in order as the
+user tested each change live:
+
+- Sandbox container has no `Library/Logs` dir — `logToFile` had been silently
+  failing via `try?` since the app sandbox took effect; runtime logs were
+  empty this entire session until fixed. Explains why 2026-07-21's planned
+  "tail the log" verification could never have worked.
+- `applyThermalGlow` overwrote every satellite's material color with a
+  red-dominant tint whenever emission intensity > 0.3 (nearly always) —
+  deleted.
+- Satellite color wired to `SatelliteClass.hudColor`, the same source of
+  truth the HUD legend already used — swarm now matches the on-screen key.
+- `heroModels` (ISS/Hubble/TESS/TDRS) was populated but never read; every
+  satellite rendered as the generic gold template. Wired in via TLE-name
+  lookup, geometry-swap guarded by a marker so pooled nodes don't churn.
+- `satellites.prefix(50)` landed entirely inside one contiguous Starlink
+  block in the TLE source data — every visible satellite was Starlink.
+  Replaced with a stride sample across the whole catalog.
+- `SatelliteRenderer.maxSatellites` hardcoded to 50 (stale "Metal owns the
+  swarm" assumption) — raised to 500 (`QualityLevel`'s own "SceneKit
+  acceptable" tier). Template scales halved twice over the session per
+  user feedback (0.15/0.1/0.08 → 0.035/0.025/0.02).
+- Sun was blowing out the scene: `bloomIntensity` off entirely (tuned down
+  twice first — wrong lever), `sunLight.intensity` 5000→600, sun material
+  `emission.intensity` 2.0→0.3, glow/corona shells cut repeatedly,
+  `exposureOffset` -0.3→-0.6.
+- `cameraPivot` was built for orbital rotation and never actually rotated —
+  the cinematic fly-through only translated near Earth, never swept toward
+  the Sun/planets. Added continuous 90s pivot rotation + widened the
+  fly-through's farthest point.
+
+Rebuilt, Developer ID-signed, reinstalled to `~/Library/Screen Savers/`
+after every change above; 18/18 tests pass throughout (none of this is in
+test coverage — rendering/lighting only). Verified live via System Settings
+→ Screen Saver → Preview with the user in the loop each round, not scripted
+(this environment still has no Screen Recording permission for automated
+screenshots).
+
+Metal swarm code (`MetalSatelliteRenderer.swift`, `Shaders.metal`) left in
+place as dead code rather than deleted, in case Apple ships a supported
+custom-Metal-into-SceneKit hook later.
+
+### Superseded same-day: Metal swarm render fix (never actually fixed it)
+
+Root cause of the "weird" satellite swarm visuals: `satelliteVertex` and
+`trailVertex` in `Shaders.metal` indexed the per-satellite GPU buffer by
+`vertex_id` instead of `instance_id`. Since each satellite point is drawn as
+a 1-vertex, N-instance `drawPrimitives` call, `vertex_id` was always 0 — every
+instance in the swarm rendered satellite #0's position and color, collapsing
+thousands of satellites onto a single point. The trail shader had the same
+bug plus a buffer type mismatch (`TrailVertexData` layout read against a
+`SatelliteInstanceData` buffer), producing a garbled streak. This fix was
+correct but insufficient — see the entry above for the actual root cause
+(deprecated `currentRenderCommandEncoder`) that made this unobservable.
+
 ## [2026-07-21] - Parked
 
 User out of time. Branch `astra-hud-redesign` is 28 commits ahead of origin

@@ -1,8 +1,73 @@
 # Screensaver - Status
 
 ## Stage
+**Active** (2026-08-08) — satellite rendering fixed end-to-end (Metal → SceneKit switch, colors,
+count, sun brightness, camera). Branch `astra-hud-redesign`. Verified live via System Settings →
+Screen Saver → Nature vs Noise → Preview (this environment has no Screen Recording permission for
+automated screenshots, so verification was interactive with the user, not scripted).
+
+## 2026-08-08 — Satellite swarm was never rendering; full render pipeline pass
+
+**Root cause (the actual one):** the Metal satellite swarm hooked into SceneKit via
+`SCNSceneRenderer.currentRenderCommandEncoder`, called from `willRenderScene`. That API is
+deprecated on every OS version (iOS 8–26, macOS 10.8–26 per Apple's docs) and returns `nil` on
+this SDK (macOS 27), so `MetalSatelliteRenderer.render(into:)`'s guard failed silently every
+frame — the swarm could never draw, regardless of shader correctness. An earlier fix in this
+same session (indexing `satelliteVertex`/`trailVertex` by `instance_id` instead of `vertex_id`,
+which *was* a real bug — the swarm collapsed onto satellite #0) was correct but could never be
+observed because of this deeper issue.
+
+**Fix:** disabled the Metal swarm path (`effectiveUseMetal = false` in `setupRenderers()`,
+NatureVsNoiseView.swift) and made the native SceneKit satellite renderer
+(`SatelliteRenderer.swift`) the primary path instead of a 50-object "hero satellites only"
+fallback. Re-enable Metal only if Apple ships a supported custom-Metal-into-SceneKit hook.
+
+**Follow-on fixes found while getting the SceneKit path production-quality:**
+- `logToFile` wrote to `NSHomeDirectory()/Library/Logs/`, which doesn't exist in the app
+  sandbox container — every write silently failed via `try?`. Now creates the dir first.
+  (This is *why* runtime logs were empty all through the 2026-07-21 park — worth knowing if
+  `~/Library/Logs/NatureVsNoise.log` looks stale again.)
+- `applyThermalGlow` overwrote every satellite's emission color with a red-dominant tint
+  whenever emission intensity > 0.3 (true for almost all of them) — deleted, it was fighting
+  the classification coloring with no one asking for it.
+- Satellite color now comes from `SatelliteClass.hudColor` (MissionControlTheme.swift) — the
+  same source of truth the HUD's classification legend already used, so swarm colors finally
+  match the on-screen key (gold=ISS, cyan=Starlink, green=notable, white=active, red=debris).
+- `heroModels` (ISS/Hubble/TESS/TDRS GLB/procedural models) was populated but never read —
+  every satellite rendered as the generic gold template regardless of class. Wired in via
+  exact TLE-name lookup in `updateSatellites`, marker-guarded so pooled nodes only swap
+  geometry when their hero identity actually changes.
+- `satellites.prefix(50)` landed entirely inside one contiguous Starlink block in the TLE
+  source data (CelesTrak lists Starlink as one large run) — every visible satellite was
+  Starlink. Swapped for a stride sample across the whole catalog.
+- `SatelliteRenderer.maxSatellites` was hardcoded to 50 (a leftover from "Metal owns the
+  swarm, SceneKit only does hero satellites") — now 500, matching `QualityLevel`'s own
+  documented "SceneKit acceptable" tier. Template scales for active/debris/starlink halved
+  twice over the session (0.15/0.1/0.08 → 0.035/0.025/0.02) per user feedback on size.
+- Sun was blowing out the whole scene: `bloomIntensity` turned off entirely (was 0.3, tuned
+  down twice before that was recognized as the wrong lever), `sunLight.intensity` 5000→600,
+  sun material `emission.intensity` 2.0→0.3, fake-bloom glow/corona shell opacities cut
+  repeatedly, `exposureOffset` -0.3→-0.6.
+- `cameraPivot` existed specifically for orbital rotation (per its own code comment) but
+  nothing ever rotated it — the cinematic fly-through only translated the camera near Earth
+  and never swept round to reveal the Sun/planets. Added a continuous 90s pivot rotation plus
+  widened the fly-through's farthest point (z:15→25) per user request for "more movement and
+  sweeping."
+
+Rebuilt, Developer ID-signed (`Developer ID Application: M P Worner (PMJJD98L5C)`), reinstalled
+to `~/Library/Screen Savers/NatureVsNoise.saver` after every change above. 18/18 tests pass
+throughout (none of this touched code the test suite covers — it's all rendering/lighting).
+
+**Known follow-ups, not yet requested:**
+- No guarantee the stride sample includes at least one of every `SatelliteClass` — fine in
+  practice at 500/catalog-size, but not proven.
+- `.medium`/`.high`/`.ultra` `QualityLevel.maxSatellites` (500/1000/5000) assume Metal; only
+  `SatelliteRenderer`'s internal 500 cap protects against a hardware tier requesting more.
+- Metal swarm code (`MetalSatelliteRenderer.swift`, `Shaders.metal`) is now fully dead code —
+  not deleted, in case Apple ships a working custom-Metal hook later.
+
+## Previous stage
 **Parked** (2026-07-21) — source-level stability work is done; runtime / visual verification deferred.
-Branch `astra-hud-redesign` is 28 commits ahead of origin with all fixes ready when the user returns.
 
 ## Last Updated
 2026-07-21

@@ -1,5 +1,26 @@
 # Tasks
 
+## ✅ 2026-08-08 — satellite swarm never rendered; full pipeline pass
+- [x] Root cause: `SCNSceneRenderer.currentRenderCommandEncoder` (deprecated on every OS version)
+      returns `nil` from `willRenderScene` on this SDK — Metal swarm's `render(into:)` guard
+      failed silently every frame. Disabled Metal path (`effectiveUseMetal = false`), promoted
+      SceneKit `SatelliteRenderer` from hero-only fallback to primary.
+- [x] `logToFile` silently failing — sandbox container has no `Library/Logs` dir; now creates it.
+- [x] Deleted `applyThermalGlow` — was overwriting every satellite's color with a red tint.
+- [x] Satellite color wired to `SatelliteClass.hudColor` (matches HUD legend, was unwired).
+- [x] `heroModels` (ISS/Hubble/TESS/TDRS) wired in via TLE-name lookup — was populated, never read.
+- [x] `satellites.prefix(50)` fixed to stride-sample across catalog — was landing entirely inside
+      one contiguous Starlink block in the TLE source data.
+- [x] `SatelliteRenderer.maxSatellites` 50→500 (stale "Metal owns the swarm" assumption); template
+      scales halved twice (0.15/0.1/0.08 → 0.035/0.025/0.02).
+- [x] Sun blowout fixed: bloom off, `sunLight.intensity` 5000→600, sun `emission.intensity` 2.0→0.3,
+      glow/corona shells cut, `exposureOffset` -0.3→-0.6.
+- [x] `cameraPivot` orbital rotation wired up (built, never used) + widened fly-through amplitude.
+- [ ] No guarantee the stride sample includes every `SatelliteClass` at least once — fine in
+      practice at 500/catalog-size, not proven.
+- [ ] Metal swarm code left as dead code (not deleted) — revisit if Apple ships a supported
+      custom-Metal-into-SceneKit hook.
+
 ## 🔴 2026-06-16 — render + memory bug-fix pass
 - [x] Fix invisible satellites — view-projection matrix bound to buffer(1) in hybrid path (a112746)
 - [x] Planet quality — mipmaps + 16x anisotropy, tessellation 64/96→128, gentle bloom (f10a9ec)

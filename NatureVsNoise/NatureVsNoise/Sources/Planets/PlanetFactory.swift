@@ -127,7 +127,7 @@ class PlanetFactory {
             // Emissive for sun
             if data.name == "Sun" {
                 material.emission.contents = texture
-                material.emission.intensity = 2.0 // High intensity for bloom
+                material.emission.intensity = 0.3 // ponytail: was 2.0→0.6→0.3
                 material.lightingModel = .constant // Sun emits light, doesn't receive
             }
         }

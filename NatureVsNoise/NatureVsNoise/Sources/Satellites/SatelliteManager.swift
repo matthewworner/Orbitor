@@ -443,25 +443,37 @@ class SatelliteManager {
         return (position: result.position, velocity: result.velocity)
     }
 
-    // MARK: - Country Coloring
+    // MARK: - Classification Coloring
 
+    /// Muted, classification-driven palette (real trackers color by object type, not by flag).
+    /// Replaces the old per-country neon scheme (electric blue/red/yellow/magenta) that made the
+    /// swarm look like confetti instead of satellites.
     func colorForSatellite(_ satellite: Satellite) -> SIMD4<Float> {
-        // NEON COLORS for maximum visual impact
-        switch satellite.country {
-        case "US":
-            return SIMD4<Float>(0.0, 0.5, 1.0, 1.0) // Electric Blue
-        case "RU", "SU":
-            return SIMD4<Float>(1.0, 0.0, 0.0, 1.0) // Pure Red
-        case "CN":
-            return SIMD4<Float>(1.0, 1.0, 0.0, 1.0) // Bright Yellow
-        case "EU":
-            return SIMD4<Float>(0.0, 1.0, 0.3, 1.0) // Neon Green
-        case "JP":
-            return SIMD4<Float>(1.0, 0.4, 0.0, 1.0) // Hot Orange
-        case "IN":
-            return SIMD4<Float>(1.0, 0.0, 1.0, 1.0) // Magenta
-        default:
-            return SIMD4<Float>(0.8, 0.8, 0.8, 1.0) // Bright White
+        switch classifySatellite(satellite) {
+        case .iss, .notable:
+            return SIMD4<Float>(1.0, 1.0, 0.95, 1.0)   // bright white — hero objects
+        case .starlink:
+            return SIMD4<Float>(0.55, 0.75, 1.0, 1.0)   // cool blue-white
+        case .activeSatellite:
+            return SIMD4<Float>(1.0, 0.82, 0.5, 1.0)    // warm gold
+        case .debris:
+            return SIMD4<Float>(0.5, 0.5, 0.55, 1.0)    // dim grey
+        }
+    }
+
+    /// Point size + brightness for the Metal swarm, keyed off the same classification used for
+    /// color. Debris renders small/dim, hero objects render large/bright — everything else was a
+    /// uniform size, which read as a flat wall of identical dots.
+    func renderSizeAndBrightness(for satellite: Satellite) -> (size: Float, brightness: Float) {
+        switch classifySatellite(satellite) {
+        case .iss, .notable:
+            return (size: 3.0, brightness: 1.0)
+        case .starlink:
+            return (size: 1.5, brightness: 0.85)
+        case .activeSatellite:
+            return (size: 1.5, brightness: 0.9)
+        case .debris:
+            return (size: 0.8, brightness: 0.4)
         }
     }
 

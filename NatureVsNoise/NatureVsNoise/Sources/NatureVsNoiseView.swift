@@ -169,7 +169,12 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     
     // Diagnostic log file for debugging screensaver issues
     private func logToFile(_ message: String) {
-        let logPath = NSHomeDirectory() + "/Library/Logs/NatureVsNoise.log"
+        let logDir = NSHomeDirectory() + "/Library/Logs"
+        let logPath = logDir + "/NatureVsNoise.log"
+        // ponytail: sandboxed containers don't ship a Library/Logs dir, so every write here was
+        // silently failing via `try?` — the log file has never actually been written since the
+        // app sandbox took effect. Create the dir once; cheap no-op once it exists.
+        try? FileManager.default.createDirectory(atPath: logDir, withIntermediateDirectories: true)
 
         // ponytail: rotate at startup if the log is over 500 KB — was unbounded across months.
         // True ring buffer is overkill; screensaver log is debug-only and a launch-time cap
@@ -296,11 +301,17 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         flyPast.timingMode = .easeIn
         
         // Phase 3: Swing around and reset - FARTHER to see the shell
-        let swingAround = SCNAction.move(to: SCNVector3(x: 0, y: 5, z: 15), duration: 15)
+        let swingAround = SCNAction.move(to: SCNVector3(x: 0, y: 10, z: 25), duration: 15) // ponytail: was y:5 z:15, wider reveal
         swingAround.timingMode = .easeOut
         
         let cinematicSequence = SCNAction.sequence([approach, flyPast, swingAround])
         cameraNode.runAction(SCNAction.repeatForever(cinematicSequence))
+
+        // ponytail: cameraPivot existed for orbital rotation but nothing ever rotated it, so the
+        // fly-through only ever translated near Earth and never swept round to the Sun/planets.
+        // Slow continuous orbit reveals the rest of the solar system as it turns.
+        let orbitSweep = SCNAction.rotateBy(x: 0, y: .pi * 2, z: 0, duration: 90)
+        cameraPivot.runAction(SCNAction.repeatForever(orbitSweep))
         
         setupGroundCamera()
         lastViewModeSwitchTime = Date().timeIntervalSince1970
@@ -341,8 +352,12 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
     
     /// Setup renderers based on feature flags
     private func setupRenderers() {
-        // Hybrid rendering: Use Metal for swarm (via SceneKit delegate), SceneKit for hero satellites
-        let effectiveUseMetal = FeatureFlags.enableSwarm
+        // ponytail: the Metal swarm path hooks in via SCNSceneRenderer.currentRenderCommandEncoder,
+        // which Apple lists as deprecated on every OS version and returns nil here on this SDK —
+        // render(into:) silently no-ops every frame, so the swarm can never actually draw. Forced
+        // off rather than chasing a dead API; SceneKit satellite rendering (native, not deprecated)
+        // is the real fix. Re-enable if/when Apple ships a supported custom-Metal-draw hook.
+        let effectiveUseMetal = false
         let effectiveToySats = FeatureFlags.enableToySats
         
         logDiagnostics("RENDERER_SETUP", details: [
@@ -414,16 +429,12 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         // HIGH QUALITY VISUALS (Phase 3)
         // Enable HDR and Bloom for cinematic look
         cameraNode.camera?.wantsHDR = true
-        cameraNode.camera?.exposureOffset = -0.3 // Slightly darker space
+        cameraNode.camera?.exposureOffset = -0.6
         cameraNode.camera?.averageGray = 0.18
         cameraNode.camera?.whitePoint = 1.0
         
-        // Bloom: gentle glow on the brightest highlights only (sun, lit limb, hottest sats).
-        // Kept subtle with a high threshold so mid-tone planet/satellite colors are NOT washed
-        // out — the earlier full-off setting was overcorrecting for an over-bloomed config.
-        cameraNode.camera?.bloomIntensity = 0.3
-        cameraNode.camera?.bloomThreshold = 0.9   // only near-white highlights bloom
-        cameraNode.camera?.bloomBlurRadius = 6.0
+        // ponytail: bloom got halved twice and was still too bright — stop tuning it, turn it off.
+        cameraNode.camera?.bloomIntensity = 0
         
         // Create a pivot node for orbital rotation
         // Camera will be offset from pivot, and rotating the pivot creates orbital motion
@@ -569,7 +580,7 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         let sunLight = SCNNode()
         sunLight.light = SCNLight()
         sunLight.light?.type = .omni
-        sunLight.light?.intensity = 5000 // Boosted
+        sunLight.light?.intensity = 600 // ponytail: was 5000→2500→1200→600
         sunLight.light?.temperature = 6500
         sunLight.light?.color = NSColor(red: 1.0, green: 0.9, blue: 0.8, alpha: 1.0)
         sunLight.light?.attenuationStartDistance = 0
@@ -585,12 +596,12 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         glowMat.diffuse.contents = NSColor.clear
         glowMat.emission.contents = NSColor(red: 1.0, green: 0.6, blue: 0.1, alpha: 1.0)
         glowMat.transparencyMode = .aOne
-        glowMat.transparent.contents = NSColor(white: 1.0, alpha: 0.4)
+        glowMat.transparent.contents = NSColor(white: 1.0, alpha: 0.1)
         glowMat.isDoubleSided = false
         glowMat.cullMode = .back
         sunGlowGeo.materials = [glowMat]
         let glowNode = SCNNode(geometry: sunGlowGeo)
-        glowNode.opacity = 0.5
+        glowNode.opacity = 0.12
         glowNode.position = sunNode.position
         scene.rootNode.addChildNode(glowNode)
         
@@ -601,11 +612,11 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         coronaMat.diffuse.contents = NSColor.clear
         coronaMat.emission.contents = NSColor(red: 1.0, green: 0.4, blue: 0.0, alpha: 1.0)
         coronaMat.transparencyMode = .aOne
-        coronaMat.transparent.contents = NSColor(white: 1.0, alpha: 0.15)
+        coronaMat.transparent.contents = NSColor(white: 1.0, alpha: 0.04)
         coronaMat.isDoubleSided = false
         coronaGeo.materials = [coronaMat]
         let coronaNode = SCNNode(geometry: coronaGeo)
-        coronaNode.opacity = 0.3
+        coronaNode.opacity = 0.08
         coronaNode.position = sunNode.position
         scene.rootNode.addChildNode(coronaNode)
         
@@ -716,11 +727,14 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
             let maxSatellites = qualityLevel.maxSatellites
             let satellites = Array(satelliteManager.satellites.prefix(maxSatellites))
             var colors: [SIMD4<Float>] = []
+            var sizesAndBrightness: [(size: Float, brightness: Float)] = []
             colors.reserveCapacity(satellites.count)
+            sizesAndBrightness.reserveCapacity(satellites.count)
             for satellite in satellites {
                 colors.append(satelliteManager.colorForSatellite(satellite))
+                sizesAndBrightness.append(satelliteManager.renderSizeAndBrightness(for: satellite))
             }
-            metalRenderer.uploadSatellites(satellites, colors: colors)
+            metalRenderer.uploadSatellites(satellites, colors: colors, sizesAndBrightness: sizesAndBrightness)
             lastUploadedCatalogGeneration = currentGeneration
         }
 
@@ -751,7 +765,19 @@ class NatureVsNoiseView: ScreenSaverView, SCNSceneRendererDelegate {
         
         let scale: Float = 2.0 / 6371.0
 
-        let satellites = Array(satelliteManager.satellites.prefix(safeMaxSatellites))
+        // ponytail: raw prefix(50) landed entirely inside one contiguous source block (TLE
+        // files list Starlink as one huge run) — every visible satellite was Starlink. Stride
+        // across the whole catalog instead so the sample actually spans categories.
+        let allSatellites = satelliteManager.satellites
+        let satellites: [SatelliteManager.Satellite]
+        if allSatellites.count <= safeMaxSatellites {
+            satellites = allSatellites
+        } else {
+            let step = max(1, allSatellites.count / safeMaxSatellites)
+            satellites = Swift.stride(from: 0, to: allSatellites.count, by: step)
+                .prefix(safeMaxSatellites)
+                .map { allSatellites[$0] }
+        }
         
         for satellite in satellites {
             let (position, velocity) = satelliteManager.getPositionAndVelocity(for: satellite, at: animationTime)

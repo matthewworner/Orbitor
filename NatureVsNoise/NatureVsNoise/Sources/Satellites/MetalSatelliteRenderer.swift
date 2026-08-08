@@ -87,8 +87,6 @@ class MetalSatelliteRenderer: NSObject {
     var trailLength: Float = 1.5
     var lodDistance: Float = 100.0
     weak var cameraNode: SCNNode?
-    var swarmSize: Float = 1.5
-    var swarmBrightness: Float = 1.0
     
     // MARK: - Initialization
 
@@ -169,7 +167,12 @@ class MetalSatelliteRenderer: NSObject {
         let renderDescriptor = MTLRenderPipelineDescriptor()
         renderDescriptor.vertexFunction = vertexFunction
         renderDescriptor.fragmentFunction = fragmentFunction
+        // Additive glow instead of flat alpha-blended discs — a "firefly swarm" should glow,
+        // not paint solid coins. Overlapping satellites brighten instead of just occluding.
         renderDescriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
+        // ponytail: tried additive (.one/.one) for a "glow" look — wrong call, additive vanishes
+        // against this scene's bright sun/bloom (color + near-white ≈ near-white). Back to normal
+        // alpha-over so satellites stay visible regardless of background brightness.
         renderDescriptor.colorAttachments[0].isBlendingEnabled = true
         renderDescriptor.colorAttachments[0].sourceRGBBlendFactor = .sourceAlpha
         renderDescriptor.colorAttachments[0].destinationRGBBlendFactor = .oneMinusSourceAlpha
@@ -232,7 +235,7 @@ class MetalSatelliteRenderer: NSObject {
     // MARK: - Data Upload
     
     /// Upload satellite orbital elements to GPU
-    func uploadSatellites(_ satellites: [SatelliteManager.Satellite], colors: [SIMD4<Float>]) {
+    func uploadSatellites(_ satellites: [SatelliteManager.Satellite], colors: [SIMD4<Float>], sizesAndBrightness: [(size: Float, brightness: Float)]) {
         guard let elementsBuffer = elementsBuffer,
               let colorBuffer = colorBuffer,
               let instanceBuffer = instanceBuffer else { 
@@ -261,13 +264,15 @@ class MetalSatelliteRenderer: NSObject {
             )
             colorsPtr[i] = colors[i]
 
-            // Set firefly swarm properties: larger size, higher brightness
+            // Per-classification size/brightness (hero objects large+bright, debris small+dim) —
+            // was a flat swarmSize/swarmBrightness constant for every satellite.
+            let (size, brightness) = sizesAndBrightness[i]
             instancePtr[i] = SatelliteInstanceData(
                 position: SIMD3<Float>(0, 0, 0), // Will be set by propagation shader or CPU fallback
                 velocity: SIMD3<Float>(0, 0, 0),
                 color: colors[i],
-                size: swarmSize, // 1.5 for better visibility
-                brightness: swarmBrightness, // 1.0 for full brightness
+                size: size,
+                brightness: brightness,
                 _padding: .zero
             )
         }

@@ -11,8 +11,12 @@ class SatelliteRenderer {
     private var satelliteNodes: [SCNNode] = []
     private var trailNodes: [SCNNode] = []
 
-    // SceneKit renders hero/detail satellites, Metal handles the swarm
-    private let maxSatellites = 50
+    // ponytail: was 50, a leftover from when Metal owned the full swarm and SceneKit only did
+    // close-up hero satellites. Metal's disabled (deprecated currentRenderCommandEncoder), so
+    // SceneKit now owns the whole swarm — match QualityLevel's own documented "SceneKit safe
+    // limit" (NatureVsNoiseView.swift) instead of a stale hero-only number. Callers already pass
+    // at most qualityLevel.maxSatellites; this is just the renderer's own ceiling.
+    private let maxSatellites = 500 // ponytail: "SceneKit acceptable" tier
     private var currentSatelliteCount = 0
 
     // Templates for different satellite types
@@ -220,7 +224,6 @@ class SatelliteRenderer {
         // Clamp arrays to same count once
         let validClassifications: [SatelliteClass]
         let validAges: [Double]
-        let validVelocities: [SIMD3<Float>]
         
         if classifications.count >= currentSatelliteCount {
             validClassifications = classifications
@@ -232,12 +235,6 @@ class SatelliteRenderer {
             validAges = ages
         } else {
             validAges = ages + Array(repeating: 5.0, count: currentSatelliteCount - ages.count)
-        }
-        
-        if velocities.count >= currentSatelliteCount {
-            validVelocities = velocities
-        } else {
-            validVelocities = velocities + Array(repeating: SIMD3<Float>(0, 0, 0), count: currentSatelliteCount - velocities.count)
         }
         
         // Initialize trail history if needed
@@ -252,7 +249,6 @@ class SatelliteRenderer {
             let position = positions[i]
             let classification = validClassifications[i]
             let age = validAges[i]
-            let velocity = validVelocities[i]
 
             // Apply Earth offset
             node.position = SCNVector3(
@@ -262,13 +258,18 @@ class SatelliteRenderer {
             )
 
             node.isHidden = false
-            
-            // Apply age-based material degradation
-            applyMaterialAging(to: node, age: age, classification: classification)
-            
-            // Apply velocity-based thermal glow
-            applyThermalGlow(to: node, velocity: velocity)
-            
+
+            // heroModels was loaded but never consulted — ISS/Hubble/TESS/TDRS always rendered as
+            // the generic gold "active" template. Swap in the real model when the TLE name matches.
+            let heroKey = i < names.count ? names[i] : ""
+            if let heroTemplate = heroModels[heroKey] {
+                applyHeroModel(to: node, template: heroTemplate, key: heroKey)
+            } else {
+                revertToActiveTemplateIfNeeded(node)
+                // Apply age-based material degradation
+                applyMaterialAging(to: node, age: age, classification: classification)
+            }
+
             // Update trail history
             updateTrailHistory(for: i, position: position, earthOffset: earthOffset)
         }
@@ -420,6 +421,31 @@ class SatelliteRenderer {
     private let trailRebuildInterval: CFTimeInterval = 0.5
     private var lastTrailRebuild: CFTimeInterval = 0
 
+    // MARK: - Hero Model Swap
+
+    /// Node pooling means the same SCNNode gets reused across ticks; only touch children when the
+    /// hero identity actually changes, matching the trail/geometry churn throttling elsewhere.
+    private func applyHeroModel(to node: SCNNode, template: SCNNode, key: String) {
+        let marker = "hero:\(key)"
+        guard node.name != marker else { return }
+        node.childNodes.forEach { $0.removeFromParentNode() }
+        node.scale = template.scale
+        for child in template.childNodes {
+            node.addChildNode(child.clone())
+        }
+        node.name = marker
+    }
+
+    private func revertToActiveTemplateIfNeeded(_ node: SCNNode) {
+        guard node.name?.hasPrefix("hero:") == true, let template = activeSatelliteTemplate else { return }
+        node.childNodes.forEach { $0.removeFromParentNode() }
+        node.scale = template.scale
+        for child in template.childNodes {
+            node.addChildNode(child.clone())
+        }
+        node.name = nil
+    }
+
     // MARK: - Material Effects
     
     private func applyMaterialAging(to node: SCNNode, age: Double, classification: SatelliteClass) {
@@ -441,6 +467,11 @@ class SatelliteRenderer {
             emissionIntensity = 0.1
         }
         
+        // ponytail: recolor by classification.hudColor — the same single source of truth the
+        // HUD legend reads from — instead of leaving every pooled node on its gold "active"
+        // template color regardless of actual class.
+        let classColor = classification.hudColor
+
         // Apply to all materials in the node
         node.enumerateChildNodes { child, _ in
             if let geometry = child.geometry {
@@ -454,40 +485,18 @@ class SatelliteRenderer {
                     if material.emission.intensity > 0.05 { // Don't add emission to everything, only stuff that glows
                         material.emission.intensity = emissionIntensity
                     }
+
+                    material.diffuse.contents = classColor
                 }
             }
         }
     }
     
-    private func applyThermalGlow(to node: SCNNode, velocity: SIMD3<Float>) {
-        let speed = simd_length(velocity)
-        let normalized = min(speed / 8.0, 1.0)  // 8 km/s = max LEO speed
-        
-        // Warm glow for fast satellites, cool for slow
-        let glowColor = NSColor(
-            red: CGFloat(0.2 + normalized * 0.3),
-            green: CGFloat(0.15),
-            blue: CGFloat(0.3 - normalized * 0.2),
-            alpha: 1.0
-        )
-        
-        // Apply subtle emission tint
-        node.enumerateChildNodes { child, _ in
-            if let geometry = child.geometry {
-                for material in geometry.materials {
-                    if material.emission.intensity > 0.3 {
-                        material.emission.contents = glowColor
-                    }
-                }
-            }
-        }
-    }
-
     // MARK: - Template Generation
     
     private func generateActiveSatelliteTemplate() -> SCNNode {
         let node = SCNNode()
-        node.scale = SCNVector3(0.15, 0.15, 0.15)
+        node.scale = SCNVector3(0.035, 0.035, 0.035) // ponytail: was 0.15→0.07
 
         let body = SCNBox(width: 1.0, height: 0.6, length: 0.6, chamferRadius: 0.05)
         body.materials = [MaterialFactory.goldCached]
@@ -517,7 +526,7 @@ class SatelliteRenderer {
     
     private func generateDebrisTemplate() -> SCNNode {
         let node = SCNNode()
-        node.scale = SCNVector3(0.1, 0.1, 0.1)
+        node.scale = SCNVector3(0.025, 0.025, 0.025) // ponytail: was 0.1→0.05
         
         // Irregular chunk - use multiple small boxes
         for _ in 0..<3 {
@@ -547,7 +556,7 @@ class SatelliteRenderer {
     
     private func generateStarlinkTemplate() -> SCNNode {
         let node = SCNNode()
-        node.scale = SCNVector3(0.08, 0.08, 0.08)
+        node.scale = SCNVector3(0.02, 0.02, 0.02) // ponytail: was 0.08→0.04
         
         // Starlink "pizza box" design - flat rectangular body
         let body = SCNBox(width: 2.0, height: 0.1, length: 1.0, chamferRadius: 0.02)
